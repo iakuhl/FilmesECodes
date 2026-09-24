@@ -70,7 +70,9 @@ acrescenta, e por quê:
 - `main.py`: monta o app raiz a partir de oito grupos de comando
   (`clube`, `membro`, `filme`, `rodada`, `indicacao`, `sessao`,
   `avaliacao`, `oscar`), um módulo por grupo em `comandos/`.
-- `contexto.py`: o **composition root**. Monta os 12 repositórios SQLite,
+- `contexto.py`: o **composition root** (promovido a
+  `adapters/composicao.py` no início da Fase 4, quando uma segunda
+  interface passou a precisar dele). Monta os 12 repositórios SQLite,
   os serviços de infraestrutura e os 15 casos de uso. Anota cada
   repositório com o tipo do *port*, não da classe concreta, de modo que o
   `mypy` verifica neste ponto que cada adapter satisfaz o contrato que

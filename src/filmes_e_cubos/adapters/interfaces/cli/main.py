@@ -17,6 +17,7 @@ from typing import Annotated
 
 import typer
 
+from filmes_e_cubos.adapters.composicao import CAMINHO_BANCO_PADRAO, VARIAVEL_DE_AMBIENTE_BANCO
 from filmes_e_cubos.adapters.interfaces.cli.comandos import (
     avaliacao,
     clube,
@@ -27,11 +28,7 @@ from filmes_e_cubos.adapters.interfaces.cli.comandos import (
     rodada,
     sessao,
 )
-from filmes_e_cubos.adapters.interfaces.cli.contexto import (
-    CAMINHO_BANCO_PADRAO,
-    VARIAVEL_DE_AMBIENTE_BANCO,
-    FabricaDeContexto,
-)
+from filmes_e_cubos.adapters.interfaces.cli.contexto import FabricaDeContexto
 from filmes_e_cubos.adapters.interfaces.cli.erros import GrupoComTratamentoDeErros
 
 app = typer.Typer(

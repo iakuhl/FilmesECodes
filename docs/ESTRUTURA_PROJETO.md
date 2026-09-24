@@ -32,13 +32,15 @@ FilmesECodes/
 │       │   └── ports/                 # Protocols: repositórios, SorteadorService,
 │       │                              # RelogioService, CriterioApuracaoOscar
 │       └── adapters/
+│           ├── composicao.py          # composition root: engine -> repos -> casos de uso
 │           ├── persistence/
 │           │   └── sqlite/            # ✅ Fase 2: esquema, engine, 12 repositórios
 │           ├── servicos/              # ✅ Fase 2: RelogioSistema, SorteadorAleatorio
 │           └── interfaces/            # ✅ Fase 3: interface de usuário
+│               ├── convencoes.py      # padrões deduzidos, iguais em todas as interfaces
 │               └── cli/
 │                   ├── main.py        # app Typer raiz; monta os grupos de comando
-│                   ├── contexto.py    # composition root: engine -> repos -> casos de uso
+│                   ├── contexto.py    # quando montar o composition root; critério da CLI
 │                   ├── erros.py       # CliError + tradução de erros para stderr/exit 1
 │                   ├── resolucao.py   # clube/rodada/temporada "correntes" quando omitidos
 │                   ├── conversores.py # texto da linha de comando -> tipos do domínio
@@ -74,7 +76,7 @@ FilmesECodes/
 - **`src/filmes_e_cubos/application/ports/`**: contratos (`Protocol`/ABC)
   que os casos de uso declaram precisar. Quem implementa cada um mora em
   `adapters/` — e o único ponto que amarra contrato a implementação é o
-  composition root da CLI.
+  composition root, `adapters/composicao.py`.
 - **`src/filmes_e_cubos/adapters/persistence/sqlite/`**: implementações
   concretas dos ports de repositório usando SQLAlchemy Core + SQLite (ver
   [ARQUITETURA.md](ARQUITETURA.md) para o racional de Core vs. ORM).
@@ -84,8 +86,10 @@ FilmesECodes/
 - **`src/filmes_e_cubos/adapters/interfaces/cli/`**: a interface de
   linha de comando (ver [CLI.md](CLI.md)). Traduz argumentos de terminal
   em chamadas aos casos de uso e formata o resultado — nenhuma regra de
-  negócio mora aqui. `contexto.py` é o composition root: o único ponto do
-  projeto que conhece ports e implementações concretas ao mesmo tempo.
+  negócio mora aqui. `contexto.py` decide quando montar o composition
+  root (`adapters/composicao.py`, o único ponto do projeto que conhece
+  ports e implementações concretas ao mesmo tempo) e qual critério de
+  apuração do Óscar a CLI usa.
 - **`tests/`**: espelha a estrutura de `src/`, com testes de domínio
   (regras de negócio isoladas), de aplicação (casos de uso com
   implementações de teste/fake dos ports) e de adapters — estes sempre

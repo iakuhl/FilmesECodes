@@ -116,18 +116,37 @@ Implementações concretas dos ports. Três categorias existem:
 
 #### Composition root
 
-`adapters/interfaces/cli/contexto.py` é o **composition root** do
-sistema: o único módulo que conhece, ao mesmo tempo, todos os ports e
-todas as suas implementações concretas. É onde a decisão "SQLite" e a
-decisão "relógio do sistema" são efetivamente tomadas. Todo o resto do
-código — domínio, casos de uso e até os próprios comandos — enxerga
-apenas contratos.
+`adapters/composicao.py` é o **composition root** do sistema: o único
+módulo que conhece, ao mesmo tempo, todos os ports e todas as suas
+implementações concretas. É onde a decisão "SQLite" e a decisão "relógio
+do sistema" são efetivamente tomadas. Todo o resto do código — domínio,
+casos de uso e até as próprias interfaces — enxerga apenas contratos.
+
+Nasceu dentro da CLI (`adapters/interfaces/cli/contexto.py`, Fase 3) e
+foi promovido a módulo próprio no início da Fase 4, quando uma segunda
+interface passou a precisar exatamente do mesmo grafo de dependências.
+Cada interface continua dona apenas do que é dela: a CLI, por exemplo,
+decide *quando* montar o grafo (só quando um comando toca dados) e qual
+critério de apuração do Óscar usar.
 
 Uma consequência prática e deliberada: os repositórios são anotados ali
 com o tipo do *port*, não com o da classe concreta. Assim o `mypy` checa,
 naquele ponto de montagem, que cada adapter realmente satisfaz o
 `Protocol` que diz implementar — a verificação estrutural que justifica a
 decisão nº 4 da tabela abaixo.
+
+O critério de apuração do Óscar é a única dependência que o composition
+root **não** escolhe: como o mecanismo continua em aberto no produto,
+cada interface o delega a quem opera do seu jeito (a CLI pergunta no
+terminal; interfaces HTTP recebem a escolha na requisição). Por isso
+`ApurarCategoriaOscar` é montado sob demanda, por
+`Contexto.apurar_categoria_oscar(criterio)`.
+
+Conveniências que várias interfaces compartilham — o nome padrão de uma
+edição do Óscar, a presença padrão de uma sessão, o clube a que uma
+sessão pertence — ficam em `adapters/interfaces/convencoes.py`, para que
+todas se comportem igual. Não são regras de negócio: os casos de uso
+continuam recebendo tudo explicitamente.
 
 ## Registro de decisões arquiteturais (ADR resumido)
 
@@ -140,7 +159,7 @@ decisão nº 4 da tabela abaixo.
 | 5 | Injeção de dependência manual (sem framework de DI) | Adotada | Projeto pequeno; um container de DI seria complexidade prematura nesta fase. |
 | 6 | `Clube` como entidade de primeira classe, com configurações | Adotada | Viabiliza evolução para suportar múltiplos clubes em uma versão comercial futura, sem redesenhar o domínio. |
 | 7 | Listagens de leitura da interface vão direto ao repositório, sem caso de uso | Adotada (Fase 3) | Um caso de uso que só repassa uma chamada de repositório não acrescenta regra nenhuma — seria indireção vazia. Ações que mudam estado, essas sim, passam obrigatoriamente por um caso de uso. |
-| 8 | Composition root único, em `adapters/interfaces/cli/contexto.py` | Adotada (Fase 3) | Concentra em um lugar toda a amarração port↔implementação, e transforma a checagem de tipos nesse ponto em verificação de conformidade dos adapters. |
+| 8 | Composition root único, em `adapters/composicao.py` (na Fase 3, em `adapters/interfaces/cli/contexto.py`) | Adotada (Fase 3; movido na Fase 4) | Concentra em um lugar toda a amarração port↔implementação, e transforma a checagem de tipos nesse ponto em verificação de conformidade dos adapters. Compartilhado por todas as interfaces. |
 
 ## Princípios de orientação a objetos aplicados
 

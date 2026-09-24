@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from filmes_e_cubos.adapters.interfaces.cli.contexto import Contexto
+from filmes_e_cubos.adapters.composicao import Contexto
 from filmes_e_cubos.adapters.interfaces.cli.erros import CliError
 from filmes_e_cubos.domain.entities.clube import Clube
 from filmes_e_cubos.domain.entities.rodada import Rodada

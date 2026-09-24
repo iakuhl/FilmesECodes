@@ -12,14 +12,19 @@ from uuid import UUID
 
 import typer
 
+from filmes_e_cubos.adapters.composicao import Contexto
 from filmes_e_cubos.adapters.interfaces.cli.apresentacao import (
     echo_resultado,
     echo_tabela,
     formatar_opcional,
 )
-from filmes_e_cubos.adapters.interfaces.cli.contexto import Contexto, obter_contexto
+from filmes_e_cubos.adapters.interfaces.cli.contexto import (
+    obter_contexto,
+    obter_criterio_apuracao,
+)
 from filmes_e_cubos.adapters.interfaces.cli.conversores import TipoCategoriaCli
 from filmes_e_cubos.adapters.interfaces.cli.resolucao import resolver_clube, resolver_temporada
+from filmes_e_cubos.adapters.interfaces.convencoes import nome_padrao_da_temporada
 from filmes_e_cubos.domain.value_objects.identificadores import (
     CategoriaOscarId,
     FilmeId,
@@ -52,7 +57,7 @@ def temporada_abrir(
     temporada = contexto.abrir_temporada_oscar.executar(
         clube_id=clube.id,
         ano=ano_da_edicao,
-        nome=nome if nome is not None else f"Óscar do {clube.nome} {ano_da_edicao}",
+        nome=nome if nome is not None else nome_padrao_da_temporada(clube.nome, ano_da_edicao),
     )
     echo_resultado(f"Temporada aberta: {temporada.nome} ({temporada.id})")
 
@@ -160,11 +165,12 @@ def apurar(
 ) -> None:
     """Apura a categoria e emite o troféu.
 
-    A vencedora é escolhida pelo critério montado no composition root —
-    por padrão, `CriterioApuracaoInterativo`, que pergunta aqui mesmo.
+    A vencedora é escolhida pelo critério de apuração da CLI — por padrão,
+    `CriterioApuracaoInterativo`, que pergunta aqui mesmo.
     """
     contexto = obter_contexto(ctx)
-    trofeu = contexto.apurar_categoria_oscar.executar(
+    apuracao = contexto.apurar_categoria_oscar(obter_criterio_apuracao(ctx))
+    trofeu = apuracao.executar(
         categoria_id=CategoriaOscarId(categoria_id),
         membro_vencedor_manual_id=(
             MembroId(membro_vencedor_id) if membro_vencedor_id is not None else None

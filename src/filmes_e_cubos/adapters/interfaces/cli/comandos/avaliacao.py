@@ -7,13 +7,14 @@ from uuid import UUID
 
 import typer
 
+from filmes_e_cubos.adapters.composicao import Contexto
 from filmes_e_cubos.adapters.interfaces.cli.apresentacao import (
     echo_resultado,
     echo_tabela,
     formatar_decimal,
     formatar_opcional,
 )
-from filmes_e_cubos.adapters.interfaces.cli.contexto import Contexto, obter_contexto
+from filmes_e_cubos.adapters.interfaces.cli.contexto import obter_contexto
 from filmes_e_cubos.adapters.interfaces.cli.conversores import converter_nota
 from filmes_e_cubos.adapters.interfaces.cli.resolucao import resolver_clube
 from filmes_e_cubos.domain.entities.avaliacao import Avaliacao
