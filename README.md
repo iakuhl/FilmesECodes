@@ -31,23 +31,47 @@ apuração do Óscar anual. É um projeto pessoal, mas conduzido com rigor
 profissional — serve como peça de portfólio e é desenhado para,
 eventualmente, evoluir para uma versão comercializável (multi-clube).
 
-**Status atual:** Fases 1 e 2 do roadmap **concluídas e testadas**; Fase 3
-**não iniciada**. Ver [docs/ROADMAP.md](docs/ROADMAP.md) para o histórico
-completo e a seção **"Como continuar a Fase 3"** abaixo para retomar o
-trabalho em uma nova sessão.
+**Status atual:** Fases 1, 2 e 3 do roadmap **concluídas e testadas** —
+o sistema é utilizável de ponta a ponta pela linha de comando. Ver
+[docs/ROADMAP.md](docs/ROADMAP.md) para o histórico completo.
 
 - ✅ **Fase 1** — núcleo de domínio (12 entidades, 6 value objects) e
-  casos de uso (agora 15, após a Fase 2) em `src/filmes_e_cubos/domain/`
-  e `src/filmes_e_cubos/application/`.
+  15 casos de uso, em `src/filmes_e_cubos/domain/` e
+  `src/filmes_e_cubos/application/`.
 - ✅ **Fase 2** — persistência SQLite via SQLAlchemy Core, em
   `src/filmes_e_cubos/adapters/persistence/sqlite/` (12 repositórios) e
   `src/filmes_e_cubos/adapters/servicos/` (relógio e sorteador reais).
-- ⏳ **Fase 3** — CLI (Typer). Dependência já instalada e entry point já
-  registrado em `pyproject.toml`, mas **o código da CLI ainda não
-  existe**. Rodar `filmes-e-cubos` agora falha.
+- ✅ **Fase 3** — CLI com Typer, em
+  `src/filmes_e_cubos/adapters/interfaces/cli/` (8 grupos de comando).
+- ⏳ **Fase 4** — API/web, não iniciada.
 
-Toda a suíte de testes está verde: `uv run pytest` (139 testes),
-`uv run mypy src` (limpo, 87 arquivos) e `uv run ruff check .` (limpo).
+Suíte de testes verde: 246 testes (`uv run pytest`), `uv run mypy src`
+limpo em 105 arquivos e `uv run ruff check .` sem violações.
+
+## Uso
+
+```bash
+uv run filmes-e-cubos --help
+```
+
+A referência completa dos comandos, com as convenções da interface, está
+em [docs/CLI.md](docs/CLI.md). Um ciclo típico do clube:
+
+```bash
+filmes-e-cubos clube criar "Filmes e Cubos"
+filmes-e-cubos membro cadastrar "Iano"
+filmes-e-cubos filme cadastrar "Parasita" --ano 2019
+filmes-e-cubos rodada abrir
+filmes-e-cubos indicacao indicar --membro-id <MEMBRO> --filme-id <FILME>
+filmes-e-cubos indicacao sortear
+filmes-e-cubos sessao registrar <INDICACAO>
+filmes-e-cubos avaliacao registrar --sessao-id <SESSAO> --membro-id <MEMBRO> --nota 4,5
+filmes-e-cubos rodada encerrar
+```
+
+Os dados ficam em um arquivo SQLite (`filmes_e_cubos.db` no diretório
+atual, por padrão; configurável com `--db-path` ou a variável de ambiente
+`FILMES_E_CUBOS_DB`).
 
 ## Desenvolvimento
 
@@ -60,113 +84,6 @@ uv run mypy src      # checagem estática de tipos
 uv run ruff check .  # lint
 ```
 
-## Como continuar a Fase 3 (CLI)
-
-Contexto para retomar em uma nova sessão: as Fases 1 e 2 estão prontas,
-testadas e commitadas. Falta só a interface de linha de comando. Segue o
-plano que estava em andamento quando a sessão anterior foi interrompida
-(por limite de contexto) — nenhuma linha de código da CLI foi escrita
-ainda, então não há nada para conferir/consertar, só para construir.
-
-### O que já está pronto para a CLI consumir
-
-- **15 casos de uso** em `src/filmes_e_cubos/application/use_cases/`,
-  cada um com um método `executar(...)` e suas próprias exceções de
-  domínio (ver [docs/CASOS_DE_USO.md](docs/CASOS_DE_USO.md) para a lista
-  completa e as regras de cada um): `CriarClube`, `CadastrarMembro`,
-  `DesativarMembro`, `CadastrarFilme`, `AbrirNovaRodada`, `IndicarFilme`,
-  `AdicionarFilmeDemocracia`, `RealizarSorteio`, `EncerrarRodada`,
-  `RegistrarSessaoExibicao`, `AvaliarFilme`, `AbrirTemporadaOscar`,
-  `DefinirCategoriaOscar`, `IndicarFilmeParaCategoria`,
-  `ApurarCategoriaOscar`.
-- **12 repositórios SQLite** prontos em
-  `src/filmes_e_cubos/adapters/persistence/sqlite/` (um arquivo por
-  entidade) e `criar_engine(caminho_banco)` em `fabrica_engine.py` para
-  obter um `Engine` do SQLAlchemy a partir de um caminho de arquivo.
-- **Serviços reais** em `src/filmes_e_cubos/adapters/servicos/`:
-  `RelogioSistema` (implementa `RelogioService`) e `SorteadorAleatorio`
-  (implementa `SorteadorService`).
-- **Falta implementar**: `CriterioApuracaoOscar` (port em
-  `application/ports/criterio_apuracao_oscar.py`) não tem nenhuma
-  implementação concreta ainda — nem os fakes de teste resolvem isso
-  automaticamente para a CLI real.
-
-### Estrutura sugerida (ainda não criada)
-
-```
-src/filmes_e_cubos/adapters/interfaces/
-├── __init__.py
-└── cli/
-    ├── __init__.py
-    ├── main.py                       # cria o Typer() `app`, monta os sub-apps
-    ├── contexto.py                   # composition root: monta engine + repos + use cases
-    ├── criterio_apuracao_interativo.py  # CriterioApuracaoOscar via prompt ao usuário
-    ├── comandos_clube.py             # criar, listar
-    ├── comandos_membro.py            # cadastrar, desativar, listar
-    ├── comandos_filme.py             # cadastrar, listar
-    ├── comandos_rodada.py            # abrir, encerrar, status
-    ├── comandos_indicacao.py         # indicar, democracia, sortear, assistida
-    ├── comandos_avaliacao.py         # registrar (nota opcional = dorminhoco)
-    └── comandos_oscar.py             # temporada-abrir, categoria-definir, nomear, apurar
-```
-
-O `pyproject.toml` já aponta o entry point `filmes-e-cubos` para
-`filmes_e_cubos.adapters.interfaces.cli.main:app` — depois de criar
-`main.py` com um objeto `app` (Typer), `uv run filmes-e-cubos --help`
-deve funcionar.
-
-### Decisões de design recomendadas (dentro da liberdade já dada pelo usuário)
-
-1. **Caminho do banco**: opção global `--db-path` (ou variável de
-   ambiente `FILMES_E_CUBOS_DB`), com default tipo `filmes_e_cubos.db`
-   no diretório atual. Construir o `Engine` a cada invocação de comando
-   a partir desse caminho (SQLite é um arquivo, não precisa manter
-   conexão viva entre comandos).
-2. **Resolver o clube automaticamente**: como o uso real (Filmes e
-   Cubos) é de um único clube, comandos que precisam de `clube_id`
-   podem, se não informado via `--clube-id`, usar
-   `ClubeRepository.listar_todos()` e escolher automaticamente quando
-   houver exatamente um; senão, pedir para especificar. Mesma ideia para
-   "rodada aberta do clube" via `RodadaRepository.buscar_aberta_por_clube`.
-3. **`CriterioApuracaoOscar` interativo**: como o mecanismo de apuração
-   continua em aberto no domínio (ver ROADMAP.md), a implementação mais
-   honesta para uma CLI é perguntar ao usuário — listar as nomeações de
-   `NomeacaoOscar` (com o filme de cada uma) e pedir para escolher a
-   vencedora. Não é um hack: o port existe exatamente para isso.
-4. **`RegistrarSessaoExibicao` / membros presentes**: aceitar
-   `--presente <membro_id>` repetível; se nenhum for passado, um default
-   razoável é assumir todos os membros ativos do clube como presentes
-   (`MembroRepository.listar_ativos_por_clube`).
-5. **`AvaliarFilme` sem nota = dorminhoco**: já é assim no caso de uso
-   (`nota` é opcional); a CLI só precisa tornar `--nota` opcional
-   também.
-
-### Testes a escrever
-
-- `tests/adapters/interfaces/cli/` — usar `typer.testing.CliRunner` (ou
-  `click.testing.CliRunner`) contra um banco SQLite temporário
-  (`tmp_path`), cobrindo pelo menos um fluxo de ponta a ponta completo:
-  criar clube → cadastrar membros → cadastrar filme → abrir rodada →
-  indicar → sortear ou marcar assistida direto → registrar sessão →
-  avaliar (com nota e sem nota) → encerrar rodada → abrir temporada do
-  Óscar → definir categoria → nomear → apurar.
-- Seguir o mesmo padrão de modularidade já usado: um arquivo de teste
-  por módulo de comandos.
-
-### Verificação ao terminar
-
-```bash
-uv run pytest -q       # toda a suíte, incluindo os testes novos da CLI
-uv run mypy src        # sem erros
-uv run ruff check .    # sem violações
-uv run filmes-e-cubos --help   # a CLI real deve subir
-```
-
-Depois de tudo verde, atualizar `docs/ROADMAP.md` (marcar Fase 3 como
-concluída), `docs/ESTRUTURA_PROJETO.md` (preencher `adapters/interfaces/`
-na árvore) e esta seção do README (pode ser removida ou reduzida a uma
-nota curta, já que a Fase 3 estará concluída).
-
 ## Documentação
 
 - [docs/ARQUITETURA.md](docs/ARQUITETURA.md) — estilo arquitetural, camadas
@@ -175,6 +92,8 @@ nota curta, já que a Fase 3 estará concluída).
   invariantes do domínio.
 - [docs/CASOS_DE_USO.md](docs/CASOS_DE_USO.md) — casos de uso da aplicação.
 - [docs/ESTRUTURA_PROJETO.md](docs/ESTRUTURA_PROJETO.md) — estrutura de
-  pastas planejada e ferramentas do projeto.
+  pastas e ferramentas do projeto.
+- [docs/CLI.md](docs/CLI.md) — referência da interface de linha de
+  comando.
 - [docs/ROADMAP.md](docs/ROADMAP.md) — fases de desenvolvimento previstas.
 - [docs/GLOSSARIO.md](docs/GLOSSARIO.md) — termos do domínio do clube.

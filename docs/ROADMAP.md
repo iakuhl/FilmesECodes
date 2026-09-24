@@ -56,24 +56,51 @@ o que impediria a CLI de funcionar de ponta a ponta): novos casos de uso
 ganharam métodos de listagem (`listar_todos`/`listar_por_clube`) usados
 para exibição pela futura interface.
 
-## Fase 3 — Primeira interface de usuário — ⏳ NÃO iniciada
+## Fase 3 — Primeira interface de usuário ✅ concluída
 
-Decisão tomada (ainda não implementada): **CLI**, usando
-[Typer](https://typer.tiangolo.com/) (já adicionado a `pyproject.toml`
-como dependência, junto com `sqlalchemy`). O entry point
-`filmes-e-cubos` já está registrado em `pyproject.toml`
-(`[project.scripts]`), apontando para
-`filmes_e_cubos.adapters.interfaces.cli.main:app` — **esse módulo ainda
-não existe**, então rodar a CLI agora falhará até a Fase 3 ser
-implementada. Ver a seção "Como continuar a Fase 3" no
-[README.md](../README.md) para o plano detalhado do que falta: estrutura
-de pastas sugerida, lista de comandos por caso de uso (incluindo os 13
-casos de uso já existentes + os 2 novos desta fase), a decisão pendente
-de como implementar `CriterioApuracaoOscar` para a CLI (sugestão:
-critério interativo, que pergunta ao usuário quem venceu) e o esquema de
-composição (engine → repositórios → casos de uso → comandos).
-A interface deve apenas traduzir entrada/saída para chamadas aos casos
-de uso já existentes — nenhuma regra de negócio nova deve nascer aqui.
+Decisão tomada e implementada: **CLI com [Typer](https://typer.tiangolo.com/)**,
+em `src/filmes_e_cubos/adapters/interfaces/cli/`, com o entry point
+`filmes-e-cubos` registrado em `pyproject.toml`. A referência completa dos
+comandos está em [CLI.md](CLI.md).
+
+A interface apenas traduz entrada e saída para chamadas aos casos de uso
+já existentes — nenhuma regra de negócio nasceu aqui. O que a camada
+acrescenta, e por quê:
+
+- `main.py`: monta o app raiz a partir de oito grupos de comando
+  (`clube`, `membro`, `filme`, `rodada`, `indicacao`, `sessao`,
+  `avaliacao`, `oscar`), um módulo por grupo em `comandos/`.
+- `contexto.py`: o **composition root**. Monta os 12 repositórios SQLite,
+  os serviços de infraestrutura e os 15 casos de uso. Anota cada
+  repositório com o tipo do *port*, não da classe concreta, de modo que o
+  `mypy` verifica neste ponto que cada adapter satisfaz o contrato que
+  diz implementar. A montagem é adiada por uma `FabricaDeContexto` para
+  que consultar a ajuda (`--help`) não crie um banco vazio no diretório
+  do usuário.
+- `erros.py`: concentra o contrato de erro da interface — qualquer
+  `DomainError` ou `CliError` vira mensagem em `stderr` com código de
+  saída 1, traduzida em um único ponto (um `TyperGroup` customizado na
+  raiz), de modo que um comando novo já nasce com o comportamento certo.
+- `resolucao.py`: deduz clube, rodada aberta e temporada do ano quando o
+  usuário omite o id — conveniência de interface, nunca decisão de
+  negócio.
+- `conversores.py`: fronteira entre o texto do terminal e os tipos do
+  domínio (`Decimal`, `Nota`, enumerações).
+- `criterio_apuracao_interativo.py`: implementação de
+  `CriterioApuracaoOscar` que lista as nomeações e pergunta ao usuário
+  quem venceu (ver a seção de pontos em aberto abaixo).
+- `apresentacao.py`: tabelas e mensagens. A tabela é montada à mão, sem
+  biblioteca de terminal: `rich` só existe como dependência transitiva do
+  `typer` (que publica a variante `typer-slim`, sem ela), e depender dele
+  sem declará-lo deixaria a CLI refém de um detalhe de empacotamento de
+  terceiros.
+
+Testes em `tests/adapters/interfaces/cli/` (107 testes): um arquivo por
+grupo de comandos, mais testes de unidade da apresentação, dos
+conversores, da resolução automática e do contrato de erro, e um teste de
+ponta a ponta que percorre uma temporada inteira do clube. Todos rodam a
+CLI de verdade, com `typer.testing.CliRunner`, contra um banco SQLite
+real em `tmp_path`.
 
 ## Fase 4 — API / Web
 
@@ -96,5 +123,5 @@ de uso já existentes — nenhuma regra de negócio nova deve nascer aqui.
 | Decisão | Status | Onde foi/será resolvida |
 |---|---|---|
 | Implementação concreta de persistência | ✅ Resolvida: SQLite via SQLAlchemy Core | Fase 2 |
-| Primeira interface de usuário | ⏳ Decidida (CLI/Typer), não implementada | Fase 3 |
-| Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | Continua em aberto — port `CriterioApuracaoOscar` plugável | Sugestão: critério interativo na CLI (Fase 3) |
+| Primeira interface de usuário | ✅ Resolvida: CLI com Typer | Fase 3 |
+| Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | Continua em aberto no domínio — port `CriterioApuracaoOscar` plugável | A CLI usa `CriterioApuracaoInterativo`, que delega a escolha a quem opera. Quando o clube decidir um mecanismo automático, basta escrever outro adapter e trocá-lo no composition root. |

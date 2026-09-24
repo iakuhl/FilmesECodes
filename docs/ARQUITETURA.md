@@ -3,28 +3,31 @@
 ## Estilo arquitetural
 
 O projeto adota **Arquitetura Hexagonal (Ports & Adapters)**, também
-descrita como uma variante de Clean Architecture. A motivação é direta a
-partir das decisões já tomadas para esta fase:
+descrita como uma variante de Clean Architecture. A motivação original
+foi poder construir o núcleo antes de duas decisões que ainda estavam em
+aberto: qual seria a **interface** do sistema (CLI, API, web) e qual
+seria a **persistência** concreta.
 
-- A **interface** do sistema (CLI, API, web) ainda não foi decidida.
-- A **persistência** concreta (SQLite, arquivos, outro banco) ainda não
-  foi decidida.
+Para que essas decisões pudessem esperar sem bloquear o desenvolvimento
+do domínio, o núcleo (entidades e regras de negócio) precisava ser
+completamente independente de ambas — o que se consegue isolando-o detrás
+de contratos (**ports**) e empurrando toda decisão concreta para
+implementações plugáveis (**adapters**) escritas depois, sem tocar no
+núcleo.
 
-Para que essas duas decisões possam continuar em aberto sem bloquear o
-desenvolvimento do domínio, o núcleo do sistema (entidades e regras de
-negócio) precisa ser completamente independente de ambas. Isso só é
-possível isolando o núcleo detrás de contratos (**ports**) e empurrando
-toda decisão concreta para implementações plugáveis (**adapters**) que
-são escritas depois, sem tocar no núcleo.
+A aposta se confirmou: as duas decisões foram tomadas depois (SQLite na
+Fase 2, CLI na Fase 3) e nenhuma delas exigiu uma única alteração em
+`domain/` ou `application/`. Uma terceira continua em aberto — o critério
+de apuração do Óscar — e segue viável exatamente pelo mesmo mecanismo.
 
 ## Camadas
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  Adapters (futuro)                                       │
-│  - Interfaces: CLI / API / Web                            │
-│  - Persistência: SQLite / JSON / outro                    │
-│  - Serviços externos: provedor de dados de filmes, etc.   │
+│  Adapters                                                 │
+│  - Interfaces: CLI (Typer) ✅ | API / Web (futuro)         │
+│  - Persistência: SQLite + SQLAlchemy Core ✅               │
+│  - Serviços: relógio ✅, sorteador ✅, critério do Óscar ✅ │
 └───────────────────────┬───────────────────────────────────┘
                          │ implementam
 ┌───────────────────────▼───────────────────────────────────┐
@@ -74,7 +77,7 @@ fora:
   `SorteioRepository`, `SessaoRepository`, `AvaliacaoRepository`,
   `TemporadaOscarRepository`, `CategoriaOscarRepository`,
   `NomeacaoOscarRepository`, `TrofeuRepository`): contratos de
-  persistência, sem implementação concreta nesta fase. `Clube` tem seu
+  persistência, implementados na Fase 2. `Clube` tem seu
   próprio repositório porque `Membro`, `Rodada` e `TemporadaOscar` se
   referenciam a ele por `clube_id`, não por composição direta (ver
   [DOMINIO.md](DOMINIO.md)).
@@ -90,7 +93,7 @@ fora:
 
 ### Adapters
 
-Implementações concretas dos ports. Duas categorias já existem (Fase 2):
+Implementações concretas dos ports. Três categorias existem:
 
 - **Persistência** (`adapters/persistence/sqlite/`): um repositório
   SQLite por entidade, implementado com **SQLAlchemy Core** (tabelas
@@ -103,10 +106,28 @@ Implementações concretas dos ports. Duas categorias já existem (Fase 2):
   entidade e linha de tabela (funções `_para_linha`/`_para_entidade`).
 - **Serviços de infraestrutura** (`adapters/servicos/`):
   implementações reais de `RelogioService` e `SorteadorService`.
+- **Interface** (`adapters/interfaces/cli/`): a CLI em Typer (Fase 3 —
+  ver [CLI.md](CLI.md)). Traduz argumentos de terminal em chamadas aos
+  casos de uso e formata o resultado. Inclui também uma implementação de
+  `CriterioApuracaoOscar` (`CriterioApuracaoInterativo`), que pergunta ao
+  usuário quem venceu a categoria: como o mecanismo de apuração continua
+  em aberto no produto, a resposta mais honesta é delegá-la a quem opera,
+  e o port existe exatamente para permitir isso sem contaminar o domínio.
 
-Uma terceira categoria ainda não existe: **interface** (ex.: um comando
-de CLI que chama um caso de uso), planejada para a Fase 3 (ver
-[ROADMAP.md](ROADMAP.md) e o README para o plano detalhado).
+#### Composition root
+
+`adapters/interfaces/cli/contexto.py` é o **composition root** do
+sistema: o único módulo que conhece, ao mesmo tempo, todos os ports e
+todas as suas implementações concretas. É onde a decisão "SQLite" e a
+decisão "relógio do sistema" são efetivamente tomadas. Todo o resto do
+código — domínio, casos de uso e até os próprios comandos — enxerga
+apenas contratos.
+
+Uma consequência prática e deliberada: os repositórios são anotados ali
+com o tipo do *port*, não com o da classe concreta. Assim o `mypy` checa,
+naquele ponto de montagem, que cada adapter realmente satisfaz o
+`Protocol` que diz implementar — a verificação estrutural que justifica a
+decisão nº 4 da tabela abaixo.
 
 ## Registro de decisões arquiteturais (ADR resumido)
 
@@ -114,10 +135,12 @@ de CLI que chama um caso de uso), planejada para a Fase 3 (ver
 |---|---------|--------|----------------|
 | 1 | Arquitetura Hexagonal (Ports & Adapters) | Adotada | Permite deixar persistência e interface indefinidas sem bloquear o domínio. |
 | 2 | Persistência via padrão Repository, concretizada com **SQLite + SQLAlchemy Core** | Adotada (Fase 2) | Banco leve, embutido em arquivo, sem servidor externo; Core (não ORM) preserva o encapsulamento das entidades. |
-| 3 | Interface de usuário: **CLI com Typer** | Decidida, não implementada (Fase 3) | Simplicidade de implementação, sem infraestrutura extra; `typer` já está em `pyproject.toml`. |
+| 3 | Interface de usuário: **CLI com Typer** | Adotada (Fase 3) | Simplicidade de implementação, sem infraestrutura extra. Ver [CLI.md](CLI.md). |
 | 4 | Contratos via `typing.Protocol` (ou `abc.ABC` quando fizer sentido) | Adotada | Contratos explícitos e verificáveis por type checking (`mypy`), sem herança forçada. |
 | 5 | Injeção de dependência manual (sem framework de DI) | Adotada | Projeto pequeno; um container de DI seria complexidade prematura nesta fase. |
 | 6 | `Clube` como entidade de primeira classe, com configurações | Adotada | Viabiliza evolução para suportar múltiplos clubes em uma versão comercial futura, sem redesenhar o domínio. |
+| 7 | Listagens de leitura da interface vão direto ao repositório, sem caso de uso | Adotada (Fase 3) | Um caso de uso que só repassa uma chamada de repositório não acrescenta regra nenhuma — seria indireção vazia. Ações que mudam estado, essas sim, passam obrigatoriamente por um caso de uso. |
+| 8 | Composition root único, em `adapters/interfaces/cli/contexto.py` | Adotada (Fase 3) | Concentra em um lugar toda a amarração port↔implementação, e transforma a checagem de tipos nesse ponto em verificação de conformidade dos adapters. |
 
 ## Princípios de orientação a objetos aplicados
 

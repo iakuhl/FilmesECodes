@@ -2,11 +2,9 @@
 
 Este documento descreve a estrutura de pastas do projeto, alinhada com a
 arquitetura definida em [ARQUITETURA.md](ARQUITETURA.md).
-`domain/`, `application/` (Fase 1) e `adapters/persistence/` +
-`adapters/servicos/` (Fase 2, persistência SQLite) já existem e estão
-implementados e testados. `adapters/interfaces/` (Fase 3, CLI) **ainda
-não existe** — ver [ROADMAP.md](ROADMAP.md) e a seção "Como continuar a
-Fase 3" do [README.md](../README.md).
+Todas as camadas previstas até a Fase 3 existem e estão implementadas e
+testadas: `domain/` e `application/` (Fase 1), `adapters/persistence/` e
+`adapters/servicos/` (Fase 2) e `adapters/interfaces/cli/` (Fase 3).
 
 ## Árvore de diretórios
 
@@ -18,6 +16,7 @@ FilmesECodes/
 │   ├── DOMINIO.md
 │   ├── CASOS_DE_USO.md
 │   ├── ESTRUTURA_PROJETO.md
+│   ├── CLI.md
 │   ├── ROADMAP.md
 │   └── GLOSSARIO.md
 ├── pyproject.toml                     # gerenciado via uv
@@ -36,8 +35,17 @@ FilmesECodes/
 │           ├── persistence/
 │           │   └── sqlite/            # ✅ Fase 2: esquema, engine, 12 repositórios
 │           ├── servicos/              # ✅ Fase 2: RelogioSistema, SorteadorAleatorio
-│           └── interfaces/            # ⏳ Fase 3: CLI — AINDA NÃO EXISTE
-│               └── cli/               # (a criar: main.py, comandos_*.py, ...)
+│           └── interfaces/            # ✅ Fase 3: interface de usuário
+│               └── cli/
+│                   ├── main.py        # app Typer raiz; monta os grupos de comando
+│                   ├── contexto.py    # composition root: engine -> repos -> casos de uso
+│                   ├── erros.py       # CliError + tradução de erros para stderr/exit 1
+│                   ├── resolucao.py   # clube/rodada/temporada "correntes" quando omitidos
+│                   ├── conversores.py # texto da linha de comando -> tipos do domínio
+│                   ├── apresentacao.py            # tabelas e mensagens
+│                   ├── criterio_apuracao_interativo.py  # CriterioApuracaoOscar via prompt
+│                   └── comandos/      # um módulo por grupo: clube, membro, filme,
+│                                      # rodada, indicacao, sessao, avaliacao, oscar
 └── tests/
     ├── conftest.py
     ├── domain/
@@ -47,8 +55,11 @@ FilmesECodes/
     │   ├── fakes/                     # implementações in-memory dos ports
     │   └── use_cases/
     └── adapters/
-        └── persistence/
-            └── sqlite/                # testes de integração, um arquivo por repositório
+        ├── persistence/
+        │   └── sqlite/                # testes de integração, um arquivo por repositório
+        └── interfaces/
+            └── cli/                   # CLI real contra SQLite temporário, um arquivo
+                                       # por grupo de comandos + fluxo de ponta a ponta
 ```
 
 ## Responsabilidade de cada pasta
@@ -61,22 +72,27 @@ FilmesECodes/
   arquivo/módulo (ver [CASOS_DE_USO.md](CASOS_DE_USO.md)), recebendo os
   ports de que precisa via injeção de dependência manual (construtor).
 - **`src/filmes_e_cubos/application/ports/`**: contratos (`Protocol`/ABC)
-  que os casos de uso declaram precisar — sem nenhuma implementação
-  concreta nesta fase.
+  que os casos de uso declaram precisar. Quem implementa cada um mora em
+  `adapters/` — e o único ponto que amarra contrato a implementação é o
+  composition root da CLI.
 - **`src/filmes_e_cubos/adapters/persistence/sqlite/`**: implementações
   concretas dos ports de repositório usando SQLAlchemy Core + SQLite (ver
   [ARQUITETURA.md](ARQUITETURA.md) para o racional de Core vs. ORM).
 - **`src/filmes_e_cubos/adapters/servicos/`**: implementações concretas
   de `RelogioService` e `SorteadorService` usando o relógio e o gerador
   aleatório reais do sistema.
-- **`src/filmes_e_cubos/adapters/interfaces/`**: reservado para a
-  interface de usuário (CLI na Fase 3). Ainda não existe.
+- **`src/filmes_e_cubos/adapters/interfaces/cli/`**: a interface de
+  linha de comando (ver [CLI.md](CLI.md)). Traduz argumentos de terminal
+  em chamadas aos casos de uso e formata o resultado — nenhuma regra de
+  negócio mora aqui. `contexto.py` é o composition root: o único ponto do
+  projeto que conhece ports e implementações concretas ao mesmo tempo.
 - **`tests/`**: espelha a estrutura de `src/`, com testes de domínio
   (regras de negócio isoladas), de aplicação (casos de uso com
-  implementações de teste/fake dos ports) e de adapters (persistência
-  testada de ponta a ponta contra um SQLite real, não fakes).
+  implementações de teste/fake dos ports) e de adapters — estes sempre
+  contra o componente real: a persistência contra um SQLite de verdade e
+  a CLI contra o app Typer de verdade, nunca contra fakes.
 
-## Ferramentas e convenções previstas
+## Ferramentas e convenções
 
 | Ferramenta | Uso |
 |---|---|
@@ -85,7 +101,7 @@ FilmesECodes/
 | `ruff` | Lint e formatação (substitui flake8/black/isort). |
 | `mypy` | Verificação estática de tipos — importante para validar os contratos (`Protocol`) entre camadas. |
 | `sqlalchemy` (Core) | Persistência SQLite na Fase 2 — tabelas explícitas, sem ORM declarativo. |
-| `typer` | Framework de CLI para a Fase 3 (dependência já adicionada; uso ainda pendente). |
+| `typer` | Framework da CLI (Fase 3), com o entry point `filmes-e-cubos`. |
 
 ### Convenções de nomenclatura
 
@@ -93,16 +109,18 @@ FilmesECodes/
   nomeados em **português**, fiéis à linguagem que o clube já usa
   (`Membro`, `Rodada`, `Sorteio`, `Trofeu`) — mantém o código próximo da
   linguagem ubíqua do domínio.
-- Termos puramente técnicos e genéricos (nomes de módulos padrão,
-  utilitários de infraestrutura) podem seguir convenções em inglês quando
-  isso for mais natural no ecossistema Python (ex.: nomes de exceções
-  base, utilitários internos). Esta convivência será refinada quando o
-  código começar a ser escrito.
+- Termos puramente técnicos e genéricos seguem convenções em inglês
+  quando isso é mais natural no ecossistema Python: os ports levam o
+  sufixo `Repository`/`Service`, e as exceções base são `DomainError` e
+  `CliError` (o sufixo `Error` é exigido pela regra N818 do `ruff`, que o
+  projeto adota). As exceções específicas, porém, continuam em português:
+  `RodadaJaAbertaError`, `NotaForaDaEscalaError`.
 - Um caso de uso = um verbo no infinitivo + objeto (`IndicarFilme`,
   `RealizarSorteio`), espelhando a lista em
   [CASOS_DE_USO.md](CASOS_DE_USO.md).
 
 ## O que fica para depois
 
-- Implementação da CLI (Fase 3) — ver "Como continuar a Fase 3" no
-  [README.md](../README.md).
+- Adapter de API/web (Fase 4) entraria como
+  `adapters/interfaces/api/`, ao lado de `cli/`, reaproveitando os mesmos
+  casos de uso — ver [ROADMAP.md](ROADMAP.md).
