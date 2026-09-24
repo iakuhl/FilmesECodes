@@ -4,11 +4,15 @@ from pathlib import Path
 
 from sqlalchemy import Engine, create_engine
 
-from filmes_e_cubos.adapters.persistence.sqlite.esquema import metadata
+from filmes_e_cubos.adapters.persistence.sqlite.migracao import migrar
 
 
 def criar_engine(caminho_banco: str | Path) -> Engine:
-    """Cria o engine apontando para `caminho_banco` e garante que as tabelas existam."""
+    """Cria o engine apontando para `caminho_banco` e leva o esquema à versão atual.
+
+    Um arquivo novo ganha todas as tabelas; um banco existente recebe só as
+    migrações que ainda não tinha (ver `migracao.py`).
+    """
     engine = create_engine(f"sqlite:///{caminho_banco}")
-    metadata.create_all(engine)
+    migrar(engine)
     return engine

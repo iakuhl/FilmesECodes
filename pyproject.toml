@@ -5,7 +5,11 @@ description = "Software de gestão para o clube de cinema Filmes e Cubos."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "alembic>=1.13",
     "fastapi>=0.141",
+    "itsdangerous>=2.2",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.9",
     "sqlalchemy>=2.0",
     "typer>=0.12",
     "uvicorn>=0.30",
@@ -21,6 +25,7 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
     "httpx2>=2.13",
+    "beautifulsoup4>=4.12",
 ]
 
 [build-system]
