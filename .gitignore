@@ -8,3 +8,6 @@ dist/
 build/
 *.egg-info/
 uv.lock.bak
+
+# Estado local de sessão do Claude Code (não é conteúdo do projeto)
+.claude/
