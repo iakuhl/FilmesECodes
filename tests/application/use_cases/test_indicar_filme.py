@@ -8,6 +8,7 @@ import pytest
 from filmes_e_cubos.application.use_cases.indicar_filme import IndicarFilme
 from filmes_e_cubos.domain.entities.clube import Clube
 from filmes_e_cubos.domain.entities.filme import Filme
+from filmes_e_cubos.domain.entities.indicacao import Indicacao
 from filmes_e_cubos.domain.entities.membro import Membro
 from filmes_e_cubos.domain.entities.rodada import Rodada
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
@@ -30,6 +31,7 @@ def _montar_caso_de_uso() -> tuple[
     MembroRepositorioFake,
     FilmeRepositorioFake,
     RodadaRepositorioFake,
+    IndicacaoRepositorioFake,
 ]:
     clubes = ClubeRepositorioFake()
     membros = MembroRepositorioFake()
@@ -39,11 +41,11 @@ def _montar_caso_de_uso() -> tuple[
     caso_de_uso = IndicarFilme(
         indicacoes, rodadas, membros, filmes, clubes, RelogioFake(datetime(2024, 1, 7))
     )
-    return caso_de_uso, clubes, membros, filmes, rodadas
+    return caso_de_uso, clubes, membros, filmes, rodadas, indicacoes
 
 
 def test_indicar_filme_com_sucesso(clube: Clube) -> None:
-    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    caso_de_uso, clubes, membros, filmes, rodadas, _indicacoes = _montar_caso_de_uso()
     clubes.salvar(clube)
     membro = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
     membros.salvar(membro)
@@ -59,7 +61,7 @@ def test_indicar_filme_com_sucesso(clube: Clube) -> None:
 
 
 def test_indicar_filme_em_rodada_encerrada_levanta_erro(clube: Clube) -> None:
-    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    caso_de_uso, clubes, membros, filmes, rodadas, _indicacoes = _montar_caso_de_uso()
     clubes.salvar(clube)
     membro = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
     membros.salvar(membro)
@@ -74,7 +76,7 @@ def test_indicar_filme_em_rodada_encerrada_levanta_erro(clube: Clube) -> None:
 
 
 def test_indicar_filme_com_membro_inativo_levanta_erro(clube: Clube) -> None:
-    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    caso_de_uso, clubes, membros, filmes, rodadas, _indicacoes = _montar_caso_de_uso()
     clubes.salvar(clube)
     membro = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
     membro.desativar()
@@ -89,7 +91,7 @@ def test_indicar_filme_com_membro_inativo_levanta_erro(clube: Clube) -> None:
 
 
 def test_indicar_filme_inexistente_levanta_erro(clube: Clube) -> None:
-    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    caso_de_uso, clubes, membros, filmes, rodadas, _indicacoes = _montar_caso_de_uso()
     clubes.salvar(clube)
     membro = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
     membros.salvar(membro)
@@ -101,7 +103,7 @@ def test_indicar_filme_inexistente_levanta_erro(clube: Clube) -> None:
 
 
 def test_mesmo_membro_indicar_duas_vezes_na_mesma_rodada_levanta_erro(clube: Clube) -> None:
-    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    caso_de_uso, clubes, membros, filmes, rodadas, _indicacoes = _montar_caso_de_uso()
     clubes.salvar(clube)
     membro = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
     membros.salvar(membro)
@@ -118,7 +120,7 @@ def test_mesmo_membro_indicar_duas_vezes_na_mesma_rodada_levanta_erro(clube: Clu
 
 
 def test_indicar_filme_alem_do_tamanho_da_rodada_levanta_erro() -> None:
-    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    caso_de_uso, clubes, membros, filmes, rodadas, _indicacoes = _montar_caso_de_uso()
     clube = Clube.criar(
         nome="Clube pequeno",
         configuracao=ConfiguracaoClube(
@@ -140,3 +142,34 @@ def test_indicar_filme_alem_do_tamanho_da_rodada_levanta_erro() -> None:
 
     with pytest.raises(RodadaLotadaError):
         caso_de_uso.executar(rodada_id=rodada.id, membro_id=membro_2.id, filme_id=filme_2.id)
+
+
+def test_indicacao_democracia_nao_conta_na_cota_nem_bloqueia_membro(clube: Clube) -> None:
+    """Uma indicação DEMOCRACIA é extra: não ocupa a cota nem impede que o
+    mesmo membro indique normalmente na mesma rodada."""
+    caso_de_uso, clubes, membros, filmes, rodadas, indicacoes = _montar_caso_de_uso()
+    clube_pequeno = Clube.criar(
+        nome="Clube pequeno",
+        configuracao=ConfiguracaoClube(
+            tamanho_rodada=1, escala_avaliacao=ConfiguracaoClube.padrao().escala_avaliacao
+        ),
+    )
+    clubes.salvar(clube_pequeno)
+    membro = Membro.criar(clube_id=clube_pequeno.id, nome="Ana", data_ingresso=date(2024, 1, 1))
+    membros.salvar(membro)
+    filme_normal = Filme.criar(titulo="Duna")
+    filme_democracia = Filme.criar(titulo="Arrival")
+    filmes.salvar(filme_normal)
+    filmes.salvar(filme_democracia)
+    rodada = Rodada.abrir(clube_id=clube_pequeno.id, numero=1, data_inicio=date(2024, 1, 1))
+    rodadas.salvar(rodada)
+    indicacao_democracia = Indicacao.criar_democracia(
+        rodada_id=rodada.id, filme_id=filme_democracia.id, data_indicacao=date(2024, 1, 2)
+    )
+    indicacoes.salvar(indicacao_democracia)
+
+    indicacao = caso_de_uso.executar(
+        rodada_id=rodada.id, membro_id=membro.id, filme_id=filme_normal.id
+    )
+
+    assert indicacao.membro_id == membro.id

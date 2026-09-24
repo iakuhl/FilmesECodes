@@ -9,6 +9,7 @@ from filmes_e_cubos.domain.entities.indicacao import Indicacao
 from filmes_e_cubos.domain.exceptions.indicacao import TransicaoDeStatusInvalidaError
 from filmes_e_cubos.domain.value_objects.identificadores import FilmeId, MembroId, RodadaId
 from filmes_e_cubos.domain.value_objects.status import StatusIndicacao
+from filmes_e_cubos.domain.value_objects.tipo_indicacao import TipoIndicacao
 
 
 def _criar_indicacao() -> Indicacao:
@@ -51,8 +52,35 @@ def test_marcar_assistida_a_partir_de_sorteada() -> None:
     assert indicacao.status is StatusIndicacao.ASSISTIDA
 
 
-def test_marcar_assistida_sem_ter_sido_sorteada_levanta_erro() -> None:
+def test_marcar_assistida_diretamente_a_partir_de_pendente() -> None:
+    """O sorteio é opcional: a indicação pode ser assistida sem passar por ele."""
     indicacao = _criar_indicacao()
+
+    indicacao.marcar_assistida()
+
+    assert indicacao.status is StatusIndicacao.ASSISTIDA
+
+
+def test_marcar_assistida_ja_assistida_levanta_erro() -> None:
+    indicacao = _criar_indicacao()
+    indicacao.marcar_assistida()
 
     with pytest.raises(TransicaoDeStatusInvalidaError):
         indicacao.marcar_assistida()
+
+
+def test_criar_democracia_nasce_sem_membro_e_tipo_democracia() -> None:
+    indicacao = Indicacao.criar_democracia(
+        rodada_id=RodadaId(uuid4()), filme_id=FilmeId(uuid4()), data_indicacao=date(2024, 1, 1)
+    )
+
+    assert indicacao.membro_id is None
+    assert indicacao.tipo is TipoIndicacao.DEMOCRACIA
+    assert indicacao.status is StatusIndicacao.PENDENTE
+
+
+def test_indicacao_normal_nasce_com_tipo_normal() -> None:
+    indicacao = _criar_indicacao()
+
+    assert indicacao.tipo is TipoIndicacao.NORMAL
+    assert indicacao.membro_id is not None

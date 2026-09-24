@@ -18,6 +18,9 @@ class NomeacaoOscar:
     `indicado_por_membro_id` é herdado da `Indicacao` semanal original do
     filme (ver caso de uso `IndicarFilmeParaCategoria`) — é essa
     rastreabilidade que permite entregar o troféu a quem indicou o filme.
+    Fica `None` quando o filme veio de uma indicação DEMOCRACIA (sem
+    indicador individual); nesse caso, quem recebe o troféu é decidido
+    pelo grupo no momento da apuração (ver `ApurarCategoriaOscar`).
     """
 
     def __init__(
@@ -26,7 +29,7 @@ class NomeacaoOscar:
         id: NomeacaoOscarId,
         categoria_id: CategoriaOscarId,
         filme_id: FilmeId,
-        indicado_por_membro_id: MembroId,
+        indicado_por_membro_id: MembroId | None,
     ) -> None:
         self._id = id
         self._categoria_id = categoria_id
@@ -39,7 +42,7 @@ class NomeacaoOscar:
         *,
         categoria_id: CategoriaOscarId,
         filme_id: FilmeId,
-        indicado_por_membro_id: MembroId,
+        indicado_por_membro_id: MembroId | None,
     ) -> NomeacaoOscar:
         return cls(
             id=NomeacaoOscarId(uuid4()),
@@ -61,5 +64,5 @@ class NomeacaoOscar:
         return self._filme_id
 
     @property
-    def indicado_por_membro_id(self) -> MembroId:
+    def indicado_por_membro_id(self) -> MembroId | None:
         return self._indicado_por_membro_id

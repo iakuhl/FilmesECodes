@@ -14,7 +14,9 @@ from filmes_e_cubos.domain.value_objects.nota import Nota
 
 
 class AvaliarFilme:
-    """Registra a nota (e comentário opcional) de um membro para uma sessão."""
+    """Registra o resultado de um membro para uma sessão: uma nota, ou,
+    sem `nota`, o registro de que o membro cochilou (`DORMINHOCO`).
+    """
 
     def __init__(
         self,
@@ -34,7 +36,7 @@ class AvaliarFilme:
         sessao_id: SessaoExibicaoId,
         membro_id: MembroId,
         clube_id: ClubeId,
-        nota: Nota,
+        nota: Nota | None = None,
         comentario: str | None = None,
     ) -> Avaliacao:
         if self._sessoes.buscar_por_id(sessao_id) is None:

@@ -11,10 +11,13 @@ from filmes_e_cubos.domain.value_objects.identificadores import (
     SessaoExibicaoId,
 )
 from filmes_e_cubos.domain.value_objects.nota import Nota
+from filmes_e_cubos.domain.value_objects.status_avaliacao import StatusAvaliacao
 
 
 class Avaliacao:
-    """A nota (e comentário opcional) que um membro dá a uma sessão assistida."""
+    """A nota (e comentário opcional) que um membro dá a uma sessão assistida,
+    ou o registro de que o membro cochilou e não tem nota a dar (`DORMINHOCO`).
+    """
 
     def __init__(
         self,
@@ -22,12 +25,14 @@ class Avaliacao:
         id: AvaliacaoId,
         sessao_id: SessaoExibicaoId,
         membro_id: MembroId,
-        nota: Nota,
+        status: StatusAvaliacao,
+        nota: Nota | None = None,
         comentario: str | None = None,
     ) -> None:
         self._id = id
         self._sessao_id = sessao_id
         self._membro_id = membro_id
+        self._status = status
         self._nota = nota
         self._comentario = comentario
 
@@ -37,16 +42,30 @@ class Avaliacao:
         *,
         sessao_id: SessaoExibicaoId,
         membro_id: MembroId,
-        nota: Nota,
         escala: EscalaAvaliacao,
+        nota: Nota | None = None,
         comentario: str | None = None,
     ) -> Avaliacao:
-        """Cria uma avaliação, validando a nota contra a escala informada."""
+        """Cria uma avaliação. Sem `nota` (`None`), o membro cochilou e o
+        status vira `DORMINHOCO`; com `nota`, ela é validada contra a
+        escala informada e o status vira `NOTA_REGISTRADA`. Por construção,
+        não existe forma de haver um status inconsistente com o valor de
+        `nota`.
+        """
+        if nota is None:
+            return cls(
+                id=AvaliacaoId(uuid4()),
+                sessao_id=sessao_id,
+                membro_id=membro_id,
+                status=StatusAvaliacao.DORMINHOCO,
+                comentario=comentario,
+            )
         escala.validar(nota)
         return cls(
             id=AvaliacaoId(uuid4()),
             sessao_id=sessao_id,
             membro_id=membro_id,
+            status=StatusAvaliacao.NOTA_REGISTRADA,
             nota=nota,
             comentario=comentario,
         )
@@ -64,7 +83,11 @@ class Avaliacao:
         return self._membro_id
 
     @property
-    def nota(self) -> Nota:
+    def status(self) -> StatusAvaliacao:
+        return self._status
+
+    @property
+    def nota(self) -> Nota | None:
         return self._nota
 
     @property

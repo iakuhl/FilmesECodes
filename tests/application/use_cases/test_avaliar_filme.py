@@ -15,6 +15,7 @@ from filmes_e_cubos.domain.exceptions.avaliacao import (
 )
 from filmes_e_cubos.domain.value_objects.identificadores import IndicacaoId
 from filmes_e_cubos.domain.value_objects.nota import Nota
+from filmes_e_cubos.domain.value_objects.status_avaliacao import StatusAvaliacao
 from tests.application.fakes.avaliacao_repositorio_fake import AvaliacaoRepositorioFake
 from tests.application.fakes.clube_repositorio_fake import ClubeRepositorioFake
 from tests.application.fakes.membro_repositorio_fake import MembroRepositorioFake
@@ -66,6 +67,15 @@ def test_avaliar_filme_com_nota_fora_da_escala_levanta_erro(clube: Clube) -> Non
         caso_de_uso.executar(
             sessao_id=sessao.id, membro_id=membro.id, clube_id=clube.id, nota=Nota.criar("5.3")
         )
+
+
+def test_avaliar_filme_sem_nota_registra_dorminhoco(clube: Clube) -> None:
+    caso_de_uso, _, _, _, _, membro, sessao = _preparar(clube)
+
+    avaliacao = caso_de_uso.executar(sessao_id=sessao.id, membro_id=membro.id, clube_id=clube.id)
+
+    assert avaliacao.status is StatusAvaliacao.DORMINHOCO
+    assert avaliacao.nota is None
 
 
 def test_mesmo_membro_avaliar_a_mesma_sessao_duas_vezes_levanta_erro(clube: Clube) -> None:

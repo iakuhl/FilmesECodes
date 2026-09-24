@@ -69,8 +69,8 @@ Um filme indicado e potencialmente assistido pelo clube.
 ### Rodada
 
 Um ciclo de indicações: começa quando os membros ativos começam a indicar
-filmes e termina quando todas as indicações da rodada tiverem sido
-sorteadas e assistidas.
+filmes e termina quando todas as indicações da rodada (normais e
+DEMOCRACIA) tiverem sido assistidas.
 
 - `id`
 - `clube_id`
@@ -83,24 +83,34 @@ sorteadas e assistidas.
 
 ### Indicacao
 
-O filme que um membro indicou para uma rodada específica.
+O filme que um membro indicou para uma rodada específica — ou que o
+grupo escolheu assistir como sessão extra (indicação DEMOCRACIA).
 
 - `id`
 - `rodada_id`
-- `membro_id`: quem indicou.
+- `membro_id`: quem indicou. **Ausente** (`None`) para indicações do
+  tipo `democracia`, que não têm um indicador individual.
 - `filme_id`
-- `status`: `pendente` (aguardando sorteio), `sorteada` (aguardando
-  sessão) ou `assistida`.
+- `tipo`: `normal` (indicação semanal de um membro) ou `democracia`
+  (sessão extra, escolhida em grupo — ver regra 7 abaixo).
+- `status`: `pendente` (aguardando ser assistida), `sorteada`
+  (passou pelo sorteio, opcional, e aguarda sessão) ou `assistida`.
 - `data_indicacao`
 
-**Invariante**: cada membro ativo indica no máximo um filme por rodada
-(o número de indicações de uma rodada é limitado pelo
-`tamanho_rodada` configurado no `Clube`).
+**Invariantes**:
+- cada membro ativo indica no máximo uma indicação `normal` por rodada
+  (o número de indicações `normal` de uma rodada é limitado pelo
+  `tamanho_rodada` configurado no `Clube`; indicações `democracia` ficam
+  de fora dessa contagem);
+- uma indicação vai de `pendente` direto para `assistida`, ou passa por
+  `sorteada` no meio — o sorteio é uma etapa opcional de apoio, não
+  obrigatória (ver regra 2 abaixo).
 
 ### Sorteio
 
 Registro de qual `Indicacao` foi sorteada para a sessão da semana, dentre
-as indicações ainda `pendente` da rodada corrente.
+as indicações ainda `pendente` da rodada corrente. Ferramenta opcional de
+apoio: nem toda indicação passa por um sorteio antes de ser assistida.
 
 - `id`
 - `rodada_id`
@@ -115,7 +125,8 @@ status `pendente`.
 
 ### SessaoExibicao
 
-A sessão em que o clube efetivamente assistiu ao filme sorteado.
+A sessão em que o clube efetivamente assistiu ao filme (indicado
+normalmente ou via DEMOCRACIA).
 
 - `id`
 - `indicacao_id`
@@ -123,21 +134,28 @@ A sessão em que o clube efetivamente assistiu ao filme sorteado.
 - `membros_presentes`: subconjunto dos membros do clube.
 
 **Invariante**: uma sessão só existe para uma indicação com status
-`sorteada`; ao ser criada, a indicação correspondente passa a
-`assistida`.
+`pendente` ou `sorteada`; ao ser criada, a indicação correspondente passa
+a `assistida`.
 
 ### Avaliacao
 
-A nota que um membro dá ao filme assistido em uma sessão.
+O resultado de um membro para uma sessão assistida: uma nota, ou o
+registro de que o membro cochilou.
 
 - `id`
 - `sessao_id`
-- `membro_id`: quem avaliou.
+- `membro_id`: quem avaliou (ou cochilou).
+- `status`: `nota_registrada` ou `dorminhoco`.
 - `nota`: valor entre 0,5 e 5,0, em passos de 0,5 (10 valores possíveis).
+  Presente apenas quando `status` é `nota_registrada`; ausente
+  (`None`) quando `dorminhoco`.
 - `comentario` (opcional).
 
-**Invariante**: um membro avalia uma mesma sessão no máximo uma vez; a
-nota deve respeitar a `escala_avaliacao` configurada no `Clube`.
+**Invariantes**: um membro avalia uma mesma sessão no máximo uma vez
+(dê nota ou fique `dorminhoco`); uma nota informada deve respeitar a
+`escala_avaliacao` configurada no `Clube`; avaliações `dorminhoco` devem
+ser excluídas de qualquer cálculo de média (nenhum cálculo de média está
+implementado ainda — esta é uma regra para quando ele existir).
 
 ### TemporadaOscar
 
@@ -164,15 +182,18 @@ Uma categoria de premiação dentro de uma `TemporadaOscar`.
 
 ### NomeacaoOscar
 
-Um filme concorrendo em uma `CategoriaOscar` de uma temporada — tipicamente
-um filme já assistido pelo clube naquele ano.
+Um filme concorrendo em uma `CategoriaOscar` de uma temporada — um filme
+assistido pelo clube dentro do ano daquela temporada.
 
 - `id`
 - `categoria_id`
 - `filme_id`
 - `indicado_por_membro_id`: **o mesmo membro que originalmente indicou
   esse filme em sua `Indicacao` semanal** — é ele quem receberá o troféu
-  se o filme vencer a categoria.
+  se o filme vencer a categoria. **Ausente** (`None`) quando o filme veio
+  de uma indicação `democracia`, que não tem indicador individual — nesse
+  caso, quem recebe o troféu é decidido pelo grupo no momento da
+  apuração (ver `Trofeu` e regra 7 abaixo).
 
 ### Trofeu
 
@@ -182,26 +203,47 @@ venceu.
 - `id`
 - `categoria_id`
 - `nomeacao_vencedora_id`
-- `membro_vencedor_id`: derivado de `NomeacaoOscar.indicado_por_membro_id`
-  — reforça a regra central de que **o troféu é entregue a quem indicou
-  o filme**, não a quem "atua" tematicamente na categoria.
+- `membro_vencedor_id`: normalmente derivado de
+  `NomeacaoOscar.indicado_por_membro_id` — reforça a regra central de que
+  **o troféu é entregue a quem indicou o filme**, não a quem "atua"
+  tematicamente na categoria. Quando a nomeação vencedora não tem
+  indicador (veio de uma indicação `democracia`), este campo vem de uma
+  escolha manual do grupo, feita no momento da apuração/premiação.
 - `data_apuracao`
 
 ## Regras de negócio centrais (resumo)
 
-1. O tamanho de uma rodada (quantas indicações a compõem) é um parâmetro
-   de configuração do `Clube`, não uma constante do código — hoje vale 5
-   porque há 5 membros ativos, mas o domínio não assume esse número.
-2. Uma rodada avança indicação por indicação: sorteio → sessão → nota; só
-   quando todas as indicações da rodada estiverem `assistida` é que uma
-   nova rodada pode começar.
-3. O sorteio só pode escolher entre indicações `pendente` da rodada
-   corrente — nunca de rodadas já encerradas nem de indicações já
-   sorteadas.
+1. O tamanho de uma rodada (quantas indicações `normal` a compõem) é um
+   parâmetro de configuração do `Clube`, não uma constante do código —
+   hoje vale 5 porque há 5 membros ativos, mas o domínio não assume esse
+   número.
+2. O sorteio é uma etapa **opcional** de apoio, não obrigatória: uma
+   indicação pode ser marcada como assistida diretamente a partir de
+   `pendente` (ex.: o grupo decide pular o sorteio e escolher direto) ou
+   passar por `sorteada` no meio. Só quando todas as indicações da
+   rodada (normais e `democracia`) estiverem `assistida` é que uma nova
+   rodada pode começar.
+3. O sorteio, quando usado, só pode escolher entre indicações `pendente`
+   da rodada corrente — nunca de rodadas já encerradas nem de indicações
+   já sorteadas.
 4. A escala de notas (0,5 a 5,0 em passos de 0,5) é uma configuração do
-   clube, verificada como invariante de `Avaliacao`.
-5. O troféu de uma categoria do Óscar sempre aponta para o membro que
+   clube, verificada como invariante de `Avaliacao` quando uma nota é
+   informada. Uma avaliação sem nota vira `dorminhoco` e é ignorada em
+   qualquer cálculo de média.
+5. O troféu de uma categoria do Óscar aponta para o membro que
    originalmente indicou o filme vencedor no clube — é essa rastreabilidade
-   entre `Indicacao` e `NomeacaoOscar` que torna a apuração possível.
+   entre `Indicacao` e `NomeacaoOscar` que torna a apuração possível. Para
+   filmes indicados via `democracia` (sem indicador individual), o
+   membro do troféu é escolhido pelo grupo no momento da apuração.
 6. Categorias do Óscar podem ser fixas (recorrentes) ou variáveis
    (definidas a cada edição); ambas convivem na mesma `TemporadaOscar`.
+7. Uma indicação `democracia` é uma sessão **extra**, não uma
+   substituição da indicação normal da semana: acontece quando a sessão
+   programada precisa ser adiada por imprevisto, e o clube assiste a um
+   filme escolhido em grupo. Não conta na cota da rodada, não exige um
+   membro indicador, e o filme concorre ao Óscar normalmente (desde que
+   assistido dentro do ano da temporada).
+8. Uma categoria do Óscar só aceita nomear filmes assistidos pelo clube
+   **dentro do ano da temporada em questão** — um filme assistido em
+   outro ano não pode concorrer, mesmo que já tenha sido assistido
+   alguma vez.

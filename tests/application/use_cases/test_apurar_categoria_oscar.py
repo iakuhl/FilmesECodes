@@ -9,7 +9,10 @@ from filmes_e_cubos.application.use_cases.apurar_categoria_oscar import ApurarCa
 from filmes_e_cubos.domain.entities.categoria_oscar import CategoriaOscar
 from filmes_e_cubos.domain.entities.nomeacao_oscar import NomeacaoOscar
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
-from filmes_e_cubos.domain.exceptions.oscar import CategoriaJaApuradaError
+from filmes_e_cubos.domain.exceptions.oscar import (
+    CategoriaJaApuradaError,
+    VencedorDemocraciaNaoInformadoError,
+)
 from filmes_e_cubos.domain.value_objects.identificadores import (
     CategoriaOscarId,
     FilmeId,
@@ -80,6 +83,61 @@ def test_apurar_categoria_ja_apurada_levanta_erro() -> None:
     caso_de_uso.executar(categoria_id=categoria.id)
 
     with pytest.raises(CategoriaJaApuradaError):
+        caso_de_uso.executar(categoria_id=categoria.id)
+
+
+def test_apurar_categoria_democracia_usa_vencedor_manual_informado() -> None:
+    categorias = CategoriaOscarRepositorioFake()
+    categoria = CategoriaOscar.criar(
+        temporada_id=TemporadaOscarId(uuid4()),
+        nome="Melhor veículo",
+        tipo=TipoCategoriaOscar.VARIAVEL,
+    )
+    categorias.salvar(categoria)
+    nomeacoes = NomeacaoOscarRepositorioFake()
+    nomeacao_democracia = NomeacaoOscar.criar(
+        categoria_id=categoria.id, filme_id=FilmeId(uuid4()), indicado_por_membro_id=None
+    )
+    nomeacoes.salvar(nomeacao_democracia)
+    trofeus = TrofeuRepositorioFake()
+    membro_escolhido_pelo_grupo = MembroId(uuid4())
+    caso_de_uso = ApurarCategoriaOscar(
+        trofeus,
+        nomeacoes,
+        categorias,
+        CriterioApuracaoFake(vencedora_id=nomeacao_democracia.id),
+        RelogioFake(datetime(2024, 12, 20)),
+    )
+
+    trofeu = caso_de_uso.executar(
+        categoria_id=categoria.id, membro_vencedor_manual_id=membro_escolhido_pelo_grupo
+    )
+
+    assert trofeu.membro_vencedor_id == membro_escolhido_pelo_grupo
+
+
+def test_apurar_categoria_democracia_sem_vencedor_manual_levanta_erro() -> None:
+    categorias = CategoriaOscarRepositorioFake()
+    categoria = CategoriaOscar.criar(
+        temporada_id=TemporadaOscarId(uuid4()),
+        nome="Melhor veículo",
+        tipo=TipoCategoriaOscar.VARIAVEL,
+    )
+    categorias.salvar(categoria)
+    nomeacoes = NomeacaoOscarRepositorioFake()
+    nomeacao_democracia = NomeacaoOscar.criar(
+        categoria_id=categoria.id, filme_id=FilmeId(uuid4()), indicado_por_membro_id=None
+    )
+    nomeacoes.salvar(nomeacao_democracia)
+    caso_de_uso = ApurarCategoriaOscar(
+        TrofeuRepositorioFake(),
+        nomeacoes,
+        categorias,
+        CriterioApuracaoFake(vencedora_id=nomeacao_democracia.id),
+        RelogioFake(datetime(2024, 12, 20)),
+    )
+
+    with pytest.raises(VencedorDemocraciaNaoInformadoError):
         caso_de_uso.executar(categoria_id=categoria.id)
 
 

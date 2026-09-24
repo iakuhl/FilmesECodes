@@ -41,9 +41,24 @@ def test_registrar_sessao_para_indicacao_sorteada() -> None:
     assert indicacoes.buscar_por_id(indicacao.id).status is StatusIndicacao.ASSISTIDA  # type: ignore[union-attr]
 
 
-def test_registrar_sessao_para_indicacao_ainda_pendente_levanta_erro() -> None:
+def test_registrar_sessao_para_indicacao_pendente_pula_o_sorteio() -> None:
+    """O sorteio é opcional: registrar sessão direto de PENDENTE deve funcionar."""
+    indicacoes = IndicacaoRepositorioFake()
+    sessoes = SessaoRepositorioFake()
+    indicacao = _nova_indicacao()
+    indicacoes.salvar(indicacao)
+    caso_de_uso = RegistrarSessaoExibicao(sessoes, indicacoes, RelogioFake(datetime(2024, 1, 7)))
+
+    sessao = caso_de_uso.executar(indicacao_id=indicacao.id, membros_presentes=frozenset())
+
+    assert sessao.indicacao_id == indicacao.id
+    assert indicacoes.buscar_por_id(indicacao.id).status is StatusIndicacao.ASSISTIDA  # type: ignore[union-attr]
+
+
+def test_registrar_sessao_para_indicacao_ja_assistida_levanta_erro() -> None:
     indicacoes = IndicacaoRepositorioFake()
     indicacao = _nova_indicacao()
+    indicacao.marcar_assistida()
     indicacoes.salvar(indicacao)
     caso_de_uso = RegistrarSessaoExibicao(
         SessaoRepositorioFake(), indicacoes, RelogioFake(datetime(2024, 1, 7))

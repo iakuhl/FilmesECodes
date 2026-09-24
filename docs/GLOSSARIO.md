@@ -11,23 +11,40 @@ conversas futuras usem sempre o mesmo vocabulário (linguagem ubíqua).
   nomes derivados do clube remetem a essa origem.
 
 - **Rodada**: ciclo de indicações. Cada membro ativo indica um filme por
-  rodada; a rodada avança sorteando e assistindo uma indicação por vez, e
-  só se encerra quando todas as indicações da rodada tiverem sido
-  assistidas. Encerrada uma rodada, uma nova começa.
+  rodada; a rodada avança assistindo uma indicação por vez (com ou sem
+  sorteio pelo meio — ver **Sorteio**), e só se encerra quando todas as
+  indicações da rodada (normais e Democracia) tiverem sido assistidas.
+  Encerrada uma rodada, uma nova começa.
 
 - **Indicação**: o filme que um membro específico propôs para uma rodada.
   Carrega a autoria (quem indicou), o que é fundamental para a apuração
-  do Óscar do Filmes e Cubos.
+  do Óscar do Filmes e Cubos. Uma indicação Democracia (ver abaixo) é a
+  exceção: não tem um indicador individual.
 
 - **Sorteio**: escolha aleatória, entre as indicações ainda pendentes da
   rodada corrente, de qual filme será assistido na próxima sessão.
+  Ferramenta opcional de apoio: o grupo pode pular o sorteio e marcar uma
+  indicação como assistida diretamente, sem passar por ele.
 
 - **Sessão (de exibição)**: o encontro em que o clube efetivamente assiste
-  ao filme sorteado.
+  a um filme indicado.
 
-- **Avaliação / nota**: nota que cada membro dá ao filme assistido em uma
-  sessão, em uma escala de 0,5 a 5 estrelas (passos de 0,5). Essas notas
-  são acumuladas ao longo do ano.
+- **Democracia (sessão/indicação)**: uma sessão **extra**, não uma
+  substituição da indicação normal da semana, criada quando a sessão
+  programada precisa ser adiada por algum imprevisto. O filme extra é
+  escolhido pelo grupo (sem um indicador individual) e assistido pelos
+  membros presentes; os votos e a participação no Óscar acontecem
+  normalmente. Quando um filme Democracia vence uma categoria do Óscar,
+  os membros decidem, na hora, para quem vai o troféu.
+
+- **Dorminhoco**: o estado de uma avaliação quando o membro esteve na
+  sessão mas cochilou e não tem uma nota a dar. O "voto" fica registrado
+  para a posteridade, mas é sempre ignorado em qualquer cálculo de média.
+
+- **Avaliação / nota**: o resultado que cada membro registra para a
+  sessão que assistiu — uma nota, em uma escala de 0,5 a 5 estrelas
+  (passos de 0,5), ou Dorminhoco. Essas notas são acumuladas ao longo do
+  ano.
 
 - **Óscar do Filmes e Cubos**: evento anual do clube que premia os filmes
   assistidos durante o ano em diversas categorias, com base nas notas e

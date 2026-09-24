@@ -9,8 +9,12 @@ from filmes_e_cubos.application.ports.relogio_service import RelogioService
 from filmes_e_cubos.application.ports.trofeu_repository import TrofeuRepository
 from filmes_e_cubos.domain.entities.trofeu import Trofeu
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
-from filmes_e_cubos.domain.exceptions.oscar import CategoriaJaApuradaError, NomeacaoInvalidaError
-from filmes_e_cubos.domain.value_objects.identificadores import CategoriaOscarId
+from filmes_e_cubos.domain.exceptions.oscar import (
+    CategoriaJaApuradaError,
+    NomeacaoInvalidaError,
+    VencedorDemocraciaNaoInformadoError,
+)
+from filmes_e_cubos.domain.value_objects.identificadores import CategoriaOscarId, MembroId
 
 
 class ApurarCategoriaOscar:
@@ -30,7 +34,12 @@ class ApurarCategoriaOscar:
         self._criterio = criterio
         self._relogio = relogio
 
-    def executar(self, *, categoria_id: CategoriaOscarId) -> Trofeu:
+    def executar(
+        self,
+        *,
+        categoria_id: CategoriaOscarId,
+        membro_vencedor_manual_id: MembroId | None = None,
+    ) -> Trofeu:
         if self._categorias.buscar_por_id(categoria_id) is None:
             raise EntidadeNaoEncontradaError(f"Categoria {categoria_id} não encontrada.")
         if self._trofeus.buscar_por_categoria(categoria_id) is not None:
@@ -48,10 +57,17 @@ class ApurarCategoriaOscar:
                 f"Nomeação vencedora {vencedora.id} não pertence à categoria {categoria_id}."
             )
 
+        membro_vencedor_id = vencedora.indicado_por_membro_id or membro_vencedor_manual_id
+        if membro_vencedor_id is None:
+            raise VencedorDemocraciaNaoInformadoError(
+                f"Nomeação {vencedora.id} não tem indicador automático (veio de um filme "
+                "DEMOCRACIA) — informe membro_vencedor_manual_id com a escolha do grupo."
+            )
+
         trofeu = Trofeu.emitir(
             categoria_id=categoria_id,
             nomeacao_vencedora_id=vencedora.id,
-            membro_vencedor_id=vencedora.indicado_por_membro_id,
+            membro_vencedor_id=membro_vencedor_id,
             data_apuracao=self._relogio.hoje(),
         )
         self._trofeus.salvar(trofeu)

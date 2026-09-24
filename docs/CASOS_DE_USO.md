@@ -31,17 +31,28 @@ os ports (repositórios/serviços) de que depende.
   `aberta` para o clube.
 
 ### IndicarFilme
-- **Intenção**: registrar a indicação de um filme por um membro na rodada
-  corrente.
+- **Intenção**: registrar a indicação `normal` de um filme por um membro
+  na rodada corrente.
 - **Ports**: `RodadaRepository`, `IndicacaoRepository`, `FilmeRepository`,
-  `MembroRepository`.
+  `MembroRepository`, `ClubeRepository`.
 - **Regras**: a rodada precisa estar `aberta`; um membro não pode indicar
   duas vezes na mesma rodada; a rodada não pode exceder o
-  `tamanho_rodada` configurado.
+  `tamanho_rodada` configurado. Indicações `democracia` não entram nessas
+  contagens (ver `AdicionarFilmeDemocracia`).
+
+### AdicionarFilmeDemocracia
+- **Intenção**: registrar uma indicação `democracia` — sessão extra,
+  escolhida em grupo, quando a sessão programada precisa ser adiada. Não
+  substitui a indicação normal da semana.
+- **Ports**: `RodadaRepository`, `IndicacaoRepository`, `FilmeRepository`.
+- **Regras**: precisa haver uma rodada `aberta` para o clube; não exige
+  (nem aceita) um membro indicador; não conta na cota de `tamanho_rodada`
+  nem na checagem de indicação duplicada por membro.
 
 ### RealizarSorteio
 - **Intenção**: sortear uma das indicações `pendente` da rodada corrente
-  para a próxima sessão.
+  para a próxima sessão. Ferramenta **opcional** de apoio — nada obriga
+  uma indicação a passar por aqui antes de ser assistida.
 - **Ports**: `RodadaRepository`, `IndicacaoRepository`, `SorteioRepository`,
   `SorteadorService`, `RelogioService`.
 - **Regras**: só considera indicações `pendente` da rodada corrente;
@@ -57,18 +68,21 @@ os ports (repositórios/serviços) de que depende.
 ## Sessões e avaliações
 
 ### RegistrarSessaoExibicao
-- **Intenção**: registrar que o filme sorteado foi assistido em uma data,
-  com os membros presentes.
+- **Intenção**: registrar que o filme da indicação foi assistido em uma
+  data, com os membros presentes.
 - **Ports**: `IndicacaoRepository`, `SessaoRepository`, `RelogioService`.
-- **Regras**: só é possível para uma indicação com status `sorteada`;
-  ao concluir, marca a indicação como `assistida`.
+- **Regras**: possível a partir de `pendente` (sorteio pulado) ou
+  `sorteada`; ao concluir, marca a indicação como `assistida`.
 
 ### AvaliarFilme
-- **Intenção**: um membro registra sua nota (e comentário opcional) para
-  o filme assistido em uma sessão.
-- **Ports**: `SessaoRepository`, `AvaliacaoRepository`, `MembroRepository`.
-- **Regras**: nota dentro da `escala_avaliacao` do clube; um membro avalia
-  cada sessão no máximo uma vez.
+- **Intenção**: um membro registra o resultado da sessão para si: uma
+  nota (e comentário opcional), ou, sem nota, o registro de que cochilou
+  (`dorminhoco`).
+- **Ports**: `SessaoRepository`, `AvaliacaoRepository`, `MembroRepository`,
+  `ClubeRepository`.
+- **Regras**: nota, quando informada, precisa estar dentro da
+  `escala_avaliacao` do clube; um membro avalia cada sessão no máximo uma
+  vez, dê nota ou fique `dorminhoco`.
 
 ## Óscar do Filmes e Cubos
 
@@ -85,20 +99,28 @@ os ports (repositórios/serviços) de que depende.
 - **Regras**: nome obrigatório; tipo (`fixa`/`variavel`) obrigatório.
 
 ### IndicarFilmeParaCategoria
-- **Intenção**: nomear um filme (já assistido pelo clube) para concorrer
-  em uma categoria da temporada.
-- **Ports**: `TemporadaOscarRepository`, `IndicacaoRepository`,
-  `FilmeRepository`.
-- **Regras**: o filme precisa ter sido efetivamente assistido pelo clube
-  (existir uma `Indicacao` `assistida` correspondente); a `NomeacaoOscar`
-  herda o `indicado_por_membro_id` da indicação original — essa
-  rastreabilidade é o que permite entregar o troféu a quem indicou.
+- **Intenção**: nomear um filme, assistido pelo clube **dentro do ano da
+  temporada**, para concorrer em uma categoria.
+- **Ports**: `NomeacaoOscarRepository`, `CategoriaOscarRepository`,
+  `TemporadaOscarRepository`, `IndicacaoRepository`, `SessaoRepository`.
+- **Regras**: o filme precisa ter sido assistido pelo clube (existir uma
+  `Indicacao` `assistida` correspondente) e essa sessão precisa ter
+  ocorrido dentro do ano da temporada da categoria — um filme assistido
+  em outro ano não é elegível, mesmo já tendo sido assistido alguma vez.
+  A `NomeacaoOscar` herda o `indicado_por_membro_id` da indicação
+  original (`None` se ela for `democracia`) — essa rastreabilidade é o
+  que permite entregar o troféu a quem indicou.
 
 ### ApurarCategoriaOscar
 - **Intenção**: calcular/registrar o vencedor de uma categoria e emitir o
-  `Trofeu` correspondente ao membro que indicou o filme vencedor.
-- **Ports**: `TemporadaOscarRepository`, `RelogioService`.
+  `Trofeu` correspondente.
+- **Ports**: `TrofeuRepository`, `NomeacaoOscarRepository`,
+  `CategoriaOscarRepository`, `CriterioApuracaoOscar`, `RelogioService`.
 - **Regras**: a apuração pode ser por votação dos membros ou por critério
   definido por categoria — o mecanismo de apuração em si é um detalhe a
-  refinar na fase de implementação; o caso de uso apenas garante que o
-  `Trofeu` resultante aponta corretamente para o membro indicador.
+  refinar depois (por isso é um port plugável, `CriterioApuracaoOscar`).
+  Quando a nomeação vencedora tem `indicado_por_membro_id` (indicação
+  `normal`), o troféu vai automaticamente para esse membro. Quando não
+  tem (indicação `democracia`), o caso de uso exige um
+  `membro_vencedor_manual_id` — a escolha do grupo, feita na hora da
+  apuração/premiação — e levanta erro se ele não for informado.

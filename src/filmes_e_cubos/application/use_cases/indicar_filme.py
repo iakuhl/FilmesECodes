@@ -14,6 +14,7 @@ from filmes_e_cubos.domain.exceptions.indicacao import IndicacaoDuplicadaError
 from filmes_e_cubos.domain.exceptions.membro import MembroInativoError
 from filmes_e_cubos.domain.exceptions.rodada import RodadaJaEncerradaError, RodadaLotadaError
 from filmes_e_cubos.domain.value_objects.identificadores import FilmeId, MembroId, RodadaId
+from filmes_e_cubos.domain.value_objects.tipo_indicacao import TipoIndicacao
 
 
 class IndicarFilme:
@@ -51,14 +52,18 @@ class IndicarFilme:
         if self._filmes.buscar_por_id(filme_id) is None:
             raise EntidadeNaoEncontradaError(f"Filme {filme_id} não encontrado.")
 
-        indicacoes_da_rodada = self._indicacoes.listar_por_rodada(rodada_id)
-        if any(indicacao.membro_id == membro_id for indicacao in indicacoes_da_rodada):
+        indicacoes_normais_da_rodada = [
+            indicacao
+            for indicacao in self._indicacoes.listar_por_rodada(rodada_id)
+            if indicacao.tipo is TipoIndicacao.NORMAL
+        ]
+        if any(indicacao.membro_id == membro_id for indicacao in indicacoes_normais_da_rodada):
             raise IndicacaoDuplicadaError(f"Membro {membro_id} já indicou um filme nesta rodada.")
 
         clube = self._clubes.buscar_por_id(rodada.clube_id)
         if clube is None:
             raise EntidadeNaoEncontradaError(f"Clube {rodada.clube_id} não encontrado.")
-        if len(indicacoes_da_rodada) >= clube.configuracao.tamanho_rodada:
+        if len(indicacoes_normais_da_rodada) >= clube.configuracao.tamanho_rodada:
             raise RodadaLotadaError(f"Rodada {rodada_id} já atingiu o tamanho máximo.")
 
         indicacao = Indicacao.criar(

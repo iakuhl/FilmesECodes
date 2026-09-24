@@ -12,7 +12,11 @@ class TemporadaOscarInvalidaError(DomainError):
 
 
 class FilmeNaoAssistidoError(DomainError):
-    """Levantada ao nomear, para uma categoria, um filme que o clube ainda não assistiu."""
+    """Levantada ao nomear, para uma categoria, um filme que o clube nunca assistiu."""
+
+
+class FilmeNaoAssistidoNoAnoDaTemporadaError(DomainError):
+    """Levantada ao nomear, para uma categoria, um filme assistido fora do ano da temporada."""
 
 
 class CategoriaJaApuradaError(DomainError):
@@ -21,3 +25,9 @@ class CategoriaJaApuradaError(DomainError):
 
 class NomeacaoInvalidaError(DomainError):
     """Levantada quando a nomeação vencedora de uma apuração não pertence à categoria apurada."""
+
+
+class VencedorDemocraciaNaoInformadoError(DomainError):
+    """Levantada ao apurar uma categoria cuja nomeação vencedora não tem indicador automático
+    (veio de um filme DEMOCRACIA) sem que um vencedor manual tenha sido informado.
+    """
