@@ -91,9 +91,7 @@ def test_temporada_de_outro_ano_precisa_de_id_explicito(cli: CliDeTeste, clube_i
 
 
 def test_temporada_inexistente_por_id_falha(cli: CliDeTeste, clube_id: str) -> None:
-    resultado = cli.executar(
-        "oscar", "categoria", "listar", "--temporada-id", str(uuid4())
-    )
+    resultado = cli.executar("oscar", "categoria", "listar", "--temporada-id", str(uuid4()))
 
     assert resultado.exit_code == 1
     assert "não encontrada" in resultado.stderr

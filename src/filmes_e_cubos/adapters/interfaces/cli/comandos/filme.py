@@ -24,9 +24,7 @@ app = typer.Typer(help="Catálogo de filmes disponíveis para indicação.", no_
 def cadastrar(
     ctx: typer.Context,
     titulo: Annotated[str, typer.Argument(help="Título do filme.")],
-    ano: Annotated[
-        int | None, typer.Option("--ano", help="Ano de lançamento.")
-    ] = None,
+    ano: Annotated[int | None, typer.Option("--ano", help="Ano de lançamento.")] = None,
     diretor: Annotated[str | None, typer.Option("--diretor", help="Nome do diretor.")] = None,
     id_externo: Annotated[
         str | None,

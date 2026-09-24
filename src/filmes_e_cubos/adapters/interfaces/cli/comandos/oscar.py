@@ -68,10 +68,7 @@ def temporada_listar(
     temporadas = contexto.temporadas.listar_por_clube(clube.id)
     echo_tabela(
         ("ID", "ANO", "NOME", "SITUAÇÃO"),
-        [
-            (str(t.id), str(t.ano), t.nome, t.status.name.lower())
-            for t in temporadas
-        ],
+        [(str(t.id), str(t.ano), t.nome, t.status.name.lower()) for t in temporadas],
         vazio=f"Nenhuma temporada do Óscar em {clube.nome}.",
     )
 

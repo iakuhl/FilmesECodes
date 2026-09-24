@@ -49,9 +49,7 @@ def registrar(
     )
 
 
-def _membros_ativos_da_indicacao(
-    contexto: Contexto, indicacao: Indicacao
-) -> frozenset[MembroId]:
+def _membros_ativos_da_indicacao(contexto: Contexto, indicacao: Indicacao) -> frozenset[MembroId]:
     """Presença padrão: todos os membros ativos do clube dono da rodada."""
     rodada = contexto.rodadas.buscar_por_id(indicacao.rodada_id)
     if rodada is None:

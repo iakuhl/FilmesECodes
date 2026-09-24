@@ -15,9 +15,7 @@ def test_registrar_sessao_marca_a_indicacao_como_assistida(
     assert "assistida" in cli.executar_ok("rodada", "status").stdout
 
 
-def test_sessao_pode_ser_registrada_sem_sorteio_previo(
-    cli: CliDeTeste, indicacao_id: str
-) -> None:
+def test_sessao_pode_ser_registrada_sem_sorteio_previo(cli: CliDeTeste, indicacao_id: str) -> None:
     """O sorteio é apoio opcional: uma indicação pendente pode ir direto para a sessão."""
     resultado = cli.executar("sessao", "registrar", indicacao_id)
 
@@ -70,9 +68,7 @@ def test_opcao_presente_e_repetivel(
     assert "2 presente(s)" in resultado.stdout
 
 
-def test_registrar_duas_vezes_a_mesma_indicacao_falha(
-    cli: CliDeTeste, indicacao_id: str
-) -> None:
+def test_registrar_duas_vezes_a_mesma_indicacao_falha(cli: CliDeTeste, indicacao_id: str) -> None:
     cli.executar_ok("sessao", "registrar", indicacao_id)
 
     resultado = cli.executar("sessao", "registrar", indicacao_id)

@@ -48,9 +48,7 @@ def test_status_aceita_rodada_encerrada_por_id(cli: CliDeTeste, indicacao_id: st
     assert "assistida" in saida
 
 
-def test_encerrar_exige_todas_as_indicacoes_assistidas(
-    cli: CliDeTeste, indicacao_id: str
-) -> None:
+def test_encerrar_exige_todas_as_indicacoes_assistidas(cli: CliDeTeste, indicacao_id: str) -> None:
     resultado = cli.executar("rodada", "encerrar")
 
     assert resultado.exit_code == 1

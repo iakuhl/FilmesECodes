@@ -26,9 +26,7 @@ def cadastrar(
     apelido: Annotated[
         str | None, typer.Option("--apelido", help="Como o membro é chamado no clube.")
     ] = None,
-    clube_id: Annotated[
-        UUID | None, typer.Option("--clube-id", help="Clube do membro.")
-    ] = None,
+    clube_id: Annotated[UUID | None, typer.Option("--clube-id", help="Clube do membro.")] = None,
 ) -> None:
     """Cadastra um membro no clube."""
     contexto = obter_contexto(ctx)

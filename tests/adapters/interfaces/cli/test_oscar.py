@@ -132,9 +132,7 @@ def test_apurar_categoria_sem_nomeacoes_falha(cli: CliDeTeste, categoria_id: str
     assert "nomeação" in resultado.stderr
 
 
-def test_apurar_duas_vezes_falha(
-    cli: CliDeTeste, categoria_id: str, filme_assistido: str
-) -> None:
+def test_apurar_duas_vezes_falha(cli: CliDeTeste, categoria_id: str, filme_assistido: str) -> None:
     _nomear(cli, categoria_id, filme_assistido)
     cli.executar_ok("oscar", "apurar", categoria_id, entrada="1\n")
 

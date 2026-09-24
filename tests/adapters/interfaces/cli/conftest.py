@@ -33,9 +33,7 @@ class CliDeTeste:
     caminho_banco: Path
 
     def executar(self, *args: str, entrada: str | None = None) -> Result:
-        return self.runner.invoke(
-            app, ["--db-path", str(self.caminho_banco), *args], input=entrada
-        )
+        return self.runner.invoke(app, ["--db-path", str(self.caminho_banco), *args], input=entrada)
 
     def executar_ok(self, *args: str, entrada: str | None = None) -> Result:
         """Executa esperando sucesso; falha o teste mostrando a saída se não for."""

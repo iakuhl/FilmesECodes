@@ -64,6 +64,7 @@ def echo_tabela(
         max(len(cabecalho[coluna]), *(len(linha[coluna]) for linha in linhas))
         for coluna in range(len(cabecalho))
     ]
+
     def formatar(celulas: Sequence[str]) -> str:
         return "  ".join(
             texto.ljust(largura) for texto, largura in zip(celulas, larguras, strict=True)
