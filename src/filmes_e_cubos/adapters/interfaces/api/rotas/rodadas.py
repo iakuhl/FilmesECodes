@@ -6,13 +6,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, status
 
-from filmes_e_cubos.adapters.interfaces.api.dependencias import ContextoDep
 from filmes_e_cubos.adapters.interfaces.api.esquemas import RodadaSaida
 from filmes_e_cubos.adapters.interfaces.consultas import (
     obter_clube,
     obter_rodada,
     obter_rodada_aberta,
 )
+from filmes_e_cubos.adapters.interfaces.contexto_http import ContextoDep
 from filmes_e_cubos.domain.value_objects.identificadores import ClubeId, RodadaId
 
 roteador = APIRouter(tags=["rodadas"])

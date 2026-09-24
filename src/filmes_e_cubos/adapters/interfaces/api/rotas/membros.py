@@ -6,9 +6,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, status
 
-from filmes_e_cubos.adapters.interfaces.api.dependencias import ContextoDep
 from filmes_e_cubos.adapters.interfaces.api.esquemas import MembroSaida, NovoMembro
 from filmes_e_cubos.adapters.interfaces.consultas import obter_clube, obter_membro
+from filmes_e_cubos.adapters.interfaces.contexto_http import ContextoDep
 from filmes_e_cubos.domain.value_objects.identificadores import ClubeId, MembroId
 
 roteador = APIRouter(tags=["membros"])

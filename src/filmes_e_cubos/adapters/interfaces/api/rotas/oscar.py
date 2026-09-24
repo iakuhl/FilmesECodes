@@ -7,7 +7,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, status
 
-from filmes_e_cubos.adapters.interfaces.api.dependencias import ContextoDep
 from filmes_e_cubos.adapters.interfaces.api.esquemas import (
     CategoriaSaida,
     NomeacaoSaida,
@@ -24,6 +23,7 @@ from filmes_e_cubos.adapters.interfaces.consultas import (
     obter_nomeacao,
     obter_temporada,
 )
+from filmes_e_cubos.adapters.interfaces.contexto_http import ContextoDep
 from filmes_e_cubos.adapters.interfaces.convencoes import nome_padrao_da_temporada
 from filmes_e_cubos.adapters.servicos.criterio_apuracao_escolha_informada import (
     CriterioEscolhaInformada,

@@ -7,9 +7,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, status
 
-from filmes_e_cubos.adapters.interfaces.api.dependencias import ContextoDep
 from filmes_e_cubos.adapters.interfaces.api.esquemas import NovaSessao, SessaoSaida
 from filmes_e_cubos.adapters.interfaces.consultas import obter_indicacao, obter_sessao
+from filmes_e_cubos.adapters.interfaces.contexto_http import ContextoDep
 from filmes_e_cubos.adapters.interfaces.convencoes import presenca_padrao
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
 from filmes_e_cubos.domain.value_objects.identificadores import MembroId

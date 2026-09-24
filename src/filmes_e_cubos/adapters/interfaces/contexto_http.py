@@ -1,4 +1,4 @@
-"""Dependências injetadas pelo FastAPI nas rotas da API."""
+"""Dependência que entrega o `Contexto` às rotas HTTP (API e web)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from filmes_e_cubos.adapters.composicao import Contexto
 
 
 def obter_contexto(request: Request) -> Contexto:
-    """O `Contexto` que `criar_api` guardou no estado do app.
+    """O `Contexto` guardado no estado do app que atende a requisição.
 
     O contexto é montado uma vez, na criação do app, e compartilhado por
     todas as requisições: repositórios e casos de uso não guardam estado
@@ -18,7 +18,7 @@ def obter_contexto(request: Request) -> Contexto:
     """
     contexto = request.app.state.contexto
     if not isinstance(contexto, Contexto):
-        raise RuntimeError("A API foi criada sem um Contexto (use `criar_api`).")
+        raise RuntimeError("O app HTTP foi criado sem um Contexto em `app.state.contexto`.")
     return contexto
 
 

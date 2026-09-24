@@ -10,9 +10,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, status
 
-from filmes_e_cubos.adapters.interfaces.api.dependencias import ContextoDep
 from filmes_e_cubos.adapters.interfaces.api.esquemas import FilmeSaida, NovoFilme
 from filmes_e_cubos.adapters.interfaces.consultas import obter_filme
+from filmes_e_cubos.adapters.interfaces.contexto_http import ContextoDep
 
 roteador = APIRouter(tags=["filmes"])
 

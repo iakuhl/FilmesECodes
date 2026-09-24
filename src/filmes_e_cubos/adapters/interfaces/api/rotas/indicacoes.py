@@ -6,7 +6,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, status
 
-from filmes_e_cubos.adapters.interfaces.api.dependencias import ContextoDep
 from filmes_e_cubos.adapters.interfaces.api.esquemas import (
     IndicacaoSaida,
     NovaIndicacao,
@@ -18,6 +17,7 @@ from filmes_e_cubos.adapters.interfaces.consultas import (
     obter_indicacao,
     obter_rodada,
 )
+from filmes_e_cubos.adapters.interfaces.contexto_http import ContextoDep
 from filmes_e_cubos.domain.value_objects.identificadores import FilmeId, MembroId, RodadaId
 
 roteador = APIRouter(tags=["indicações e sorteios"])
