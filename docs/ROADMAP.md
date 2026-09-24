@@ -152,19 +152,118 @@ completo contra SQLite real, um arquivo por grupo de rotas, contrato de
 erro, OpenAPI e fluxo de ponta a ponta), mais os do middleware, do
 servidor, das convenções e do novo critério.
 
-### Interface web — próxima etapa
+Depois da API, ainda na Fase 4: a classificação de erros HTTP e a
+injeção do `Contexto` viraram módulos compartilhados
+(`adapters/interfaces/erros_http.py` e `contexto_http.py`), e o esquema
+do banco passou a evoluir por **migrações com Alembic** (ADR 11) —
+pré-requisito das mudanças de esquema da revisão de regras abaixo.
 
-Um frontend web servido pelo mesmo servidor, reaproveitando os mesmos
-casos de uso.
+### Interface web 🚧 em andamento
+
+Decisão confirmada pelo dono do produto: **páginas renderizadas no
+servidor com Jinja2**, sem SPA nem build de JavaScript — a web é só mais
+um adapter chamando os mesmos casos de uso. Um SPA ou app futuro, se
+vier, consome a API que já existe.
+
+Feito: os módulos de apoio em `adapters/interfaces/web/` — `formatacao.py`
+(datas, decimais, rótulos), `mensagens.py` (avisos na sessão e textos
+amigáveis para as recusas de negócio) e `formularios.py` (conversão de
+campos), com testes. As dependências (`jinja2`, `python-multipart`,
+`itsdangerous`) já estão no `pyproject.toml`.
+
+Plano para o restante (ver "Como continuar"):
+
+- `web/app.py` com `criar_web(contexto, chave_secreta=...)`: app FastAPI
+  com `SessionMiddleware` (avisos), `StaticFiles` em `/estaticos` e
+  handlers que transformam erros em páginas HTML. `servidor.py` passa a
+  usar a web como app raiz e monta a API em `/api/v1` dentro dela.
+- Ambiente Jinja próprio (`autoescape`, `StrictUndefined`, filtros de
+  `formatacao.py`); `TemplateResponse(request, nome, contexto)` — a
+  assinatura do Starlette 1.x.
+- Padrão Post/Redirect/Get em toda ação: a rota roda o caso de uso dentro
+  de `recusas_viram_avisos(request)`, registra o aviso de sucesso e
+  redireciona com 303.
+- Páginas, todas escopadas por clube (`/clubes/{clube_id}/...`), com
+  verificação de que a entidade do caminho pertence ao clube: início
+  (sem clube → criar; um clube → redireciona; vários → escolher), painel
+  (rodada aberta, próxima sessão, indicar, democracia, sortear,
+  encerrar), membros, filmes, histórico de rodadas, nova sessão
+  (presença), sessão (avaliações e média), Óscar (edições, categorias,
+  nomeações, votação e apuração).
+- Testes com o `TestClient` contra o app completo e `beautifulsoup4`
+  para ler o HTML; `docs/WEB.md` com a referência das páginas.
+
+## Revisão de regras de 24/09/2026 — próxima etapa
+
+O dono do produto respondeu às questões levantadas na Fase 4. As
+decisões estão detalhadas, numeradas, em [PENDENCIAS.md](PENDENCIAS.md)
+(decisões 3 a 11), com as interpretações que ainda pedem confirmação. Em
+resumo: só presentes avaliam; um filme nunca se repete no clube; uma
+edição do Óscar por ano; ciclo da temporada com o estado *em votação*;
+apuração por votação ponderada (2/1) com 2º turno, votação por
+classificação e empate absoluto; voto alterável até a apuração; reativar
+membro; data do evento; média das notas armazenada; duração do filme; e o
+contrato de um módulo de histórico de sessões passadas.
+
+Deve vir **antes** das páginas da web, que dependem dessas regras (a
+votação, por exemplo, ganha telas próprias).
 
 ## Fase 5 — Evolução comercial
 
 - Suporte a múltiplos clubes (a entidade `Clube` já foi desenhada para
-  isso desde a Fase 1).
-- Autenticação/autorização de membros.
-- Eventuais integrações externas (ex.: base de dados de filmes para
-  autocompletar título/ano/diretor).
-- Empacotamento e distribuição como produto.
+  isso desde a Fase 1): fechar as verificações entre clubes (dívida
+  técnica 3 de [PENDENCIAS.md](PENDENCIAS.md)).
+- Autenticação/autorização — **decidido**: login individual por membro,
+  contas criadas por convite com código (quem cria o clube é o primeiro
+  admin); administradores gerenciam clube, membros, rodadas e Óscar,
+  membros comuns indicam, avaliam e votam só em nome próprio.
+- Integração externa — **decidido**: TMDB, para autocompletar título,
+  ano, diretor, duração, gêneros etc.; desligada até haver chave.
+- Empacotamento e distribuição — **decidido**: por ora só uso local,
+  mas com configuração por variáveis de ambiente e nada preso à máquina
+  local, para que levar o sistema a um servidor ou à nuvem seja fácil
+  quando essa decisão mudar.
+
+## Fase 6 — Relatórios e estatísticas (futuro)
+
+Pedido do dono do produto: o sistema deve agregar o máximo de informação
+possível, para no futuro cruzar os dados em relatórios, gráficos e
+estatísticas — por exemplo, tempo total de filmes assistidos no ano,
+quem indica filmes mais longos, notas recebidas pelas indicações de cada
+membro, notas dadas a cada filme, evolução das médias. Até lá, cada
+fase deve preferir guardar dado bruto e normalizado (quem, quando,
+quanto) a guardar só o resultado final.
+
+## Como continuar
+
+Ordem recomendada para a próxima sessão de trabalho, a partir do branch
+`roadmap/fases-4-e-5`:
+
+1. **Revisão de regras de 24/09** (decisões 3 a 11 de
+   [PENDENCIAS.md](PENDENCIAS.md)), em commits pequenos, cada um com CLI,
+   API, testes e documentação atualizados:
+   1. revisão 0002 do esquema (Alembic): `filmes.duracao_minutos`,
+      `sessoes_exibicao.media_das_notas`, `trofeus.nomeacao_vencedora_id`
+      anulável (empate absoluto) e as tabelas da votação — calculando, na
+      própria migração, a média das sessões já avaliadas;
+   2. duração do filme; reativar membro; data do evento do Óscar;
+   3. só presentes avaliam (`AvaliarFilme` passa a deduzir o clube da
+      própria sessão, e o `--clube-id` da avaliação sai da CLI); média
+      recalculada e gravada a cada avaliação;
+   4. filme nunca se repete no clube (`IndicarFilme` e
+      `AdicionarFilmeDemocracia`; novo `IndicacaoRepository.listar_por_filme`)
+      e `IndicarFilmeParaCategoria` restrito às sessões do próprio clube;
+   5. uma edição por ano; ciclo da temporada com `EM_VOTACAO` e o caso de
+      uso de avanço, restringindo cada ação à sua fase;
+   6. votação: entidades `TurnoDeVotacao` (modo dupla ou classificação,
+      candidatas, estado) e `Voto` (escolhas em ordem), contagem como
+      regra do domínio, casos de uso `RegistrarVoto` e a nova
+      `ApurarCategoriaOscar`; remoção de `CriterioApuracaoOscar`;
+   7. contrato do módulo de histórico (só ports e estruturas de dados).
+2. **Páginas da interface web** sobre o domínio já revisado (plano na
+   seção da Fase 4), fechando a Fase 4.
+3. **Fase 5**: verificações entre clubes, login com convites e
+   permissões, TMDB e configuração por ambiente.
 
 ## Pontos explicitamente em aberto
 
@@ -173,4 +272,7 @@ casos de uso.
 | Implementação concreta de persistência | ✅ Resolvida: SQLite via SQLAlchemy Core | Fase 2 |
 | Primeira interface de usuário | ✅ Resolvida: CLI com Typer | Fase 3 |
 | Tecnologia da API | ✅ Resolvida: FastAPI, erros RFC 9457 | Fase 4 |
-| Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | Continua em aberto no domínio — port `CriterioApuracaoOscar` plugável | A CLI usa `CriterioApuracaoInterativo` e a API usa `CriterioEscolhaInformada`: ambos delegam a escolha a quem opera. Quando o clube decidir um mecanismo automático, basta escrever outro adapter e entregá-lo ao caso de uso. |
+| Tecnologia da interface web | ✅ Resolvida: páginas renderizadas no servidor (Jinja2) | Fase 4 |
+| Evolução do esquema do banco | ✅ Resolvida: migrações com Alembic | Fase 4 |
+| Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | ✅ Decidida em 24/09/2026: votação ponderada (2/1), com 2º turno, classificação e empate absoluto — a implementar | Hoje a CLI e a API ainda delegam a escolha a quem opera (port `CriterioApuracaoOscar`); a votação substitui esse port. Ver [PENDENCIAS.md](PENDENCIAS.md), decisão 8. |
+| Módulo de histórico de sessões passadas | Contrato a criar; implementação em aberto | Ver [PENDENCIAS.md](PENDENCIAS.md), decisão 3 e questão em aberto 1. |

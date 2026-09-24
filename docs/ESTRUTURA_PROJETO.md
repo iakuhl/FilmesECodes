@@ -36,13 +36,19 @@ FilmesECodes/
 │           ├── composicao.py          # composition root: engine -> repos -> casos de uso
 │           ├── persistence/
 │           │   └── sqlite/            # ✅ Fase 2: esquema, engine, 12 repositórios
+│           │       ├── migracao.py    # Fase 4: leva o banco à revisão mais recente
+│           │       └── migracoes/     # Fase 4: env.py do Alembic e versions/
 │           ├── servicos/              # ✅ Fase 2: RelogioSistema, SorteadorAleatorio;
 │           │                          # Fase 4: CriterioEscolhaInformada
 │           └── interfaces/
 │               ├── convencoes.py      # padrões deduzidos, iguais em todas as interfaces
 │               ├── consultas.py       # buscas por id que precisam encontrar a entidade
+│               ├── erros_http.py      # erro de domínio -> status HTTP (API e web)
+│               ├── contexto_http.py   # injeção do Contexto nas rotas HTTP
 │               ├── escritas_em_fila.py  # middleware: uma escrita HTTP por vez
 │               ├── servidor.py        # app ASGI completo + entry point do servidor
+│               ├── web/               # 🚧 Fase 4: por ora, formatacao, mensagens e
+│               │                      # formularios (apoio das páginas)
 │               ├── cli/               # ✅ Fase 3
 │               │   ├── main.py        # app Typer raiz; monta os grupos de comando
 │               │   ├── contexto.py    # quando montar o composition root; critério da CLI
@@ -55,7 +61,6 @@ FilmesECodes/
 │               │                      # rodada, indicacao, sessao, avaliacao, oscar
 │               └── api/               # ✅ Fase 4
 │                   ├── app.py         # criar_api(): sub-app FastAPI montado em /api/v1
-│                   ├── dependencias.py  # injeção do Contexto nas rotas
 │                   ├── esquemas.py    # formato JSON de entrada e saída (Pydantic)
 │                   ├── erros.py       # erros -> application/problem+json (RFC 9457)
 │                   └── rotas/         # um módulo por grupo: clubes, membros, filmes,
@@ -75,8 +80,9 @@ FilmesECodes/
         └── interfaces/                # convenções, middleware e servidor
             ├── cli/                   # CLI real contra SQLite temporário, um arquivo
             │                          # por grupo de comandos + fluxo de ponta a ponta
-            └── api/                   # API real (app ASGI completo) contra SQLite
-                                       # temporário, idem
+            ├── api/                   # API real (app ASGI completo) contra SQLite
+            │                          # temporário, idem
+            └── web/                   # módulos de apoio da interface web
 ```
 
 ## Responsabilidade de cada pasta
@@ -150,8 +156,12 @@ FilmesECodes/
   `NovaIndicacao`) e os espelhos de enumerações do domínio levam o
   sufixo `Api` (`StatusRodadaApi`), como o `TipoCategoriaCli` da CLI.
 
+Na raiz do repositório, `alembic.ini` serve só ao desenvolvimento
+(gerar revisões com `uv run alembic revision --autogenerate -m "..."`);
+o programa migra o banco sozinho. `CLAUDE.md` resume, para quem continua
+o trabalho, os comandos, as convenções e as armadilhas do ambiente.
+
 ## O que fica para depois
 
-- A interface web (segunda metade da Fase 4) entra ao lado da API, no
-  mesmo servidor, reaproveitando os mesmos casos de uso — ver
-  [ROADMAP.md](ROADMAP.md).
+- As páginas da interface web (`adapters/interfaces/web/`), no mesmo
+  servidor da API — ver "Como continuar" em [ROADMAP.md](ROADMAP.md).

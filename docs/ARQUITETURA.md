@@ -108,6 +108,12 @@ Implementações concretas dos ports. Três categorias existem:
   ORM declarativo (que espera atributos simples e mutáveis) quebraria
   esse encapsulamento. Cada repositório converte manualmente entre
   entidade e linha de tabela (funções `_para_linha`/`_para_entidade`).
+  O esquema evolui por **migrações do Alembic** (`sqlite/migracao.py` e
+  `sqlite/migracoes/`): todo programa que abre o banco o leva até a
+  revisão mais recente, e bancos anteriores às migrações são reconhecidos
+  e migrados sem perda de dados (ADR 11). Um teste compara o resultado
+  das migrações com `esquema.py`, então mudar o esquema sem uma revisão
+  nova quebra a suíte.
 - **Serviços de infraestrutura** (`adapters/servicos/`):
   implementações reais de `RelogioService` e `SorteadorService`, e o
   `CriterioEscolhaInformada` — uma implementação de
@@ -193,6 +199,7 @@ que ele precisa sem introduzir uma Unit of Work — ver a ADR 10.
 | 8 | Composition root único, em `adapters/composicao.py` (na Fase 3, em `adapters/interfaces/cli/contexto.py`) | Adotada (Fase 3; movido na Fase 4) | Concentra em um lugar toda a amarração port↔implementação, e transforma a checagem de tipos nesse ponto em verificação de conformidade dos adapters. Compartilhado por todas as interfaces. |
 | 9 | API HTTP com **FastAPI**, em `/api/v1`, com erros no formato **RFC 9457** (`application/problem+json`) | Adotada (Fase 4) | FastAPI era a sugestão do roadmap, gera a documentação OpenAPI a partir dos próprios tipos e roda síncrono sobre o mesmo núcleo. A RFC 9457 dá aos clientes um formato de erro padronizado; o campo extra `codigo` (derivado do nome da exceção) permite reagir a um erro sem depender do texto. A classificação de cada erro de domínio em 404/409/422 é explícita e verificada por teste. Ver [API.md](API.md). |
 | 10 | Requisições que alteram dados são enfileiradas no processo (`EscritasEmFila`), em vez de uma Unit of Work transacional | Adotada (Fase 4) | Garante as regras "lê, confere, grava" contra requisições simultâneas (ex.: duplo clique) com uma fração da complexidade. Vale enquanto houver um único processo servidor e SQLite; ao escalar para vários processos ou outro banco, deve dar lugar a transações por caso de uso. |
+| 11 | Esquema versionado por **migrações do Alembic**, aplicadas automaticamente ao abrir o banco | Adotada (Fase 4) | O banco do clube é um arquivo que precisa sobreviver às atualizações; `create_all` não altera tabelas existentes. Configuração programática (sem depender de `alembic.ini`), `render_as_batch` para o `ALTER TABLE` limitado do SQLite, e revisão inicial idêntica ao esquema das Fases 2 e 3. |
 
 ## Princípios de orientação a objetos aplicados
 

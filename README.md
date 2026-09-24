@@ -45,10 +45,17 @@ linha de comando e por uma API HTTP. Ver
 - ✅ **Fase 3** — CLI com Typer, em
   `src/filmes_e_cubos/adapters/interfaces/cli/` (8 grupos de comando).
 - 🚧 **Fase 4** — ✅ API HTTP com FastAPI, em
-  `src/filmes_e_cubos/adapters/interfaces/api/`; interface web a seguir.
+  `src/filmes_e_cubos/adapters/interfaces/api/`; ✅ migrações de esquema
+  com Alembic; 🚧 interface web (módulos de apoio prontos, páginas a
+  seguir).
+- ⏭️ **Próximo passo**: a revisão de regras decidida em 24/09/2026
+  (votação ponderada no Óscar, só presentes avaliam, filme não se repete
+  no clube...) — ver "Como continuar" em
+  [docs/ROADMAP.md](docs/ROADMAP.md) e as decisões em
+  [docs/PENDENCIAS.md](docs/PENDENCIAS.md).
 
-Suíte de testes verde: 360 testes (`uv run pytest`), `uv run mypy src`
-(modo estrito) limpo em 125 arquivos e `uv run ruff check .` sem
+Suíte de testes verde: 379 testes (`uv run pytest`), `uv run mypy src`
+(modo estrito) limpo em 134 arquivos e `uv run ruff check .` sem
 violações.
 
 ## Uso
