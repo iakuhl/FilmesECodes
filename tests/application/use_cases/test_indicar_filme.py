@@ -1,0 +1,142 @@
+"""Testes do caso de uso IndicarFilme."""
+
+from datetime import date, datetime
+from uuid import uuid4
+
+import pytest
+
+from filmes_e_cubos.application.use_cases.indicar_filme import IndicarFilme
+from filmes_e_cubos.domain.entities.clube import Clube
+from filmes_e_cubos.domain.entities.filme import Filme
+from filmes_e_cubos.domain.entities.membro import Membro
+from filmes_e_cubos.domain.entities.rodada import Rodada
+from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
+from filmes_e_cubos.domain.exceptions.indicacao import IndicacaoDuplicadaError
+from filmes_e_cubos.domain.exceptions.membro import MembroInativoError
+from filmes_e_cubos.domain.exceptions.rodada import RodadaJaEncerradaError, RodadaLotadaError
+from filmes_e_cubos.domain.value_objects.configuracao_clube import ConfiguracaoClube
+from filmes_e_cubos.domain.value_objects.identificadores import FilmeId
+from tests.application.fakes.clube_repositorio_fake import ClubeRepositorioFake
+from tests.application.fakes.filme_repositorio_fake import FilmeRepositorioFake
+from tests.application.fakes.indicacao_repositorio_fake import IndicacaoRepositorioFake
+from tests.application.fakes.membro_repositorio_fake import MembroRepositorioFake
+from tests.application.fakes.relogio_fake import RelogioFake
+from tests.application.fakes.rodada_repositorio_fake import RodadaRepositorioFake
+
+
+def _montar_caso_de_uso() -> tuple[
+    IndicarFilme,
+    ClubeRepositorioFake,
+    MembroRepositorioFake,
+    FilmeRepositorioFake,
+    RodadaRepositorioFake,
+]:
+    clubes = ClubeRepositorioFake()
+    membros = MembroRepositorioFake()
+    filmes = FilmeRepositorioFake()
+    rodadas = RodadaRepositorioFake()
+    indicacoes = IndicacaoRepositorioFake()
+    caso_de_uso = IndicarFilme(
+        indicacoes, rodadas, membros, filmes, clubes, RelogioFake(datetime(2024, 1, 7))
+    )
+    return caso_de_uso, clubes, membros, filmes, rodadas
+
+
+def test_indicar_filme_com_sucesso(clube: Clube) -> None:
+    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    clubes.salvar(clube)
+    membro = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
+    membros.salvar(membro)
+    filme = Filme.criar(titulo="Duna")
+    filmes.salvar(filme)
+    rodada = Rodada.abrir(clube_id=clube.id, numero=1, data_inicio=date(2024, 1, 1))
+    rodadas.salvar(rodada)
+
+    indicacao = caso_de_uso.executar(rodada_id=rodada.id, membro_id=membro.id, filme_id=filme.id)
+
+    assert indicacao.membro_id == membro.id
+    assert indicacao.filme_id == filme.id
+
+
+def test_indicar_filme_em_rodada_encerrada_levanta_erro(clube: Clube) -> None:
+    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    clubes.salvar(clube)
+    membro = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
+    membros.salvar(membro)
+    filme = Filme.criar(titulo="Duna")
+    filmes.salvar(filme)
+    rodada = Rodada.abrir(clube_id=clube.id, numero=1, data_inicio=date(2024, 1, 1))
+    rodada.encerrar(data_encerramento=date(2024, 1, 8))
+    rodadas.salvar(rodada)
+
+    with pytest.raises(RodadaJaEncerradaError):
+        caso_de_uso.executar(rodada_id=rodada.id, membro_id=membro.id, filme_id=filme.id)
+
+
+def test_indicar_filme_com_membro_inativo_levanta_erro(clube: Clube) -> None:
+    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    clubes.salvar(clube)
+    membro = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
+    membro.desativar()
+    membros.salvar(membro)
+    filme = Filme.criar(titulo="Duna")
+    filmes.salvar(filme)
+    rodada = Rodada.abrir(clube_id=clube.id, numero=1, data_inicio=date(2024, 1, 1))
+    rodadas.salvar(rodada)
+
+    with pytest.raises(MembroInativoError):
+        caso_de_uso.executar(rodada_id=rodada.id, membro_id=membro.id, filme_id=filme.id)
+
+
+def test_indicar_filme_inexistente_levanta_erro(clube: Clube) -> None:
+    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    clubes.salvar(clube)
+    membro = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
+    membros.salvar(membro)
+    rodada = Rodada.abrir(clube_id=clube.id, numero=1, data_inicio=date(2024, 1, 1))
+    rodadas.salvar(rodada)
+
+    with pytest.raises(EntidadeNaoEncontradaError):
+        caso_de_uso.executar(rodada_id=rodada.id, membro_id=membro.id, filme_id=FilmeId(uuid4()))
+
+
+def test_mesmo_membro_indicar_duas_vezes_na_mesma_rodada_levanta_erro(clube: Clube) -> None:
+    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    clubes.salvar(clube)
+    membro = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
+    membros.salvar(membro)
+    filme_1 = Filme.criar(titulo="Duna")
+    filme_2 = Filme.criar(titulo="Arrival")
+    filmes.salvar(filme_1)
+    filmes.salvar(filme_2)
+    rodada = Rodada.abrir(clube_id=clube.id, numero=1, data_inicio=date(2024, 1, 1))
+    rodadas.salvar(rodada)
+    caso_de_uso.executar(rodada_id=rodada.id, membro_id=membro.id, filme_id=filme_1.id)
+
+    with pytest.raises(IndicacaoDuplicadaError):
+        caso_de_uso.executar(rodada_id=rodada.id, membro_id=membro.id, filme_id=filme_2.id)
+
+
+def test_indicar_filme_alem_do_tamanho_da_rodada_levanta_erro() -> None:
+    caso_de_uso, clubes, membros, filmes, rodadas = _montar_caso_de_uso()
+    clube = Clube.criar(
+        nome="Clube pequeno",
+        configuracao=ConfiguracaoClube(
+            tamanho_rodada=1, escala_avaliacao=ConfiguracaoClube.padrao().escala_avaliacao
+        ),
+    )
+    clubes.salvar(clube)
+    membro_1 = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
+    membro_2 = Membro.criar(clube_id=clube.id, nome="Bia", data_ingresso=date(2024, 1, 1))
+    membros.salvar(membro_1)
+    membros.salvar(membro_2)
+    filme_1 = Filme.criar(titulo="Duna")
+    filme_2 = Filme.criar(titulo="Arrival")
+    filmes.salvar(filme_1)
+    filmes.salvar(filme_2)
+    rodada = Rodada.abrir(clube_id=clube.id, numero=1, data_inicio=date(2024, 1, 1))
+    rodadas.salvar(rodada)
+    caso_de_uso.executar(rodada_id=rodada.id, membro_id=membro_1.id, filme_id=filme_1.id)
+
+    with pytest.raises(RodadaLotadaError):
+        caso_de_uso.executar(rodada_id=rodada.id, membro_id=membro_2.id, filme_id=filme_2.id)
