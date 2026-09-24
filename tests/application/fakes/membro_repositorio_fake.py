@@ -22,3 +22,6 @@ class MembroRepositorioFake:
             for membro in self._membros.values()
             if membro.clube_id == clube_id and membro.ativo
         ]
+
+    def listar_por_clube(self, clube_id: ClubeId) -> list[Membro]:
+        return [membro for membro in self._membros.values() if membro.clube_id == clube_id]

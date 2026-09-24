@@ -21,3 +21,8 @@ class TemporadaOscarRepositorioFake:
             if temporada.clube_id == clube_id and temporada.ano == ano:
                 return temporada
         return None
+
+    def listar_por_clube(self, clube_id: ClubeId) -> list[TemporadaOscar]:
+        return [
+            temporada for temporada in self._temporadas.values() if temporada.clube_id == clube_id
+        ]

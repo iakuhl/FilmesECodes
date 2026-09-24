@@ -11,3 +11,7 @@ uv.lock.bak
 
 # Estado local de sessão do Claude Code (não é conteúdo do projeto)
 .claude/
+
+# Banco de dados local (SQLite) gerado pela CLI
+*.db
+*.sqlite3

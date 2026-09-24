@@ -4,7 +4,13 @@ version = "0.1.0"
 description = "Software de gestão para o clube de cinema Filmes e Cubos."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "sqlalchemy>=2.0",
+    "typer>=0.12",
+]
+
+[project.scripts]
+filmes-e-cubos = "filmes_e_cubos.adapters.interfaces.cli.main:app"
 
 [dependency-groups]
 dev = [

@@ -15,3 +15,6 @@ class FilmeRepositorioFake:
 
     def buscar_por_id(self, filme_id: FilmeId) -> Filme | None:
         return self._filmes.get(filme_id)
+
+    def listar_todos(self) -> list[Filme]:
+        return list(self._filmes.values())

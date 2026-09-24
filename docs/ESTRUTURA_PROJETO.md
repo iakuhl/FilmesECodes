@@ -1,11 +1,12 @@
 # Estrutura do Projeto
 
 Este documento descreve a estrutura de pastas do projeto, alinhada com a
-arquitetura definida em [ARQUITETURA.md](ARQUITETURA.md). A partir da
-Fase 1 do roadmap (ver [ROADMAP.md](ROADMAP.md)), `domain/` e
-`application/` (com suas subpastas e os testes correspondentes) já
-existem e estão implementados; `adapters/` continua reservada e vazia,
-pois persistência e interface concretas ainda são decisões em aberto.
+arquitetura definida em [ARQUITETURA.md](ARQUITETURA.md).
+`domain/`, `application/` (Fase 1) e `adapters/persistence/` +
+`adapters/servicos/` (Fase 2, persistência SQLite) já existem e estão
+implementados e testados. `adapters/interfaces/` (Fase 3, CLI) **ainda
+não existe** — ver [ROADMAP.md](ROADMAP.md) e a seção "Como continuar a
+Fase 3" do [README.md](../README.md).
 
 ## Árvore de diretórios
 
@@ -28,20 +29,26 @@ FilmesECodes/
 │       │   ├── value_objects/         # ex.: Nota, ConfiguracaoClube
 │       │   └── exceptions/            # erros de invariante de domínio
 │       ├── application/
-│       │   ├── use_cases/             # um módulo por caso de uso
+│       │   ├── use_cases/             # um módulo por caso de uso (15, após Fase 2)
 │       │   └── ports/                 # Protocols: repositórios, SorteadorService,
 │       │                              # RelogioService, CriterioApuracaoOscar
-│       └── adapters/                  # reservado; ainda vazio (Fase 2/3)
-│           ├── persistence/           # futuro: sqlite, json, memory...
-│           └── interfaces/            # futuro: cli, api, web...
+│       └── adapters/
+│           ├── persistence/
+│           │   └── sqlite/            # ✅ Fase 2: esquema, engine, 12 repositórios
+│           ├── servicos/              # ✅ Fase 2: RelogioSistema, SorteadorAleatorio
+│           └── interfaces/            # ⏳ Fase 3: CLI — AINDA NÃO EXISTE
+│               └── cli/               # (a criar: main.py, comandos_*.py, ...)
 └── tests/
     ├── conftest.py
     ├── domain/
     │   ├── value_objects/
     │   └── entities/
-    └── application/
-        ├── fakes/                     # implementações in-memory dos ports
-        └── use_cases/
+    ├── application/
+    │   ├── fakes/                     # implementações in-memory dos ports
+    │   └── use_cases/
+    └── adapters/
+        └── persistence/
+            └── sqlite/                # testes de integração, um arquivo por repositório
 ```
 
 ## Responsabilidade de cada pasta
@@ -56,13 +63,18 @@ FilmesECodes/
 - **`src/filmes_e_cubos/application/ports/`**: contratos (`Protocol`/ABC)
   que os casos de uso declaram precisar — sem nenhuma implementação
   concreta nesta fase.
-- **`src/filmes_e_cubos/adapters/`**: reservado para as implementações
-  concretas (persistência e interface) que serão decididas e escritas em
-  fases futuras (ver [ROADMAP.md](ROADMAP.md)). Fica vazio (ou nem é
-  criado) até essa decisão.
+- **`src/filmes_e_cubos/adapters/persistence/sqlite/`**: implementações
+  concretas dos ports de repositório usando SQLAlchemy Core + SQLite (ver
+  [ARQUITETURA.md](ARQUITETURA.md) para o racional de Core vs. ORM).
+- **`src/filmes_e_cubos/adapters/servicos/`**: implementações concretas
+  de `RelogioService` e `SorteadorService` usando o relógio e o gerador
+  aleatório reais do sistema.
+- **`src/filmes_e_cubos/adapters/interfaces/`**: reservado para a
+  interface de usuário (CLI na Fase 3). Ainda não existe.
 - **`tests/`**: espelha a estrutura de `src/`, com testes de domínio
-  (regras de negócio isoladas) e de aplicação (casos de uso com
-  implementações de teste/fake dos ports).
+  (regras de negócio isoladas), de aplicação (casos de uso com
+  implementações de teste/fake dos ports) e de adapters (persistência
+  testada de ponta a ponta contra um SQLite real, não fakes).
 
 ## Ferramentas e convenções previstas
 
@@ -72,6 +84,8 @@ FilmesECodes/
 | `pytest` | Framework de testes. |
 | `ruff` | Lint e formatação (substitui flake8/black/isort). |
 | `mypy` | Verificação estática de tipos — importante para validar os contratos (`Protocol`) entre camadas. |
+| `sqlalchemy` (Core) | Persistência SQLite na Fase 2 — tabelas explícitas, sem ORM declarativo. |
+| `typer` | Framework de CLI para a Fase 3 (dependência já adicionada; uso ainda pendente). |
 
 ### Convenções de nomenclatura
 
@@ -90,6 +104,5 @@ FilmesECodes/
 
 ## O que fica para depois
 
-- Escolha e implementação do primeiro adapter de persistência.
-- Escolha e implementação da primeira interface (provavelmente CLI, por
-  simplicidade — ver [ROADMAP.md](ROADMAP.md)).
+- Implementação da CLI (Fase 3) — ver "Como continuar a Fase 3" no
+  [README.md](../README.md).

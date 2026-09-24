@@ -10,6 +10,13 @@ os ports (repositórios/serviços) de que depende.
 
 ## Gestão de clube e membros
 
+### CriarClube
+- **Intenção**: criar um novo clube, com configuração padrão ou
+  customizada.
+- **Ports**: `ClubeRepository`.
+- **Regras**: nome obrigatório (validado pela própria entidade `Clube`);
+  sem configuração informada, usa `ConfiguracaoClube.padrao()`.
+
 ### CadastrarMembro
 - **Intenção**: adicionar um novo membro ao clube.
 - **Ports**: `MembroRepository`.
@@ -21,6 +28,16 @@ os ports (repositórios/serviços) de que depende.
 - **Regras**: um membro desativado deixa de contar para o
   `tamanho_rodada`, mas seus registros passados (indicações, avaliações,
   troféus) permanecem intactos.
+
+## Catálogo de filmes
+
+### CadastrarFilme
+- **Intenção**: adicionar um filme ao catálogo, disponível para ser
+  indicado por qualquer clube.
+- **Ports**: `FilmeRepository`.
+- **Regras**: título obrigatório (validado pela própria entidade
+  `Filme`); demais campos (ano, diretor, identificador externo) são
+  opcionais.
 
 ## Rodadas e indicações
 

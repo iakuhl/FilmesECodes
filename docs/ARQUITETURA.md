@@ -88,21 +88,33 @@ fora:
   média de notas, etc.) ainda não foi decidido para o produto; o caso de
   uso `ApurarCategoriaOscar` não fica acoplado a essa decisão em aberto.
 
-### Adapters (fora de escopo nesta fase)
+### Adapters
 
-Implementações concretas dos ports — um adapter de persistência (ex.:
-`SqliteMembroRepository`) e um adapter de interface (ex.: um comando de
-CLI que chama um caso de uso). Nenhum adapter é escrito nesta primeira
-fase; a pasta é apenas reservada na estrutura do projeto (ver
-[ESTRUTURA_PROJETO.md](ESTRUTURA_PROJETO.md)).
+Implementações concretas dos ports. Duas categorias já existem (Fase 2):
+
+- **Persistência** (`adapters/persistence/sqlite/`): um repositório
+  SQLite por entidade, implementado com **SQLAlchemy Core** (tabelas
+  explícitas via `Table`/`MetaData`, não o ORM declarativo). A escolha
+  por Core em vez do ORM é deliberada: as entidades de domínio já são
+  classes ricas, com construtores que validam invariantes e métodos de
+  mutação nomeados pela regra de negócio — moldá-las para um mapeamento
+  ORM declarativo (que espera atributos simples e mutáveis) quebraria
+  esse encapsulamento. Cada repositório converte manualmente entre
+  entidade e linha de tabela (funções `_para_linha`/`_para_entidade`).
+- **Serviços de infraestrutura** (`adapters/servicos/`):
+  implementações reais de `RelogioService` e `SorteadorService`.
+
+Uma terceira categoria ainda não existe: **interface** (ex.: um comando
+de CLI que chama um caso de uso), planejada para a Fase 3 (ver
+[ROADMAP.md](ROADMAP.md) e o README para o plano detalhado).
 
 ## Registro de decisões arquiteturais (ADR resumido)
 
 | # | Decisão | Status | Justificativa |
 |---|---------|--------|----------------|
 | 1 | Arquitetura Hexagonal (Ports & Adapters) | Adotada | Permite deixar persistência e interface indefinidas sem bloquear o domínio. |
-| 2 | Persistência via padrão Repository, implementação concreta em aberto | Adotada | Decisão explícita do usuário; concretização (SQLite, JSON, etc.) fica para uma fase futura. |
-| 3 | Interface de usuário indefinida (CLI/API/web) | Em aberto | Decisão explícita do usuário; o núcleo não deve depender dessa escolha. |
+| 2 | Persistência via padrão Repository, concretizada com **SQLite + SQLAlchemy Core** | Adotada (Fase 2) | Banco leve, embutido em arquivo, sem servidor externo; Core (não ORM) preserva o encapsulamento das entidades. |
+| 3 | Interface de usuário: **CLI com Typer** | Decidida, não implementada (Fase 3) | Simplicidade de implementação, sem infraestrutura extra; `typer` já está em `pyproject.toml`. |
 | 4 | Contratos via `typing.Protocol` (ou `abc.ABC` quando fizer sentido) | Adotada | Contratos explícitos e verificáveis por type checking (`mypy`), sem herança forçada. |
 | 5 | Injeção de dependência manual (sem framework de DI) | Adotada | Projeto pequeno; um container de DI seria complexidade prematura nesta fase. |
 | 6 | `Clube` como entidade de primeira classe, com configurações | Adotada | Viabiliza evolução para suportar múltiplos clubes em uma versão comercial futura, sem redesenhar o domínio. |

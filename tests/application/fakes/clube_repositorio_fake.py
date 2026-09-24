@@ -15,3 +15,6 @@ class ClubeRepositorioFake:
 
     def buscar_por_id(self, clube_id: ClubeId) -> Clube | None:
         return self._clubes.get(clube_id)
+
+    def listar_todos(self) -> list[Clube]:
+        return list(self._clubes.values())
