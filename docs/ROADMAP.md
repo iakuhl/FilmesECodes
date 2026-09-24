@@ -104,12 +104,58 @@ ponta a ponta que percorre uma temporada inteira do clube. Todos rodam a
 CLI de verdade, com `typer.testing.CliRunner`, contra um banco SQLite
 real em `tmp_path`.
 
-## Fase 4 — API / Web
+## Fase 4 — API / Web 🚧 em andamento
 
-- Caso haja interesse em uma interface mais rica (web) ou em uso remoto
-  pelos membros do clube, adicionar um adapter de API (ex.: FastAPI) e,
-  posteriormente, um frontend web.
-- Reaproveita integralmente os casos de uso das fases anteriores.
+Objetivo original: "caso haja interesse em uma interface mais rica (web)
+ou em uso remoto pelos membros do clube, adicionar um adapter de API
+(ex.: FastAPI) e, posteriormente, um frontend web", reaproveitando
+integralmente os casos de uso das fases anteriores.
+
+### API HTTP ✅ concluída
+
+Decisão tomada e implementada: **FastAPI**, servida pelo novo entry point
+`filmes-e-cubos-servidor` (uvicorn). A referência completa está em
+[API.md](API.md); a documentação interativa, em `/api/v1/docs`.
+
+Como na CLI, nenhuma regra de negócio nasceu aqui, e `domain/` não mudou.
+O que a fase acrescentou, e por quê:
+
+- **Composition root compartilhado** (`adapters/composicao.py`): o
+  `Contexto` saiu da CLI, porque a segunda interface precisava
+  exatamente do mesmo grafo. O critério de apuração do Óscar passou a
+  ser escolhido por interface (`Contexto.apurar_categoria_oscar(criterio)`).
+- **Convenções e consultas compartilhadas**
+  (`adapters/interfaces/convencoes.py` e `consultas.py`): nome padrão da
+  temporada, presença padrão da sessão, clube de uma sessão e buscas por
+  id que precisam encontrar a entidade — para que todas as interfaces se
+  comportem igual.
+- **`adapters/interfaces/api/`**: um sub-app FastAPI montado em
+  `/api/v1`, com um módulo de rotas por grupo de recursos, esquemas
+  Pydantic explícitos (o domínio nunca é exposto diretamente) e um
+  contrato de erro único: toda falha vira `application/problem+json`
+  (RFC 9457) com um `codigo` estável. A classificação de cada erro de
+  domínio em 404/409/422 é explícita, e um teste impede que um erro novo
+  fique sem classificação.
+- **`CriterioEscolhaInformada`** (`adapters/servicos/`): a API recebe no
+  corpo da requisição qual nomeação o grupo escolheu — o mesmo papel do
+  critério interativo da CLI, sem decidir o mecanismo de apuração, que
+  continua em aberto.
+- **`EscritasEmFila`**: middleware que enfileira as requisições que
+  alteram dados, para que duas requisições simultâneas (um duplo clique)
+  não furem juntas uma regra "lê, confere, grava" — ver a ADR 10.
+- **`RodadaRepository.listar_por_clube`**: única mudança em
+  `application/`, um método de leitura para o histórico de rodadas
+  (mesmo padrão das listagens acrescentadas na Fase 2).
+
+Testes: 95 testes da API em `tests/adapters/interfaces/api/` (app ASGI
+completo contra SQLite real, um arquivo por grupo de rotas, contrato de
+erro, OpenAPI e fluxo de ponta a ponta), mais os do middleware, do
+servidor, das convenções e do novo critério.
+
+### Interface web — próxima etapa
+
+Um frontend web servido pelo mesmo servidor, reaproveitando os mesmos
+casos de uso.
 
 ## Fase 5 — Evolução comercial
 
@@ -126,4 +172,5 @@ real em `tmp_path`.
 |---|---|---|
 | Implementação concreta de persistência | ✅ Resolvida: SQLite via SQLAlchemy Core | Fase 2 |
 | Primeira interface de usuário | ✅ Resolvida: CLI com Typer | Fase 3 |
-| Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | Continua em aberto no domínio — port `CriterioApuracaoOscar` plugável | A CLI usa `CriterioApuracaoInterativo`, que delega a escolha a quem opera. Quando o clube decidir um mecanismo automático, basta escrever outro adapter e trocá-lo no composition root. |
+| Tecnologia da API | ✅ Resolvida: FastAPI, erros RFC 9457 | Fase 4 |
+| Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | Continua em aberto no domínio — port `CriterioApuracaoOscar` plugável | A CLI usa `CriterioApuracaoInterativo` e a API usa `CriterioEscolhaInformada`: ambos delegam a escolha a quem opera. Quando o clube decidir um mecanismo automático, basta escrever outro adapter e entregá-lo ao caso de uso. |

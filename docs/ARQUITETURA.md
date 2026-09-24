@@ -17,17 +17,21 @@ núcleo.
 
 A aposta se confirmou: as duas decisões foram tomadas depois (SQLite na
 Fase 2, CLI na Fase 3) e nenhuma delas exigiu uma única alteração em
-`domain/` ou `application/`. Uma terceira continua em aberto — o critério
-de apuração do Óscar — e segue viável exatamente pelo mesmo mecanismo.
+`domain/` ou `application/`. Na Fase 4, uma segunda interface (a API
+HTTP) entrou ao lado da primeira reaproveitando todos os casos de uso —
+de novo sem mudar uma regra do núcleo. Uma decisão continua em aberto —
+o critério de apuração do Óscar — e segue viável exatamente pelo mesmo
+mecanismo.
 
 ## Camadas
 
 ```
-┌─────────────────────────────────────────────────────────┐
+┌───────────────────────────────────────────────────────────┐
 │  Adapters                                                 │
-│  - Interfaces: CLI (Typer) ✅ | API / Web (futuro)         │
+│  - Interfaces: CLI (Typer) ✅ | API HTTP (FastAPI) ✅      │
 │  - Persistência: SQLite + SQLAlchemy Core ✅               │
 │  - Serviços: relógio ✅, sorteador ✅, critério do Óscar ✅ │
+│  - Composition root: monta tudo isso para as interfaces   │
 └───────────────────────┬───────────────────────────────────┘
                          │ implementam
 ┌───────────────────────▼───────────────────────────────────┐
@@ -105,14 +109,25 @@ Implementações concretas dos ports. Três categorias existem:
   esse encapsulamento. Cada repositório converte manualmente entre
   entidade e linha de tabela (funções `_para_linha`/`_para_entidade`).
 - **Serviços de infraestrutura** (`adapters/servicos/`):
-  implementações reais de `RelogioService` e `SorteadorService`.
-- **Interface** (`adapters/interfaces/cli/`): a CLI em Typer (Fase 3 —
-  ver [CLI.md](CLI.md)). Traduz argumentos de terminal em chamadas aos
-  casos de uso e formata o resultado. Inclui também uma implementação de
-  `CriterioApuracaoOscar` (`CriterioApuracaoInterativo`), que pergunta ao
-  usuário quem venceu a categoria: como o mecanismo de apuração continua
-  em aberto no produto, a resposta mais honesta é delegá-la a quem opera,
-  e o port existe exatamente para permitir isso sem contaminar o domínio.
+  implementações reais de `RelogioService` e `SorteadorService`, e o
+  `CriterioEscolhaInformada` — uma implementação de
+  `CriterioApuracaoOscar` que recebe pronta a nomeação vencedora
+  escolhida pelo grupo (usada pelas interfaces HTTP).
+- **Interfaces** (`adapters/interfaces/`):
+  - a **CLI** em Typer (Fase 3 — ver [CLI.md](CLI.md)). Traduz argumentos
+    de terminal em chamadas aos casos de uso e formata o resultado. Inclui
+    também uma implementação de `CriterioApuracaoOscar`
+    (`CriterioApuracaoInterativo`), que pergunta ao usuário quem venceu a
+    categoria: como o mecanismo de apuração continua em aberto no
+    produto, a resposta mais honesta é delegá-la a quem opera, e o port
+    existe exatamente para permitir isso sem contaminar o domínio;
+  - a **API HTTP** em FastAPI (Fase 4 — ver [API.md](API.md)), um sub-app
+    montado em `/api/v1` por `servidor.py`, que também é o entry point
+    `filmes-e-cubos-servidor`. Traduz requisições em chamadas aos casos de
+    uso e erros de domínio em respostas `application/problem+json`
+    (RFC 9457). A escolha de quem venceu uma categoria do Óscar chega no
+    corpo da requisição e é repassada ao caso de uso pelo
+    `CriterioEscolhaInformada`.
 
 #### Composition root
 
@@ -146,7 +161,23 @@ Conveniências que várias interfaces compartilham — o nome padrão de uma
 edição do Óscar, a presença padrão de uma sessão, o clube a que uma
 sessão pertence — ficam em `adapters/interfaces/convencoes.py`, para que
 todas se comportem igual. Não são regras de negócio: os casos de uso
-continuam recebendo tudo explicitamente.
+continuam recebendo tudo explicitamente. Da mesma forma,
+`adapters/interfaces/consultas.py` reúne as buscas por id que precisam
+encontrar a entidade (`obter_clube`, `obter_rodada`...), levantando o
+mesmo `EntidadeNaoEncontradaError` que os casos de uso usam.
+
+#### Escritas em fila
+
+Vários casos de uso seguem o padrão "lê, confere uma regra, grava"
+(`IndicarFilme` confere que o membro ainda não indicou na rodada antes de
+gravar a indicação). Cada repositório abre sua própria transação, então
+duas requisições HTTP simultâneas poderiam ler o mesmo estado antigo e
+furar juntas uma regra. O middleware `EscritasEmFila`
+(`adapters/interfaces/escritas_em_fila.py`) faz as requisições que
+alteram dados rodarem uma de cada vez dentro do processo, enquanto as
+leituras seguem concorrentes. Com SQLite (um escritor por vez, de todo
+jeito) e um único processo, isso dá a cada caso de uso a atomicidade de
+que ele precisa sem introduzir uma Unit of Work — ver a ADR 10.
 
 ## Registro de decisões arquiteturais (ADR resumido)
 
@@ -160,6 +191,8 @@ continuam recebendo tudo explicitamente.
 | 6 | `Clube` como entidade de primeira classe, com configurações | Adotada | Viabiliza evolução para suportar múltiplos clubes em uma versão comercial futura, sem redesenhar o domínio. |
 | 7 | Listagens de leitura da interface vão direto ao repositório, sem caso de uso | Adotada (Fase 3) | Um caso de uso que só repassa uma chamada de repositório não acrescenta regra nenhuma — seria indireção vazia. Ações que mudam estado, essas sim, passam obrigatoriamente por um caso de uso. |
 | 8 | Composition root único, em `adapters/composicao.py` (na Fase 3, em `adapters/interfaces/cli/contexto.py`) | Adotada (Fase 3; movido na Fase 4) | Concentra em um lugar toda a amarração port↔implementação, e transforma a checagem de tipos nesse ponto em verificação de conformidade dos adapters. Compartilhado por todas as interfaces. |
+| 9 | API HTTP com **FastAPI**, em `/api/v1`, com erros no formato **RFC 9457** (`application/problem+json`) | Adotada (Fase 4) | FastAPI era a sugestão do roadmap, gera a documentação OpenAPI a partir dos próprios tipos e roda síncrono sobre o mesmo núcleo. A RFC 9457 dá aos clientes um formato de erro padronizado; o campo extra `codigo` (derivado do nome da exceção) permite reagir a um erro sem depender do texto. A classificação de cada erro de domínio em 404/409/422 é explícita e verificada por teste. Ver [API.md](API.md). |
+| 10 | Requisições que alteram dados são enfileiradas no processo (`EscritasEmFila`), em vez de uma Unit of Work transacional | Adotada (Fase 4) | Garante as regras "lê, confere, grava" contra requisições simultâneas (ex.: duplo clique) com uma fração da complexidade. Vale enquanto houver um único processo servidor e SQLite; ao escalar para vários processos ou outro banco, deve dar lugar a transações por caso de uso. |
 
 ## Princípios de orientação a objetos aplicados
 

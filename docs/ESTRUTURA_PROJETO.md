@@ -2,9 +2,9 @@
 
 Este documento descreve a estrutura de pastas do projeto, alinhada com a
 arquitetura definida em [ARQUITETURA.md](ARQUITETURA.md).
-Todas as camadas previstas até a Fase 3 existem e estão implementadas e
-testadas: `domain/` e `application/` (Fase 1), `adapters/persistence/` e
-`adapters/servicos/` (Fase 2) e `adapters/interfaces/cli/` (Fase 3).
+As camadas implementadas e testadas até aqui: `domain/` e `application/`
+(Fase 1), `adapters/persistence/` e `adapters/servicos/` (Fase 2),
+`adapters/interfaces/cli/` (Fase 3) e `adapters/interfaces/api/` (Fase 4).
 
 ## Árvore de diretórios
 
@@ -17,37 +17,49 @@ FilmesECodes/
 │   ├── CASOS_DE_USO.md
 │   ├── ESTRUTURA_PROJETO.md
 │   ├── CLI.md
+│   ├── API.md
 │   ├── ROADMAP.md
 │   └── GLOSSARIO.md
 ├── pyproject.toml                     # gerenciado via uv
 ├── src/
 │   └── filmes_e_cubos/
-│       ├── __init__.py
+│       ├── __init__.py                # __version__, lida dos metadados do pacote
 │       ├── domain/
 │       │   ├── entities/              # Clube, Membro, Filme, Rodada, ...
 │       │   ├── value_objects/         # ex.: Nota, ConfiguracaoClube
 │       │   └── exceptions/            # erros de invariante de domínio
 │       ├── application/
-│       │   ├── use_cases/             # um módulo por caso de uso (15, após Fase 2)
+│       │   ├── use_cases/             # um módulo por caso de uso (15)
 │       │   └── ports/                 # Protocols: repositórios, SorteadorService,
 │       │                              # RelogioService, CriterioApuracaoOscar
 │       └── adapters/
 │           ├── composicao.py          # composition root: engine -> repos -> casos de uso
 │           ├── persistence/
 │           │   └── sqlite/            # ✅ Fase 2: esquema, engine, 12 repositórios
-│           ├── servicos/              # ✅ Fase 2: RelogioSistema, SorteadorAleatorio
-│           └── interfaces/            # ✅ Fase 3: interface de usuário
+│           ├── servicos/              # ✅ Fase 2: RelogioSistema, SorteadorAleatorio;
+│           │                          # Fase 4: CriterioEscolhaInformada
+│           └── interfaces/
 │               ├── convencoes.py      # padrões deduzidos, iguais em todas as interfaces
-│               └── cli/
-│                   ├── main.py        # app Typer raiz; monta os grupos de comando
-│                   ├── contexto.py    # quando montar o composition root; critério da CLI
-│                   ├── erros.py       # CliError + tradução de erros para stderr/exit 1
-│                   ├── resolucao.py   # clube/rodada/temporada "correntes" quando omitidos
-│                   ├── conversores.py # texto da linha de comando -> tipos do domínio
-│                   ├── apresentacao.py            # tabelas e mensagens
-│                   ├── criterio_apuracao_interativo.py  # CriterioApuracaoOscar via prompt
-│                   └── comandos/      # um módulo por grupo: clube, membro, filme,
-│                                      # rodada, indicacao, sessao, avaliacao, oscar
+│               ├── consultas.py       # buscas por id que precisam encontrar a entidade
+│               ├── escritas_em_fila.py  # middleware: uma escrita HTTP por vez
+│               ├── servidor.py        # app ASGI completo + entry point do servidor
+│               ├── cli/               # ✅ Fase 3
+│               │   ├── main.py        # app Typer raiz; monta os grupos de comando
+│               │   ├── contexto.py    # quando montar o composition root; critério da CLI
+│               │   ├── erros.py       # CliError + tradução de erros para stderr/exit 1
+│               │   ├── resolucao.py   # clube/rodada/temporada "correntes" quando omitidos
+│               │   ├── conversores.py # texto da linha de comando -> tipos do domínio
+│               │   ├── apresentacao.py            # tabelas e mensagens
+│               │   ├── criterio_apuracao_interativo.py  # CriterioApuracaoOscar via prompt
+│               │   └── comandos/      # um módulo por grupo: clube, membro, filme,
+│               │                      # rodada, indicacao, sessao, avaliacao, oscar
+│               └── api/               # ✅ Fase 4
+│                   ├── app.py         # criar_api(): sub-app FastAPI montado em /api/v1
+│                   ├── dependencias.py  # injeção do Contexto nas rotas
+│                   ├── esquemas.py    # formato JSON de entrada e saída (Pydantic)
+│                   ├── erros.py       # erros -> application/problem+json (RFC 9457)
+│                   └── rotas/         # um módulo por grupo: clubes, membros, filmes,
+│                                      # rodadas, indicacoes, sessoes, avaliacoes, oscar
 └── tests/
     ├── conftest.py
     ├── domain/
@@ -59,9 +71,12 @@ FilmesECodes/
     └── adapters/
         ├── persistence/
         │   └── sqlite/                # testes de integração, um arquivo por repositório
-        └── interfaces/
-            └── cli/                   # CLI real contra SQLite temporário, um arquivo
-                                       # por grupo de comandos + fluxo de ponta a ponta
+        ├── servicos/
+        └── interfaces/                # convenções, middleware e servidor
+            ├── cli/                   # CLI real contra SQLite temporário, um arquivo
+            │                          # por grupo de comandos + fluxo de ponta a ponta
+            └── api/                   # API real (app ASGI completo) contra SQLite
+                                       # temporário, idem
 ```
 
 ## Responsabilidade de cada pasta
@@ -82,19 +97,23 @@ FilmesECodes/
   [ARQUITETURA.md](ARQUITETURA.md) para o racional de Core vs. ORM).
 - **`src/filmes_e_cubos/adapters/servicos/`**: implementações concretas
   de `RelogioService` e `SorteadorService` usando o relógio e o gerador
-  aleatório reais do sistema.
-- **`src/filmes_e_cubos/adapters/interfaces/cli/`**: a interface de
-  linha de comando (ver [CLI.md](CLI.md)). Traduz argumentos de terminal
-  em chamadas aos casos de uso e formata o resultado — nenhuma regra de
-  negócio mora aqui. `contexto.py` decide quando montar o composition
-  root (`adapters/composicao.py`, o único ponto do projeto que conhece
-  ports e implementações concretas ao mesmo tempo) e qual critério de
-  apuração do Óscar a CLI usa.
+  aleatório reais do sistema, e o `CriterioEscolhaInformada` (critério de
+  apuração do Óscar em que a vencedora chega escolhida).
+- **`src/filmes_e_cubos/adapters/interfaces/`**: as interfaces com o
+  usuário e o que elas compartilham (convenções, consultas por id, o
+  middleware de escritas e o servidor HTTP). Nenhuma regra de negócio
+  mora aqui.
+  - **`cli/`**: a interface de linha de comando (ver [CLI.md](CLI.md)).
+    `contexto.py` decide quando montar o composition root e qual critério
+    de apuração do Óscar a CLI usa.
+  - **`api/`**: a API HTTP (ver [API.md](API.md)). Traduz requisições em
+    chamadas aos casos de uso e erros em `application/problem+json`.
 - **`tests/`**: espelha a estrutura de `src/`, com testes de domínio
   (regras de negócio isoladas), de aplicação (casos de uso com
   implementações de teste/fake dos ports) e de adapters — estes sempre
-  contra o componente real: a persistência contra um SQLite de verdade e
-  a CLI contra o app Typer de verdade, nunca contra fakes.
+  contra o componente real: a persistência contra um SQLite de verdade, a
+  CLI contra o app Typer de verdade e a API contra o app ASGI de verdade,
+  nunca contra fakes.
 
 ## Ferramentas e convenções
 
@@ -103,9 +122,11 @@ FilmesECodes/
 | [`uv`](https://docs.astral.sh/uv/) | Gerenciamento de ambiente virtual e dependências, substituindo pip/venv/poetry. |
 | `pytest` | Framework de testes. |
 | `ruff` | Lint e formatação (substitui flake8/black/isort). |
-| `mypy` | Verificação estática de tipos — importante para validar os contratos (`Protocol`) entre camadas. |
+| `mypy` | Verificação estática de tipos (modo estrito) — importante para validar os contratos (`Protocol`) entre camadas. |
 | `sqlalchemy` (Core) | Persistência SQLite na Fase 2 — tabelas explícitas, sem ORM declarativo. |
 | `typer` | Framework da CLI (Fase 3), com o entry point `filmes-e-cubos`. |
+| `fastapi` + `uvicorn` | API HTTP (Fase 4), servida pelo entry point `filmes-e-cubos-servidor`. |
+| `httpx2` | Cliente HTTP usado pelo `TestClient` do Starlette nos testes (dependência só de desenvolvimento). |
 
 ### Convenções de nomenclatura
 
@@ -118,13 +139,19 @@ FilmesECodes/
   sufixo `Repository`/`Service`, e as exceções base são `DomainError` e
   `CliError` (o sufixo `Error` é exigido pela regra N818 do `ruff`, que o
   projeto adota). As exceções específicas, porém, continuam em português:
-  `RodadaJaAbertaError`, `NotaForaDaEscalaError`.
+  `RodadaJaAbertaError`, `NotaForaDaEscalaError`. Os campos padronizados
+  pela RFC 9457 nas respostas de erro da API (`type`, `title`, `status`,
+  `detail`) também ficam em inglês, porque são exigidos pelo padrão.
 - Um caso de uso = um verbo no infinitivo + objeto (`IndicarFilme`,
   `RealizarSorteio`), espelhando a lista em
   [CASOS_DE_USO.md](CASOS_DE_USO.md).
+- Na API, os esquemas de saída levam o sufixo `Saida` (`ClubeSaida`), os
+  corpos de criação começam por `Novo`/`Nova` (`NovoClube`,
+  `NovaIndicacao`) e os espelhos de enumerações do domínio levam o
+  sufixo `Api` (`StatusRodadaApi`), como o `TipoCategoriaCli` da CLI.
 
 ## O que fica para depois
 
-- Adapter de API/web (Fase 4) entraria como
-  `adapters/interfaces/api/`, ao lado de `cli/`, reaproveitando os mesmos
-  casos de uso — ver [ROADMAP.md](ROADMAP.md).
+- A interface web (segunda metade da Fase 4) entra ao lado da API, no
+  mesmo servidor, reaproveitando os mesmos casos de uso — ver
+  [ROADMAP.md](ROADMAP.md).

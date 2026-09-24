@@ -31,8 +31,9 @@ apuração do Óscar anual. É um projeto pessoal, mas conduzido com rigor
 profissional — serve como peça de portfólio e é desenhado para,
 eventualmente, evoluir para uma versão comercializável (multi-clube).
 
-**Status atual:** Fases 1, 2 e 3 do roadmap **concluídas e testadas** —
-o sistema é utilizável de ponta a ponta pela linha de comando. Ver
+**Status atual:** Fases 1, 2 e 3 do roadmap **concluídas e testadas**, e
+a Fase 4 em andamento — o sistema é utilizável de ponta a ponta pela
+linha de comando e por uma API HTTP. Ver
 [docs/ROADMAP.md](docs/ROADMAP.md) para o histórico completo.
 
 - ✅ **Fase 1** — núcleo de domínio (12 entidades, 6 value objects) e
@@ -43,10 +44,12 @@ o sistema é utilizável de ponta a ponta pela linha de comando. Ver
   `src/filmes_e_cubos/adapters/servicos/` (relógio e sorteador reais).
 - ✅ **Fase 3** — CLI com Typer, em
   `src/filmes_e_cubos/adapters/interfaces/cli/` (8 grupos de comando).
-- ⏳ **Fase 4** — API/web, não iniciada.
+- 🚧 **Fase 4** — ✅ API HTTP com FastAPI, em
+  `src/filmes_e_cubos/adapters/interfaces/api/`; interface web a seguir.
 
-Suíte de testes verde: 246 testes (`uv run pytest`), `uv run mypy src`
-limpo em 105 arquivos e `uv run ruff check .` sem violações.
+Suíte de testes verde: 360 testes (`uv run pytest`), `uv run mypy src`
+(modo estrito) limpo em 125 arquivos e `uv run ruff check .` sem
+violações.
 
 ## Uso
 
@@ -73,6 +76,17 @@ Os dados ficam em um arquivo SQLite (`filmes_e_cubos.db` no diretório
 atual, por padrão; configurável com `--db-path` ou a variável de ambiente
 `FILMES_E_CUBOS_DB`).
 
+### API HTTP
+
+```bash
+uv run filmes-e-cubos-servidor          # http://127.0.0.1:8000/api/v1/docs
+```
+
+O servidor usa o mesmo banco da CLI. A referência dos recursos e das
+convenções (incluindo o formato de erro, RFC 9457) está em
+[docs/API.md](docs/API.md). Ainda não há autenticação: por isso o padrão
+é ouvir só na própria máquina.
+
 ## Desenvolvimento
 
 O projeto é gerenciado com [uv](https://docs.astral.sh/uv/).
@@ -95,5 +109,8 @@ uv run ruff check .  # lint
   pastas e ferramentas do projeto.
 - [docs/CLI.md](docs/CLI.md) — referência da interface de linha de
   comando.
+- [docs/API.md](docs/API.md) — referência da API HTTP.
 - [docs/ROADMAP.md](docs/ROADMAP.md) — fases de desenvolvimento previstas.
+- [docs/PENDENCIAS.md](docs/PENDENCIAS.md) — questões de negócio em aberto,
+  decisões técnicas para revisão e dívidas técnicas conhecidas.
 - [docs/GLOSSARIO.md](docs/GLOSSARIO.md) — termos do domínio do clube.

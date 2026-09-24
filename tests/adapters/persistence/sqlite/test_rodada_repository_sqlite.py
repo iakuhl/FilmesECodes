@@ -57,3 +57,20 @@ def test_contar_por_clube(engine: Engine) -> None:
     repositorio.salvar(Rodada.abrir(clube_id=clube.id, numero=2, data_inicio=date(2024, 2, 1)))
 
     assert repositorio.contar_por_clube(clube.id) == 2
+
+
+def test_listar_por_clube_ordena_pelo_numero_e_isola_clubes(engine: Engine) -> None:
+    clube = _clube_salvo(engine)
+    outro_clube = _clube_salvo(engine)
+    repositorio = RodadaRepositorioSqlite(engine)
+    segunda = Rodada.abrir(clube_id=clube.id, numero=2, data_inicio=date(2024, 2, 1))
+    primeira = Rodada.abrir(clube_id=clube.id, numero=1, data_inicio=date(2024, 1, 1))
+    primeira.encerrar(data_encerramento=date(2024, 2, 1))
+    de_outro_clube = Rodada.abrir(clube_id=outro_clube.id, numero=1, data_inicio=date(2024, 1, 1))
+    for rodada in (segunda, primeira, de_outro_clube):  # salvas fora de ordem de propósito
+        repositorio.salvar(rodada)
+
+    assert [rodada.id for rodada in repositorio.listar_por_clube(clube.id)] == [
+        primeira.id,
+        segunda.id,
+    ]

@@ -24,3 +24,9 @@ class RodadaRepositorioFake:
 
     def contar_por_clube(self, clube_id: ClubeId) -> int:
         return sum(1 for rodada in self._rodadas.values() if rodada.clube_id == clube_id)
+
+    def listar_por_clube(self, clube_id: ClubeId) -> list[Rodada]:
+        return sorted(
+            (rodada for rodada in self._rodadas.values() if rodada.clube_id == clube_id),
+            key=lambda rodada: rodada.numero,
+        )

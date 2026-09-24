@@ -53,6 +53,19 @@ class RodadaRepositorioSqlite:
             ).scalar_one()
         return int(total)
 
+    def listar_por_clube(self, clube_id: ClubeId) -> list[Rodada]:
+        with self._engine.connect() as conexao:
+            linhas = (
+                conexao.execute(
+                    rodadas.select()
+                    .where(rodadas.c.clube_id == str(clube_id))
+                    .order_by(rodadas.c.numero)
+                )
+                .mappings()
+                .all()
+            )
+        return [_para_entidade(linha) for linha in linhas]
+
 
 def _para_linha(rodada: Rodada) -> dict[str, Any]:
     return {
