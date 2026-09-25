@@ -50,7 +50,8 @@ implementado ainda, exceto onde indicado.
       acontece quando vence um filme democracia.
 9. **Funcionalidades pequenas aprovadas:** reativar membro; definir a
    data do evento do Óscar; **média das notas** por sessão (sem
-   dorminhocos), **armazenada** e exibida com 1 casa decimal.
+   dorminhocos), **armazenada** — como fração, exibida em estrelas
+   (decisão 19, que substituiu a "1 casa decimal" original).
 10. **Duração do filme** (em minutos), para saber o tempo assistido no ano
     e quem indica filmes mais longos.
 11. **Dados para relatórios futuros:** o sistema deve agregar o máximo de
@@ -68,31 +69,64 @@ implementado ainda, exceto onde indicado.
 15. **Deploy:** só local por enquanto, mas o sistema deve continuar fácil
     de levar para um servidor ou para a nuvem — a decisão vai mudar.
 
+## Decisões complementares de 24/09/2026
+
+Respostas do dono do produto às interpretações da lista anterior (as de
+número 1, 3, 4, 6, 7 e 9 foram respondidas ou superadas aqui).
+
+16. **Empate generalizado no 2º turno:** a votação por classificação é só
+    entre os filmes empatados; os eliminados não voltam.
+17. **Nomeações por categoria:** todas as categorias de uma edição têm o
+    mesmo número de nomeações — 5 por padrão, editável ao abrir a edição.
+18. **Membro desativado e votação:** durante uma votação ativa não é
+    possível desativar um membro; se, por defeito, algum for desativado
+    mesmo assim, o voto dele é desconsiderado.
+19. **Média como fração:** a média guarda a soma e a quantidade das notas
+    (soma ÷ quantidade), sem arredondar, e é exibida em estrelas — uma
+    por inteiro, mais a fração restante com denominador de 2 a 10 (ex.:
+    3,66 → ★★★⅔).
+20. **Mesmo filme várias vezes na categoria:** continua permitido; uma
+    categoria pode ser inteira sobre um único filme.
+
 ### Interpretações minhas, para confirmar
 
-Pontos que as respostas não fecharam por completo; é assim que pretendo
-implementar, salvo correção:
+Pontos que as respostas não fecharam por completo; é assim que estou
+implementando, salvo correção:
 
 1. No 2º turno com apenas dois filmes, a 1ª e a 2ª opção cobrem os dois.
-   Se todos os filmes de um 2º turno empatarem de novo, a votação por
-   classificação é entre esses mesmos filmes (os eliminados não voltam).
-2. Empate parcial numa votação por classificação leva a um 2º turno
-   (votação dupla) com os empatados.
-3. Categoria com uma única nomeação vence sem votação.
-4. Votam os membros ativos no momento da apuração; o voto de quem foi
-   desativado no meio da votação é desconsiderado.
-5. O membro escolhido pelo grupo (vitória democracia ou empate absoluto)
-   precisa ser membro do clube.
-6. A média fica armazenada na sessão com 2 casas decimais (arredondamento
-   "meio para cima") e é exibida com 1.
-7. Passar para *em votação* exige que toda categoria tenha ao menos uma
-   nomeação — senão a temporada nunca chegaria a *apurada*.
-8. Como o mecanismo de apuração foi decidido, o port plugável
+2. Empate parcial numa votação por classificação leva a um novo turno de
+   votação dupla só com os empatados.
+3. O membro escolhido pelo grupo (vitória democracia ou empate absoluto)
+   precisa ser membro do clube (ativo ou não).
+4. Como o mecanismo de apuração foi decidido, o port plugável
    `CriterioApuracaoOscar` e suas implementações (a interativa da CLI e a
    `CriterioEscolhaInformada` da API) deixam de existir; a contagem de
    votos vira regra do domínio.
-9. Nomear o mesmo filme duas vezes na mesma categoria continua permitido
-   (a restrição foi oferecida e não escolhida).
+5. **Mínimo de 2 nomeações por categoria** (decisão 17): a votação dupla
+   pede duas opções distintas. Não há máximo. Com isso, a antiga
+   interpretação "categoria com uma única nomeação vence sem votação"
+   deixa de existir.
+6. Nomear além do número da edição é recusado; passar para *em votação*
+   exige que **toda categoria tenha exatamente esse número** de nomeações
+   e que a edição tenha **ao menos uma categoria**.
+7. **"Votação ativa"** (decisão 18) é a edição do Óscar do clube estar no
+   estado *em votação*. Cadastrar ou reativar um membro nesse período
+   continua permitido: ele passa a votar, e os turnos abertos esperam o
+   voto dele.
+8. **Vota-se em nomeações, não em filmes:** como o mesmo filme pode ser
+   nomeado várias vezes na mesma categoria (decisão 20), cada escolha do
+   voto aponta uma nomeação. As duas opções da votação dupla precisam ser
+   nomeações diferentes (podem ser do mesmo filme).
+9. **Sigilo do voto:** antes da apuração, as interfaces mostram só *quem*
+   já votou; depois, a pontuação de cada nomeação. As cédulas
+   individuais ficam guardadas (para relatórios), mas nenhuma interface
+   as exibe — ver a questão em aberto 2.
+10. **Estrelas com mais de 10 notas:** quando a fração exata tem
+    denominador maior que 10, exibe-se a fração mais próxima com
+    denominador até 10 (ex.: 34/11 = 3,09… → ★★★⅒); se ela arredondar
+    para zero ou para um inteiro, só aparecem estrelas inteiras.
+11. **Data do evento** pode ser definida ou trocada em qualquer estado da
+    edição, menos *encerrada* ("nada muda", decisão 7).
 
 ## Questões ainda em aberto
 
@@ -100,6 +134,9 @@ implementar, salvo correção:
    arquivo aceitos, como casar nomes de membros e títulos de filmes com
    os cadastrados, se sessões antigas pertencem a rodadas (e quais), e
    como o histórico convive com a regra de não repetir filmes.
+2. **Sigilo do voto:** as cédulas individuais podem ser exibidas (a todos,
+   só depois da apuração, ou nunca)? Hoje nenhuma interface as mostra
+   (interpretação 9).
 
 ## Decisões técnicas tomadas sem consulta
 

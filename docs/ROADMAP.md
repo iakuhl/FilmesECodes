@@ -239,27 +239,29 @@ quanto) a guardar só o resultado final.
 Ordem recomendada para a próxima sessão de trabalho, a partir do branch
 `roadmap/fases-4-e-5`:
 
-1. **Revisão de regras de 24/09** (decisões 3 a 11 de
+1. **Revisão de regras de 24/09** (decisões 3 a 11 e 16 a 20 de
    [PENDENCIAS.md](PENDENCIAS.md)), em commits pequenos, cada um com CLI,
-   API, testes e documentação atualizados:
-   1. revisão 0002 do esquema (Alembic): `filmes.duracao_minutos`,
-      `sessoes_exibicao.media_das_notas`, `trofeus.nomeacao_vencedora_id`
-      anulável (empate absoluto) e as tabelas da votação — calculando, na
-      própria migração, a média das sessões já avaliadas;
-   2. duração do filme; reativar membro; data do evento do Óscar;
-   3. só presentes avaliam (`AvaliarFilme` passa a deduzir o clube da
+   API, testes e documentação atualizados. Cada mudança de esquema ganha
+   a sua própria revisão do Alembic, no commit da regra que a pede:
+   1. duração do filme (revisão 0002: `filmes.duracao_minutos`); reativar
+      membro; data do evento do Óscar;
+   2. só presentes avaliam (`AvaliarFilme` passa a deduzir o clube da
       própria sessão, e o `--clube-id` da avaliação sai da CLI); média
-      recalculada e gravada a cada avaliação;
-   4. filme nunca se repete no clube (`IndicarFilme` e
+      guardada como fração — soma e quantidade das notas na sessão
+      (revisão 0003, que calcula as das sessões já avaliadas) —,
+      recalculada a cada avaliação e exibida em estrelas;
+   3. filme nunca se repete no clube (`IndicarFilme` e
       `AdicionarFilmeDemocracia`; novo `IndicacaoRepository.listar_por_filme`)
       e `IndicarFilmeParaCategoria` restrito às sessões do próprio clube;
-   5. uma edição por ano; ciclo da temporada com `EM_VOTACAO` e o caso de
-      uso de avanço, restringindo cada ação à sua fase;
-   6. votação: entidades `TurnoDeVotacao` (modo dupla ou classificação,
-      candidatas, estado) e `Voto` (escolhas em ordem), contagem como
-      regra do domínio, casos de uso `RegistrarVoto` e a nova
-      `ApurarCategoriaOscar`; remoção de `CriterioApuracaoOscar`;
-   7. contrato do módulo de histórico (só ports e estruturas de dados).
+   4. uma edição por ano; número de nomeações por categoria (revisão
+      0004); ciclo da temporada com `EM_VOTACAO` e o caso de uso de
+      avanço, restringindo cada ação à sua fase;
+   5. votação (revisão 0005: turnos, candidatas, votos e escolhas;
+      `trofeus.nomeacao_vencedora_id` anulável para o empate absoluto):
+      entidades `TurnoDeVotacao` e `Voto`, contagem como regra do domínio,
+      `RegistrarVoto` e a nova `ApurarCategoriaOscar`; desativar membro
+      bloqueado durante a votação; remoção de `CriterioApuracaoOscar`;
+   6. contrato do módulo de histórico (só ports e estruturas de dados).
 2. **Páginas da interface web** sobre o domínio já revisado (plano na
    seção da Fase 4), fechando a Fase 4.
 3. **Fase 5**: verificações entre clubes, login com convites e
