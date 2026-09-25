@@ -19,12 +19,14 @@ class CadastrarFilme:
         ano_lancamento: int | None = None,
         diretor: str | None = None,
         identificador_externo: str | None = None,
+        duracao_minutos: int | None = None,
     ) -> Filme:
         filme = Filme.criar(
             titulo=titulo,
             ano_lancamento=ano_lancamento,
             diretor=diretor,
             identificador_externo=identificador_externo,
+            duracao_minutos=duracao_minutos,
         )
         self._filmes.salvar(filme)
         return filme

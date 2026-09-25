@@ -166,6 +166,21 @@ implementando, salvo correção:
 10. **Migrações de esquema com Alembic** (ADR 11), com configuração
     programática e revisão inicial igual ao esquema das Fases 2 e 3;
     bancos antigos são reconhecidos e migrados sem perda de dados.
+11. **Uma revisão do Alembic por mudança de esquema**, no mesmo commit da
+    regra que a pede (0002: duração dos filmes), em vez de uma revisão
+    única para toda a revisão de regras: cada commit fica completo e
+    reversível por si.
+12. **Duração corrigível depois do cadastro** (`DefinirDuracaoFilme`,
+    `filme duracao`, `PUT /filmes/{id}/duracao`): sem isso, os filmes já
+    cadastrados nunca teriam duração, e a soma do tempo assistido no ano
+    (decisão 10) ficaria incompleta. É o único dado do filme editável por
+    enquanto.
+13. **`AcaoForaDaFaseError`** (409) é o erro único para "esta fase da
+    edição do Óscar não permite esta ação" — hoje, mudar a data do evento
+    de uma edição encerrada; na etapa do ciclo da temporada, as demais
+    restrições por fase.
+14. **Reativar é idempotente**, como desativar: reativar um membro ativo
+    não é erro.
 
 ## Dívidas técnicas conhecidas
 

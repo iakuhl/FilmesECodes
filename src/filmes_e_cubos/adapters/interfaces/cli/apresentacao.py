@@ -26,6 +26,11 @@ def formatar_opcional(valor: object | None) -> str:
     return AUSENTE if valor is None else str(valor)
 
 
+def formatar_duracao(minutos: int | None) -> str:
+    """Duração de um filme: `148 min`, ou o marcador de ausente."""
+    return AUSENTE if minutos is None else f"{minutos} min"
+
+
 def formatar_decimal(valor: Decimal) -> str:
     """Decimal em notação brasileira (vírgula decimal)."""
     return str(valor).replace(".", ",")

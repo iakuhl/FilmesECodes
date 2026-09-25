@@ -5,7 +5,10 @@ from __future__ import annotations
 from datetime import date
 from uuid import uuid4
 
-from filmes_e_cubos.domain.exceptions.oscar import TemporadaOscarInvalidaError
+from filmes_e_cubos.domain.exceptions.oscar import (
+    AcaoForaDaFaseError,
+    TemporadaOscarInvalidaError,
+)
 from filmes_e_cubos.domain.value_objects.identificadores import ClubeId, TemporadaOscarId
 from filmes_e_cubos.domain.value_objects.status import StatusTemporadaOscar
 
@@ -73,4 +76,9 @@ class TemporadaOscar:
         self._status = novo_status
 
     def definir_data_evento(self, data_evento: date) -> None:
+        """Marca (ou remarca) o dia da cerimônia; uma edição encerrada não muda mais."""
+        if self._status is StatusTemporadaOscar.ENCERRADA:
+            raise AcaoForaDaFaseError(
+                f"A edição {self._nome} está encerrada: a data do evento não muda mais."
+            )
         self._data_evento = data_evento

@@ -10,7 +10,9 @@ from filmes_e_cubos.domain.entities.filme import Filme
 
 def test_salvar_e_buscar_por_id_preserva_campos_opcionais(engine: Engine) -> None:
     repositorio = FilmeRepositorioSqlite(engine)
-    filme = Filme.criar(titulo="Duna", ano_lancamento=2021, diretor="Denis Villeneuve")
+    filme = Filme.criar(
+        titulo="Duna", ano_lancamento=2021, diretor="Denis Villeneuve", duracao_minutos=155
+    )
 
     repositorio.salvar(filme)
     recuperado = repositorio.buscar_por_id(filme.id)
@@ -19,6 +21,7 @@ def test_salvar_e_buscar_por_id_preserva_campos_opcionais(engine: Engine) -> Non
     assert recuperado.titulo == "Duna"
     assert recuperado.ano_lancamento == 2021
     assert recuperado.diretor == "Denis Villeneuve"
+    assert recuperado.duracao_minutos == 155
 
 
 def test_filme_apenas_com_titulo_recupera_campos_opcionais_como_none(engine: Engine) -> None:

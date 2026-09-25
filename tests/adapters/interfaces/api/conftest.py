@@ -41,6 +41,16 @@ class ApiDeTeste:
     def post(self, caminho: str, corpo: Any = None) -> Response:
         return self.cliente.post(PREFIXO_DA_API + caminho, json=corpo)
 
+    def put(self, caminho: str, corpo: Any = None) -> Response:
+        return self.cliente.put(PREFIXO_DA_API + caminho, json=corpo)
+
+    def atualizar(self, caminho: str, corpo: Any = None) -> Json:
+        """PUT esperando 200; devolve o recurso atualizado."""
+        resposta = self.put(caminho, corpo)
+        assert resposta.status_code == 200, resposta.text
+        corpo_da_resposta: Json = resposta.json()
+        return corpo_da_resposta
+
     def obter(self, caminho: str, **parametros: Any) -> Any:
         """GET esperando 200; devolve o corpo já decodificado."""
         resposta = self.get(caminho, **parametros)

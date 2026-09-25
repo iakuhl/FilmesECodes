@@ -218,6 +218,7 @@ class FilmeSaida(BaseModel):
     ano_lancamento: int | None
     diretor: str | None
     identificador_externo: str | None
+    duracao_minutos: int | None
 
     @classmethod
     def de_dominio(cls, filme: Filme) -> FilmeSaida:
@@ -227,6 +228,7 @@ class FilmeSaida(BaseModel):
             ano_lancamento=filme.ano_lancamento,
             diretor=filme.diretor,
             identificador_externo=filme.identificador_externo,
+            duracao_minutos=filme.duracao_minutos,
         )
 
 
@@ -237,6 +239,11 @@ class NovoFilme(_Entrada):
     identificador_externo: str | None = Field(
         default=None, description="Identificador em uma base externa (IMDb, TMDB...)."
     )
+    duracao_minutos: int | None = Field(default=None, description="Duração em minutos.")
+
+
+class NovaDuracao(_Entrada):
+    duracao_minutos: int = Field(description="Duração do filme, em minutos.")
 
 
 # --- Rodadas, indicações e sorteios ------------------------------------------
@@ -398,6 +405,10 @@ class NovaTemporada(_Entrada):
     nome: str | None = Field(
         default=None, description='Nome da edição. Padrão: "Óscar do <clube> <ano>".'
     )
+
+
+class NovaDataDoEvento(_Entrada):
+    data_evento: date = Field(description="Dia da cerimônia (AAAA-MM-DD).")
 
 
 class CategoriaSaida(BaseModel):

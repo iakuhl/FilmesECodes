@@ -31,3 +31,9 @@ class VencedorDemocraciaNaoInformadoError(DomainError):
     """Levantada ao apurar uma categoria cuja nomeação vencedora não tem indicador automático
     (veio de um filme DEMOCRACIA) sem que um vencedor manual tenha sido informado.
     """
+
+
+class AcaoForaDaFaseError(DomainError):
+    """Levantada ao tentar uma ação que a fase atual da edição do Óscar não permite
+    (ex.: mudar qualquer coisa numa edição encerrada).
+    """

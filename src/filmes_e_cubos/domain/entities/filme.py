@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from uuid import uuid4
 
-from filmes_e_cubos.domain.exceptions.filme import TituloFilmeObrigatorioError
+from filmes_e_cubos.domain.exceptions.filme import (
+    DuracaoFilmeInvalidaError,
+    TituloFilmeObrigatorioError,
+)
 from filmes_e_cubos.domain.value_objects.identificadores import FilmeId
 
 
@@ -23,14 +26,18 @@ class Filme:
         ano_lancamento: int | None = None,
         diretor: str | None = None,
         identificador_externo: str | None = None,
+        duracao_minutos: int | None = None,
     ) -> None:
         if not titulo or not titulo.strip():
             raise TituloFilmeObrigatorioError("O título do filme é obrigatório.")
+        if duracao_minutos is not None:
+            _validar_duracao(duracao_minutos)
         self._id = id
         self._titulo = titulo
         self._ano_lancamento = ano_lancamento
         self._diretor = diretor
         self._identificador_externo = identificador_externo
+        self._duracao_minutos = duracao_minutos
 
     @classmethod
     def criar(
@@ -40,6 +47,7 @@ class Filme:
         ano_lancamento: int | None = None,
         diretor: str | None = None,
         identificador_externo: str | None = None,
+        duracao_minutos: int | None = None,
     ) -> Filme:
         return cls(
             id=FilmeId(uuid4()),
@@ -47,6 +55,7 @@ class Filme:
             ano_lancamento=ano_lancamento,
             diretor=diretor,
             identificador_externo=identificador_externo,
+            duracao_minutos=duracao_minutos,
         )
 
     @property
@@ -68,3 +77,20 @@ class Filme:
     @property
     def identificador_externo(self) -> str | None:
         return self._identificador_externo
+
+    @property
+    def duracao_minutos(self) -> int | None:
+        """Duração em minutos; `None` enquanto ninguém a informou."""
+        return self._duracao_minutos
+
+    def definir_duracao(self, duracao_minutos: int) -> None:
+        """Informa (ou corrige) a duração — ex.: de um filme cadastrado antes do campo existir."""
+        _validar_duracao(duracao_minutos)
+        self._duracao_minutos = duracao_minutos
+
+
+def _validar_duracao(duracao_minutos: int) -> None:
+    if duracao_minutos <= 0:
+        raise DuracaoFilmeInvalidaError(
+            f"A duração do filme deve ser positiva, em minutos; recebido: {duracao_minutos}."
+        )

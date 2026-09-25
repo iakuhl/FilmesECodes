@@ -49,6 +49,7 @@ filmes = Table(
     Column("ano_lancamento", Integer, nullable=True),
     Column("diretor", String, nullable=True),
     Column("identificador_externo", String, nullable=True),
+    Column("duracao_minutos", Integer, nullable=True),
 )
 
 rodadas = Table(

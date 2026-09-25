@@ -53,3 +53,13 @@ def consultar_membro(membro_id: UUID, contexto: ContextoDep) -> MembroSaida:
 def desativar_membro(membro_id: UUID, contexto: ContextoDep) -> MembroSaida:
     contexto.desativar_membro.executar(membro_id=MembroId(membro_id))
     return MembroSaida.de_dominio(obter_membro(contexto.membros, membro_id))
+
+
+@roteador.post(
+    "/membros/{membro_id}/reativar",
+    summary="Reativa um membro",
+    description="O membro volta a indicar, avaliar e votar, com o histórico que já tinha.",
+)
+def reativar_membro(membro_id: UUID, contexto: ContextoDep) -> MembroSaida:
+    contexto.reativar_membro.executar(membro_id=MembroId(membro_id))
+    return MembroSaida.de_dominio(obter_membro(contexto.membros, membro_id))

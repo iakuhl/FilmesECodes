@@ -14,6 +14,7 @@ def test_so_o_titulo_e_obrigatorio(api: ApiDeTeste) -> None:
     assert filme["ano_lancamento"] is None
     assert filme["diretor"] is None
     assert filme["identificador_externo"] is None
+    assert filme["duracao_minutos"] is None
 
 
 def test_cadastrar_com_todos_os_campos(api: ApiDeTeste) -> None:
@@ -49,3 +50,28 @@ def test_ano_nao_numerico_e_recusado_na_validacao(api: ApiDeTeste) -> None:
 
 def test_filme_inexistente_e_404(api: ApiDeTeste) -> None:
     assert_problema(api.get(f"/filmes/{uuid4()}"), 404, "entidade_nao_encontrada")
+
+
+def test_cadastrar_com_duracao(api: ApiDeTeste) -> None:
+    filme = api.criar("/filmes", {"titulo": "Parasita", "duracao_minutos": 132})
+
+    assert filme["duracao_minutos"] == 132
+
+
+def test_definir_duracao_de_filme_ja_cadastrado(api: ApiDeTeste, filme: Json) -> None:
+    atualizado = api.atualizar(f"/filmes/{filme['id']}/duracao", {"duracao_minutos": 132})
+
+    assert atualizado["duracao_minutos"] == 132
+    assert api.obter(f"/filmes/{filme['id']}")["duracao_minutos"] == 132
+
+
+def test_duracao_nao_positiva_e_recusada(api: ApiDeTeste, filme: Json) -> None:
+    resposta = api.put(f"/filmes/{filme['id']}/duracao", {"duracao_minutos": 0})
+
+    assert_problema(resposta, 422, "duracao_filme_invalida")
+
+
+def test_duracao_de_filme_inexistente_e_404(api: ApiDeTeste) -> None:
+    resposta = api.put(f"/filmes/{uuid4()}/duracao", {"duracao_minutos": 90})
+
+    assert_problema(resposta, 404, "entidade_nao_encontrada")

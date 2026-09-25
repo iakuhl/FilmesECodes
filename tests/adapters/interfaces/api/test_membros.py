@@ -63,3 +63,13 @@ def test_clube_inexistente_e_404(api: ApiDeTeste) -> None:
 def test_membro_inexistente_e_404(api: ApiDeTeste) -> None:
     assert_problema(api.get(f"/membros/{uuid4()}"), 404, "entidade_nao_encontrada")
     assert_problema(api.post(f"/membros/{uuid4()}/desativar"), 404, "entidade_nao_encontrada")
+
+
+def test_reativar_devolve_o_membro_aos_ativos(api: ApiDeTeste, clube: Json, membro: Json) -> None:
+    api.executar(f"/membros/{membro['id']}/desativar")
+
+    reativado = api.executar(f"/membros/{membro['id']}/reativar")
+
+    assert reativado["ativo"] is True
+    ativos = api.obter(f"/clubes/{clube['id']}/membros", apenas_ativos=True)
+    assert [m["nome"] for m in ativos] == ["Iano"]

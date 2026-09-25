@@ -7,6 +7,7 @@ etapas reais do evento: montar a edição, nomear os concorrentes e premiar.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -72,10 +73,45 @@ def temporada_listar(
     clube = resolver_clube(contexto, clube_id)
     temporadas = contexto.temporadas.listar_por_clube(clube.id)
     echo_tabela(
-        ("ID", "ANO", "NOME", "SITUAÇÃO"),
-        [(str(t.id), str(t.ano), t.nome, t.status.name.lower()) for t in temporadas],
+        ("ID", "ANO", "NOME", "SITUAÇÃO", "EVENTO"),
+        [
+            (
+                str(t.id),
+                str(t.ano),
+                t.nome,
+                t.status.name.lower(),
+                formatar_opcional(t.data_evento.isoformat() if t.data_evento else None),
+            )
+            for t in temporadas
+        ],
         vazio=f"Nenhuma temporada do Óscar em {clube.nome}.",
     )
+
+
+@temporada_app.command("data-evento")
+def temporada_data_evento(
+    ctx: typer.Context,
+    data: Annotated[
+        datetime,
+        typer.Argument(
+            formats=["%Y-%m-%d", "%d/%m/%Y"],
+            help="Dia da cerimônia (AAAA-MM-DD ou DD/MM/AAAA).",
+            show_default=False,
+        ),
+    ],
+    temporada_id: Annotated[
+        UUID | None,
+        typer.Option("--temporada-id", help="Temporada do evento (padrão: a do ano corrente)."),
+    ] = None,
+    clube_id: Annotated[UUID | None, typer.Option("--clube-id", help="Clube da temporada.")] = None,
+) -> None:
+    """Marca (ou remarca) a data do evento de uma edição do Óscar."""
+    contexto = obter_contexto(ctx)
+    temporada = resolver_temporada(contexto, temporada_id, clube_id)
+    temporada = contexto.definir_data_evento_oscar.executar(
+        temporada_id=temporada.id, data_evento=data.date()
+    )
+    echo_resultado(f"Evento de {temporada.nome} marcado para {data.date().isoformat()}")
 
 
 @categoria_app.command("definir")

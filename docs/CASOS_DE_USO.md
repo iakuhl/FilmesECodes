@@ -29,6 +29,12 @@ os ports (repositórios/serviços) de que depende.
   `tamanho_rodada`, mas seus registros passados (indicações, avaliações,
   troféus) permanecem intactos.
 
+### ReativarMembro
+- **Intenção**: devolver às rodadas um membro desativado.
+- **Ports**: `MembroRepository`.
+- **Regras**: o membro volta a contar para o `tamanho_rodada` e a
+  indicar, avaliar e votar, com o histórico que já tinha.
+
 ## Catálogo de filmes
 
 ### CadastrarFilme
@@ -36,8 +42,14 @@ os ports (repositórios/serviços) de que depende.
   indicado por qualquer clube.
 - **Ports**: `FilmeRepository`.
 - **Regras**: título obrigatório (validado pela própria entidade
-  `Filme`); demais campos (ano, diretor, identificador externo) são
-  opcionais.
+  `Filme`); demais campos (ano, diretor, identificador externo, duração
+  em minutos) são opcionais; a duração, quando informada, é positiva.
+
+### DefinirDuracaoFilme
+- **Intenção**: informar ou corrigir a duração de um filme já cadastrado
+  (os cadastrados antes de o campo existir não a têm).
+- **Ports**: `FilmeRepository`.
+- **Regras**: duração positiva, em minutos.
 
 ## Rodadas e indicações
 
@@ -108,6 +120,12 @@ os ports (repositórios/serviços) de que depende.
 - **Ports**: `TemporadaOscarRepository`, `RelogioService`.
 - **Regras**: normalmente uma temporada por ano civil; nome pode ser
   customizado.
+
+### DefinirDataEventoOscar
+- **Intenção**: marcar (ou remarcar) o dia da cerimônia de uma edição.
+- **Ports**: `TemporadaOscarRepository`.
+- **Regras**: permitido em qualquer fase, menos depois de a edição ser
+  encerrada (`AcaoForaDaFaseError`).
 
 ### DefinirCategoriaOscar
 - **Intenção**: adicionar uma categoria (fixa ou variável) a uma

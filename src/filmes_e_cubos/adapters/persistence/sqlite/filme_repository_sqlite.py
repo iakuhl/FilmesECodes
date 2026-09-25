@@ -44,6 +44,7 @@ def _para_linha(filme: Filme) -> dict[str, Any]:
         "ano_lancamento": filme.ano_lancamento,
         "diretor": filme.diretor,
         "identificador_externo": filme.identificador_externo,
+        "duracao_minutos": filme.duracao_minutos,
     }
 
 
@@ -54,4 +55,5 @@ def _para_entidade(linha: RowMapping) -> Filme:
         ano_lancamento=linha["ano_lancamento"],
         diretor=linha["diretor"],
         identificador_externo=linha["identificador_externo"],
+        duracao_minutos=linha["duracao_minutos"],
     )

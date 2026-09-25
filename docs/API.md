@@ -112,13 +112,15 @@ também a lista `erros`, com o campo e o motivo:
 | `POST /clubes/{clube_id}/membros` | Cadastra um membro, já ativo. Corpo: `{"nome", "apelido"?}`. |
 | `GET /membros/{membro_id}` | Consulta um membro. |
 | `POST /membros/{membro_id}/desativar` | Desativa o membro, preservando o histórico dele. |
+| `POST /membros/{membro_id}/reativar` | Reativa o membro, com o histórico que ele já tinha. |
 
 ### Filmes
 
 | Método e caminho | O que faz |
 |---|---|
 | `GET /filmes` | Lista o catálogo (compartilhado entre clubes). |
-| `POST /filmes` | Cadastra um filme. Corpo: `{"titulo", "ano_lancamento"?, "diretor"?, "identificador_externo"?}`. |
+| `POST /filmes` | Cadastra um filme. Corpo: `{"titulo", "ano_lancamento"?, "diretor"?, "identificador_externo"?, "duracao_minutos"?}`. |
+| `PUT /filmes/{filme_id}/duracao` | Informa ou corrige a duração. Corpo: `{"duracao_minutos"}` (positiva; `422` se não for). |
 | `GET /filmes/{filme_id}` | Consulta um filme. |
 
 ### Rodadas
@@ -173,6 +175,7 @@ porque ali a omissão é um gesto explícito de quem digita o comando.)
 | `GET /clubes/{clube_id}/oscar/temporadas` | Lista as edições do Óscar do clube. |
 | `POST /clubes/{clube_id}/oscar/temporadas` | Abre uma edição. Corpo opcional: `{"ano"?, "nome"?}`. Sem `ano`, usa o corrente; sem `nome`, `"Óscar do <clube> <ano>"`. |
 | `GET /oscar/temporadas/{temporada_id}` | Consulta uma edição. |
+| `PUT /oscar/temporadas/{temporada_id}/data-evento` | Marca (ou remarca) o dia da cerimônia. Corpo: `{"data_evento": "AAAA-MM-DD"}`. `409` se a edição já estiver encerrada. |
 | `GET /oscar/temporadas/{temporada_id}/categorias` | Lista as categorias da edição. |
 | `POST /oscar/temporadas/{temporada_id}/categorias` | Define uma categoria. Corpo: `{"nome", "tipo"?: "fixa" \| "variavel", "descricao"?}`. O padrão é `variavel`. |
 | `GET /oscar/categorias/{categoria_id}` | Consulta uma categoria. |

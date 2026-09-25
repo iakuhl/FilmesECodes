@@ -11,6 +11,7 @@ from filmes_e_cubos.adapters.interfaces.api.esquemas import (
     CategoriaSaida,
     NomeacaoSaida,
     NovaCategoria,
+    NovaDataDoEvento,
     NovaNomeacao,
     NovaTemporada,
     PedidoDeApuracao,
@@ -75,6 +76,20 @@ def abrir_temporada(
 @roteador.get("/oscar/temporadas/{temporada_id}", summary="Consulta uma edição do Óscar")
 def consultar_temporada(temporada_id: UUID, contexto: ContextoDep) -> TemporadaSaida:
     return TemporadaSaida.de_dominio(obter_temporada(contexto.temporadas, temporada_id))
+
+
+@roteador.put(
+    "/oscar/temporadas/{temporada_id}/data-evento",
+    summary="Marca (ou remarca) a data do evento",
+    description="`409` se a edição já estiver encerrada.",
+)
+def definir_data_evento(
+    temporada_id: UUID, nova: NovaDataDoEvento, contexto: ContextoDep
+) -> TemporadaSaida:
+    temporada = contexto.definir_data_evento_oscar.executar(
+        temporada_id=TemporadaOscarId(temporada_id), data_evento=nova.data_evento
+    )
+    return TemporadaSaida.de_dominio(temporada)
 
 
 @roteador.get(

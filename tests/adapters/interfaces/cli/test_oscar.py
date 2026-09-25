@@ -173,3 +173,16 @@ def _nomear(cli: CliDeTeste, categoria_id: str, filme_id: str) -> None:
 
 def _linha(saida: str, trecho: str) -> str:
     return next(linha for linha in saida.splitlines() if trecho in linha)
+
+
+def test_marcar_e_remarcar_a_data_do_evento(cli: CliDeTeste, temporada_id: str) -> None:
+    cli.executar_ok("oscar", "temporada", "data-evento", "2025-01-18")
+    cli.executar_ok("oscar", "temporada", "data-evento", "25/01/2025")
+
+    assert "2025-01-25" in cli.executar_ok("oscar", "temporada", "listar").stdout
+
+
+def test_data_do_evento_invalida_e_recusada_pelo_parser(cli: CliDeTeste, temporada_id: str) -> None:
+    resultado = cli.executar("oscar", "temporada", "data-evento", "18 de janeiro")
+
+    assert resultado.exit_code == 2

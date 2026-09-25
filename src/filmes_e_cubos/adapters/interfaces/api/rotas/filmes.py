@@ -10,9 +10,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, status
 
-from filmes_e_cubos.adapters.interfaces.api.esquemas import FilmeSaida, NovoFilme
+from filmes_e_cubos.adapters.interfaces.api.esquemas import FilmeSaida, NovaDuracao, NovoFilme
 from filmes_e_cubos.adapters.interfaces.consultas import obter_filme
 from filmes_e_cubos.adapters.interfaces.contexto_http import ContextoDep
+from filmes_e_cubos.domain.value_objects.identificadores import FilmeId
 
 roteador = APIRouter(tags=["filmes"])
 
@@ -29,6 +30,7 @@ def cadastrar_filme(novo: NovoFilme, contexto: ContextoDep) -> FilmeSaida:
         ano_lancamento=novo.ano_lancamento,
         diretor=novo.diretor,
         identificador_externo=novo.identificador_externo,
+        duracao_minutos=novo.duracao_minutos,
     )
     return FilmeSaida.de_dominio(filme)
 
@@ -36,3 +38,15 @@ def cadastrar_filme(novo: NovoFilme, contexto: ContextoDep) -> FilmeSaida:
 @roteador.get("/filmes/{filme_id}", summary="Consulta um filme")
 def consultar_filme(filme_id: UUID, contexto: ContextoDep) -> FilmeSaida:
     return FilmeSaida.de_dominio(obter_filme(contexto.filmes, filme_id))
+
+
+@roteador.put(
+    "/filmes/{filme_id}/duracao",
+    summary="Informa ou corrige a duração de um filme",
+    description="Útil para os filmes cadastrados antes de a duração existir no catálogo.",
+)
+def definir_duracao(filme_id: UUID, nova: NovaDuracao, contexto: ContextoDep) -> FilmeSaida:
+    filme = contexto.definir_duracao_filme.executar(
+        filme_id=FilmeId(filme_id), duracao_minutos=nova.duracao_minutos
+    )
+    return FilmeSaida.de_dominio(filme)

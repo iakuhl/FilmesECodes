@@ -24,13 +24,17 @@ from filmes_e_cubos.domain.exceptions.clube import (
     NomeClubeObrigatorioError,
     TamanhoRodadaInvalidoError,
 )
-from filmes_e_cubos.domain.exceptions.filme import TituloFilmeObrigatorioError
+from filmes_e_cubos.domain.exceptions.filme import (
+    DuracaoFilmeInvalidaError,
+    TituloFilmeObrigatorioError,
+)
 from filmes_e_cubos.domain.exceptions.indicacao import (
     IndicacaoDuplicadaError,
     TransicaoDeStatusInvalidaError,
 )
 from filmes_e_cubos.domain.exceptions.membro import MembroInativoError, NomeMembroObrigatorioError
 from filmes_e_cubos.domain.exceptions.oscar import (
+    AcaoForaDaFaseError,
     CategoriaJaApuradaError,
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,
@@ -55,6 +59,7 @@ _NAO_ENCONTRADO: Final[tuple[type[DomainError], ...]] = (EntidadeNaoEncontradaEr
 # A requisição é válida, mas colide com o estado atual (tentar de novo não
 # adianta até que o estado mude).
 _CONFLITO: Final[tuple[type[DomainError], ...]] = (
+    AcaoForaDaFaseError,
     AvaliacaoDuplicadaError,
     CategoriaJaApuradaError,
     IndicacaoDuplicadaError,
@@ -70,6 +75,7 @@ _CONFLITO: Final[tuple[type[DomainError], ...]] = (
 
 # Os dados enviados violam uma regra de negócio, independentemente do estado.
 _ENTRADA_INVALIDA: Final[tuple[type[DomainError], ...]] = (
+    DuracaoFilmeInvalidaError,
     EscalaAvaliacaoInvalidaError,
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,

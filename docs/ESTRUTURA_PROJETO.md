@@ -29,7 +29,7 @@ FilmesECodes/
 │       │   ├── value_objects/         # ex.: Nota, ConfiguracaoClube
 │       │   └── exceptions/            # erros de invariante de domínio
 │       ├── application/
-│       │   ├── use_cases/             # um módulo por caso de uso (15)
+│       │   ├── use_cases/             # um módulo por caso de uso (18)
 │       │   └── ports/                 # Protocols: repositórios, SorteadorService,
 │       │                              # RelogioService, CriterioApuracaoOscar
 │       └── adapters/

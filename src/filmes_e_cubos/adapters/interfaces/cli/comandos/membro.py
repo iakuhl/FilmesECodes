@@ -46,6 +46,17 @@ def desativar(
     echo_resultado(f"Membro desativado: {membro_id}")
 
 
+@app.command("reativar")
+def reativar(
+    ctx: typer.Context,
+    membro_id: Annotated[UUID, typer.Argument(help="Id do membro a reativar.")],
+) -> None:
+    """Reativa um membro desativado; ele volta a indicar, avaliar e votar."""
+    contexto = obter_contexto(ctx)
+    contexto.reativar_membro.executar(membro_id=MembroId(membro_id))
+    echo_resultado(f"Membro reativado: {membro_id}")
+
+
 @app.command("listar")
 def listar(
     ctx: typer.Context,

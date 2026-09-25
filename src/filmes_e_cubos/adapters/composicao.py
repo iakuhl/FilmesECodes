@@ -88,6 +88,8 @@ from filmes_e_cubos.application.use_cases.cadastrar_filme import CadastrarFilme
 from filmes_e_cubos.application.use_cases.cadastrar_membro import CadastrarMembro
 from filmes_e_cubos.application.use_cases.criar_clube import CriarClube
 from filmes_e_cubos.application.use_cases.definir_categoria_oscar import DefinirCategoriaOscar
+from filmes_e_cubos.application.use_cases.definir_data_evento_oscar import DefinirDataEventoOscar
+from filmes_e_cubos.application.use_cases.definir_duracao_filme import DefinirDuracaoFilme
 from filmes_e_cubos.application.use_cases.desativar_membro import DesativarMembro
 from filmes_e_cubos.application.use_cases.encerrar_rodada import EncerrarRodada
 from filmes_e_cubos.application.use_cases.indicar_filme import IndicarFilme
@@ -95,6 +97,7 @@ from filmes_e_cubos.application.use_cases.indicar_filme_para_categoria import (
     IndicarFilmeParaCategoria,
 )
 from filmes_e_cubos.application.use_cases.realizar_sorteio import RealizarSorteio
+from filmes_e_cubos.application.use_cases.reativar_membro import ReativarMembro
 from filmes_e_cubos.application.use_cases.registrar_sessao_exibicao import RegistrarSessaoExibicao
 
 CAMINHO_BANCO_PADRAO = Path("filmes_e_cubos.db")
@@ -146,7 +149,9 @@ class Contexto:
             relogio=self.relogio,
         )
         self.desativar_membro = DesativarMembro(membro_repository=self.membros)
+        self.reativar_membro = ReativarMembro(membro_repository=self.membros)
         self.cadastrar_filme = CadastrarFilme(filme_repository=self.filmes)
+        self.definir_duracao_filme = DefinirDuracaoFilme(filme_repository=self.filmes)
         self.abrir_nova_rodada = AbrirNovaRodada(
             rodada_repository=self.rodadas,
             clube_repository=self.clubes,
@@ -192,6 +197,9 @@ class Contexto:
         self.abrir_temporada_oscar = AbrirTemporadaOscar(
             temporada_repository=self.temporadas,
             clube_repository=self.clubes,
+        )
+        self.definir_data_evento_oscar = DefinirDataEventoOscar(
+            temporada_repository=self.temporadas
         )
         self.definir_categoria_oscar = DefinirCategoriaOscar(
             categoria_repository=self.categorias,

@@ -59,6 +59,7 @@ ajuda não cria nada.
 |---|---|
 | `membro cadastrar NOME [--apelido X] [--clube-id ID]` | Cadastra um membro, já ativo. |
 | `membro desativar MEMBRO_ID` | Desativa o membro. O histórico dele (indicações, avaliações, troféus) permanece intacto; ele só deixa de contar para a rodada. |
+| `membro reativar MEMBRO_ID` | Reativa o membro, com o histórico que ele já tinha. |
 | `membro listar [--apenas-ativos] [--clube-id ID]` | Lista os membros e sua situação. |
 
 ### `filme`
@@ -67,7 +68,8 @@ O catálogo é compartilhado: um filme não pertence a um clube.
 
 | Comando | O que faz |
 |---|---|
-| `filme cadastrar TITULO [--ano N] [--diretor X] [--id-externo X]` | Cadastra um filme. Só o título é obrigatório. |
+| `filme cadastrar TITULO [--ano N] [--diretor X] [--id-externo X] [--duracao MIN]` | Cadastra um filme. Só o título é obrigatório; a duração é em minutos. |
+| `filme duracao FILME_ID MINUTOS` | Informa ou corrige a duração de um filme já cadastrado. |
 | `filme listar` | Lista o catálogo. |
 
 ### `rodada`
@@ -104,7 +106,8 @@ O catálogo é compartilhado: um filme não pertence a um clube.
 | Comando | O que faz |
 |---|---|
 | `oscar temporada abrir [--ano N] [--nome X] [--clube-id ID]` | Abre a edição anual. Sem `--ano`, usa o ano corrente. |
-| `oscar temporada listar [--clube-id ID]` | Lista as edições do clube. |
+| `oscar temporada listar [--clube-id ID]` | Lista as edições do clube, com a situação e a data do evento. |
+| `oscar temporada data-evento DATA [--temporada-id ID] [--clube-id ID]` | Marca (ou remarca) o dia da cerimônia: `AAAA-MM-DD` ou `DD/MM/AAAA`. Recusado depois que a edição é encerrada. |
 | `oscar categoria definir NOME [--tipo fixa\|variavel] [--descricao X] [--temporada-id ID]` | Adiciona uma categoria. O padrão é `variavel`. |
 | `oscar categoria listar [--temporada-id ID]` | Lista as categorias e quem já levou cada troféu. |
 | `oscar nomear --categoria-id ID --filme-id ID` | Nomeia um filme para a categoria. O filme precisa ter sido assistido pelo clube **dentro do ano da temporada**. |

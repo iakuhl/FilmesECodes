@@ -57,3 +57,11 @@ def test_cadastrar_membro_sem_clube_cadastrado_orienta_o_usuario(cli: CliDeTeste
 
 def _linha_do_membro(saida: str, nome: str) -> str:
     return next(linha for linha in saida.splitlines() if nome in linha)
+
+
+def test_reativar_membro_desativado(cli: CliDeTeste, membro_id: str) -> None:
+    cli.executar_ok("membro", "desativar", membro_id)
+
+    cli.executar_ok("membro", "reativar", membro_id)
+
+    assert "Iano" in cli.executar_ok("membro", "listar", "--apenas-ativos").stdout

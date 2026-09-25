@@ -206,3 +206,13 @@ def test_recursos_inexistentes_sao_404(api: ApiDeTeste) -> None:
         f"/oscar/nomeacoes/{uuid4()}",
     ):
         assert_problema(api.get(caminho), 404, "entidade_nao_encontrada")
+
+
+def test_marcar_a_data_do_evento(api: ApiDeTeste, temporada: Json) -> None:
+    atualizada = api.atualizar(
+        f"/oscar/temporadas/{temporada['id']}/data-evento", {"data_evento": "2025-01-18"}
+    )
+
+    assert atualizada["data_evento"] == "2025-01-18"
+    consultada = api.obter(f"/oscar/temporadas/{temporada['id']}")
+    assert consultada["data_evento"] == "2025-01-18"

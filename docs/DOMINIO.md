@@ -53,7 +53,8 @@ Uma pessoa do clube.
 - `apelido` (opcional)
 - `data_ingresso`
 - `ativo`: um membro pode ser desativado sem perder seu histórico de
-  indicações, sessões e troféus.
+  indicações, sessões e troféus — e reativado depois, com o mesmo
+  histórico.
 
 ### Filme
 
@@ -65,6 +66,10 @@ Um filme indicado e potencialmente assistido pelo clube.
 - `diretor` (opcional)
 - `identificador_externo` (opcional; reservado para integração futura com
   uma base de dados de filmes, ex. TMDB — não implementada nesta fase).
+- `duracao_minutos` (opcional; positiva quando informada). Pode ser
+  informada depois do cadastro — os filmes cadastrados antes de o campo
+  existir não a têm. Serve para somar o tempo assistido no ano e comparar
+  indicações (ver a Fase 6 do roadmap).
 
 ### Rodada
 
@@ -167,7 +172,8 @@ Uma edição anual do "Óscar do Filmes e Cubos".
 - `nome` (ex.: "Óscar do Filmes e Cubos 2025")
 - `status`: `em_preparacao`, `aberta_para_indicacoes`, `apurada`,
   `encerrada`.
-- `data_evento` (opcional até definida).
+- `data_evento` (opcional até definida): pode ser marcada e remarcada
+  em qualquer fase, menos depois de a edição ser encerrada.
 
 ### CategoriaOscar
 
