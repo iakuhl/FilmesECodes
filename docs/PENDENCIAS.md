@@ -202,6 +202,18 @@ implementando, salvo correção:
     (`application/use_cases/_filme_inedito.py`), usado pela indicação
     normal e pela democracia, com mensagens distintas para "já assistido"
     e "já indicado".
+20. **"Uma edição por ano" só no caso de uso**, sem restrição única no
+    banco: um banco antigo com duas edições no mesmo ano faria a migração
+    falhar. O mesmo vale para o número de nomeações, conferido na
+    nomeação e no avanço.
+21. **`TemporadaIncompletaError`** (409) é o erro único do avanço de fase
+    que esbarra em pendências (sem categorias, nomeações faltando,
+    categorias sem resultado); a mensagem lista o que falta, ex.:
+    "Pior criança (1/5)".
+22. **A apuração ainda usa o critério antigo** (escolha informada por
+    quem opera) e ainda não é restrita à fase *em votação*: a etapa da
+    votação a substitui por inteiro, com as suas restrições. Até lá, a
+    passagem para *apurada* conta os troféus emitidos por ela.
 
 ## Dívidas técnicas conhecidas
 

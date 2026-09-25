@@ -17,7 +17,10 @@ def temporada_id(cli: CliDeTeste, clube_id: str) -> str:
 
 @pytest.fixture
 def categoria_id(cli: CliDeTeste, temporada_id: str) -> str:
-    return cli.criar("oscar", "categoria", "definir", "Melhor veículo")
+    """Uma categoria numa edição já aberta para indicações (pronta para nomear filmes)."""
+    categoria = cli.criar("oscar", "categoria", "definir", "Melhor veículo")
+    cli.executar_ok("oscar", "temporada", "avancar")
+    return categoria
 
 
 @pytest.fixture
@@ -186,3 +189,39 @@ def test_data_do_evento_invalida_e_recusada_pelo_parser(cli: CliDeTeste, tempora
     resultado = cli.executar("oscar", "temporada", "data-evento", "18 de janeiro")
 
     assert resultado.exit_code == 2
+
+
+def test_temporada_com_numero_de_nomeacoes_escolhido(cli: CliDeTeste, clube_id: str) -> None:
+    cli.executar_ok("oscar", "temporada", "abrir", "--nomeacoes-por-categoria", "3")
+
+    assert "3 por categoria" in cli.executar_ok("oscar", "temporada", "listar").stdout
+
+
+def test_segunda_edicao_no_mesmo_ano_e_recusada(cli: CliDeTeste, temporada_id: str) -> None:
+    resultado = cli.executar("oscar", "temporada", "abrir")
+
+    assert resultado.exit_code == 1
+    assert "já tem uma edição" in resultado.stderr
+
+
+def test_avancar_mostra_a_fase_nova_e_votacao_exige_nomeacoes(
+    cli: CliDeTeste, categoria_id: str
+) -> None:
+    resultado = cli.executar("oscar", "temporada", "avancar")
+
+    assert resultado.exit_code == 1
+    assert "Melhor veículo (0/5)" in resultado.stderr
+    assert "aberta_para_indicacoes" in cli.executar_ok("oscar", "temporada", "listar").stdout
+
+
+def test_nomear_antes_de_abrir_as_indicacoes_e_recusado(
+    cli: CliDeTeste, temporada_id: str, filme_assistido: str
+) -> None:
+    categoria = cli.criar("oscar", "categoria", "definir", "Precoce")
+
+    resultado = cli.executar(
+        "oscar", "nomear", "--categoria-id", categoria, "--filme-id", filme_assistido
+    )
+
+    assert resultado.exit_code == 1
+    assert "aberta para indicações" in resultado.stderr

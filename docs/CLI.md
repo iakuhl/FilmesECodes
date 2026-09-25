@@ -105,12 +105,13 @@ O catálogo é compartilhado: um filme não pertence a um clube.
 
 | Comando | O que faz |
 |---|---|
-| `oscar temporada abrir [--ano N] [--nome X] [--clube-id ID]` | Abre a edição anual. Sem `--ano`, usa o ano corrente. |
+| `oscar temporada abrir [--ano N] [--nome X] [--nomeacoes-por-categoria N] [--clube-id ID]` | Abre a edição anual — uma por ano. Sem `--ano`, usa o ano corrente; toda categoria terá N nomeações (padrão 5, mínimo 2). |
+| `oscar temporada avancar [--temporada-id ID] [--clube-id ID]` | Leva a edição à fase seguinte: preparação → indicações → votação → apurada → encerrada. Ir à votação exige toda categoria com exatamente N nomeações; ir a apurada, resultado em toda categoria. |
 | `oscar temporada listar [--clube-id ID]` | Lista as edições do clube, com a situação e a data do evento. |
 | `oscar temporada data-evento DATA [--temporada-id ID] [--clube-id ID]` | Marca (ou remarca) o dia da cerimônia: `AAAA-MM-DD` ou `DD/MM/AAAA`. Recusado depois que a edição é encerrada. |
 | `oscar categoria definir NOME [--tipo fixa\|variavel] [--descricao X] [--temporada-id ID]` | Adiciona uma categoria. O padrão é `variavel`. |
-| `oscar categoria listar [--temporada-id ID]` | Lista as categorias e quem já levou cada troféu. |
-| `oscar nomear --categoria-id ID --filme-id ID` | Nomeia um filme para a categoria. O filme precisa ter sido assistido pelo clube **dentro do ano da temporada**. |
+| `oscar categoria listar [--temporada-id ID]` | Lista as categorias, quantas nomeações cada uma já tem (ex.: `3/5`) e quem já levou cada troféu. |
+| `oscar nomear --categoria-id ID --filme-id ID` | Nomeia um filme para a categoria, com a edição aberta para indicações e até completar as N nomeações. O filme precisa ter sido assistido pelo clube **dentro do ano da temporada**; pode ocupar mais de uma nomeação na mesma categoria. |
 | `oscar apurar CATEGORIA_ID [--membro-vencedor-id ID]` | Apura a categoria e emite o troféu. |
 
 #### Como a apuração decide o vencedor

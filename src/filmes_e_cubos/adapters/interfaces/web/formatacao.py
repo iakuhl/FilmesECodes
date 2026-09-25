@@ -35,6 +35,7 @@ ROTULOS: Final[dict[Enum, str]] = {
     StatusAvaliacao.DORMINHOCO: "Dorminhoco",
     StatusTemporadaOscar.EM_PREPARACAO: "Em preparação",
     StatusTemporadaOscar.ABERTA_PARA_INDICACOES: "Aberta para indicações",
+    StatusTemporadaOscar.EM_VOTACAO: "Em votação",
     StatusTemporadaOscar.APURADA: "Apurada",
     StatusTemporadaOscar.ENCERRADA: "Encerrada",
     TipoCategoriaOscar.FIXA: "Fixa",

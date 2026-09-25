@@ -62,6 +62,7 @@ def test_temporada_completa_do_clube(api: ApiDeTeste) -> None:
     categoria = api.criar(
         f"/oscar/temporadas/{temporada['id']}/categorias", {"nome": "Melhor veículo"}
     )
+    api.executar(f"/oscar/temporadas/{temporada['id']}/avancar")
     nomeacoes = {
         titulo: api.criar(
             f"/oscar/categorias/{categoria['id']}/nomeacoes", {"filme_id": filmes[titulo]}

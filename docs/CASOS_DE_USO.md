@@ -125,8 +125,20 @@ os ports (repositórios/serviços) de que depende.
 ### AbrirTemporadaOscar
 - **Intenção**: criar uma nova edição anual do Óscar.
 - **Ports**: `TemporadaOscarRepository`, `RelogioService`.
-- **Regras**: normalmente uma temporada por ano civil; nome pode ser
-  customizado.
+- **Regras**: **uma edição por clube por ano**
+  (`TemporadaOscarDuplicadaError`); nome pode ser customizado; o número de
+  nomeações por categoria é escolhido aqui (padrão 5, mínimo 2) e vale
+  para todas as categorias da edição.
+
+### AvancarTemporadaOscar
+- **Intenção**: levar a edição à fase seguinte do ciclo, um passo por vez.
+- **Ports**: `TemporadaOscarRepository`, `CategoriaOscarRepository`,
+  `NomeacaoOscarRepository`, `TrofeuRepository`.
+- **Regras**: ir a `em_votacao` exige ao menos uma categoria e,
+  em cada uma, exatamente o número de nomeações da edição; ir a `apurada`
+  exige resultado (troféu) em toda categoria — senão,
+  `TemporadaIncompletaError`, com o que falta. Uma edição encerrada não
+  avança.
 
 ### DefinirDataEventoOscar
 - **Intenção**: marcar (ou remarcar) o dia da cerimônia de uma edição.
@@ -138,7 +150,8 @@ os ports (repositórios/serviços) de que depende.
 - **Intenção**: adicionar uma categoria (fixa ou variável) a uma
   temporada.
 - **Ports**: `TemporadaOscarRepository`.
-- **Regras**: nome obrigatório; tipo (`fixa`/`variavel`) obrigatório.
+- **Regras**: nome obrigatório; tipo (`fixa`/`variavel`) obrigatório; só
+  em `em_preparacao` ou `aberta_para_indicacoes` (`AcaoForaDaFaseError`).
 
 ### IndicarFilmeParaCategoria
 - **Intenção**: nomear um filme, assistido pelo clube **dentro do ano da
@@ -153,7 +166,10 @@ os ports (repositórios/serviços) de que depende.
   em outro ano não é elegível, mesmo já tendo sido assistido alguma vez.
   A `NomeacaoOscar` herda o `indicado_por_membro_id` da indicação
   original (`None` se ela for `democracia`) — essa rastreabilidade é o
-  que permite entregar o troféu a quem indicou.
+  que permite entregar o troféu a quem indicou. Só com a edição
+  `aberta_para_indicacoes` (`AcaoForaDaFaseError`) e enquanto a categoria
+  não tiver todas as nomeações da edição (`CategoriaCompletaError`). O
+  mesmo filme pode ser nomeado mais de uma vez na mesma categoria.
 
 ### ApurarCategoriaOscar
 - **Intenção**: calcular/registrar o vencedor de uma categoria e emitir o

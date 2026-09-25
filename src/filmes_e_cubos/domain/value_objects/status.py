@@ -17,6 +17,7 @@ class StatusIndicacao(Enum):
 class StatusTemporadaOscar(Enum):
     EM_PREPARACAO = auto()
     ABERTA_PARA_INDICACOES = auto()
+    EM_VOTACAO = auto()
     APURADA = auto()
     ENCERRADA = auto()
 

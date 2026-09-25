@@ -84,6 +84,9 @@ from filmes_e_cubos.application.use_cases.abrir_temporada_oscar import AbrirTemp
 from filmes_e_cubos.application.use_cases.adicionar_filme_democracia import AdicionarFilmeDemocracia
 from filmes_e_cubos.application.use_cases.apurar_categoria_oscar import ApurarCategoriaOscar
 from filmes_e_cubos.application.use_cases.avaliar_filme import AvaliarFilme
+from filmes_e_cubos.application.use_cases.avancar_temporada_oscar import (
+    AvancarTemporadaOscar,
+)
 from filmes_e_cubos.application.use_cases.cadastrar_filme import CadastrarFilme
 from filmes_e_cubos.application.use_cases.cadastrar_membro import CadastrarMembro
 from filmes_e_cubos.application.use_cases.criar_clube import CriarClube
@@ -199,6 +202,12 @@ class Contexto:
         self.abrir_temporada_oscar = AbrirTemporadaOscar(
             temporada_repository=self.temporadas,
             clube_repository=self.clubes,
+        )
+        self.avancar_temporada_oscar = AvancarTemporadaOscar(
+            temporada_repository=self.temporadas,
+            categoria_repository=self.categorias,
+            nomeacao_repository=self.nomeacoes,
+            trofeu_repository=self.trofeus,
         )
         self.definir_data_evento_oscar = DefinirDataEventoOscar(
             temporada_repository=self.temporadas

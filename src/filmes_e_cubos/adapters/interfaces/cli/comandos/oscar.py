@@ -26,6 +26,7 @@ from filmes_e_cubos.adapters.interfaces.cli.contexto import (
 from filmes_e_cubos.adapters.interfaces.cli.conversores import TipoCategoriaCli
 from filmes_e_cubos.adapters.interfaces.cli.resolucao import resolver_clube, resolver_temporada
 from filmes_e_cubos.adapters.interfaces.convencoes import nome_padrao_da_temporada
+from filmes_e_cubos.domain.entities.temporada_oscar import NOMEACOES_POR_CATEGORIA_PADRAO
 from filmes_e_cubos.domain.value_objects.identificadores import (
     CategoriaOscarId,
     FilmeId,
@@ -49,9 +50,16 @@ def temporada_abrir(
     nome: Annotated[
         str | None, typer.Option("--nome", help="Nome da edição (padrão: derivado do ano).")
     ] = None,
+    nomeacoes_por_categoria: Annotated[
+        int,
+        typer.Option(
+            "--nomeacoes-por-categoria",
+            help="Quantas nomeações toda categoria da edição terá (mínimo 2).",
+        ),
+    ] = NOMEACOES_POR_CATEGORIA_PADRAO,
     clube_id: Annotated[UUID | None, typer.Option("--clube-id", help="Clube da edição.")] = None,
 ) -> None:
-    """Abre uma edição anual do Óscar."""
+    """Abre uma edição anual do Óscar — uma por ano."""
     contexto = obter_contexto(ctx)
     clube = resolver_clube(contexto, clube_id)
     ano_da_edicao = ano if ano is not None else contexto.relogio.hoje().year
@@ -59,6 +67,7 @@ def temporada_abrir(
         clube_id=clube.id,
         ano=ano_da_edicao,
         nome=nome if nome is not None else nome_padrao_da_temporada(clube.nome, ano_da_edicao),
+        nomeacoes_por_categoria=nomeacoes_por_categoria,
     )
     echo_resultado(f"Temporada aberta: {temporada.nome} ({temporada.id})")
 
@@ -73,19 +82,37 @@ def temporada_listar(
     clube = resolver_clube(contexto, clube_id)
     temporadas = contexto.temporadas.listar_por_clube(clube.id)
     echo_tabela(
-        ("ID", "ANO", "NOME", "SITUAÇÃO", "EVENTO"),
+        ("ID", "ANO", "NOME", "SITUAÇÃO", "NOMEAÇÕES", "EVENTO"),
         [
             (
                 str(t.id),
                 str(t.ano),
                 t.nome,
                 t.status.name.lower(),
+                f"{t.nomeacoes_por_categoria} por categoria",
                 formatar_opcional(t.data_evento.isoformat() if t.data_evento else None),
             )
             for t in temporadas
         ],
         vazio=f"Nenhuma temporada do Óscar em {clube.nome}.",
     )
+
+
+@temporada_app.command("avancar")
+def temporada_avancar(
+    ctx: typer.Context,
+    temporada_id: Annotated[
+        UUID | None,
+        typer.Option("--temporada-id", help="Temporada a avançar (padrão: a do ano corrente)."),
+    ] = None,
+    clube_id: Annotated[UUID | None, typer.Option("--clube-id", help="Clube da temporada.")] = None,
+) -> None:
+    """Leva a edição à fase seguinte: preparação, indicações, votação, apurada, encerrada."""
+    contexto = obter_contexto(ctx)
+    temporada = resolver_temporada(contexto, temporada_id, clube_id)
+    anterior = temporada.status
+    temporada = contexto.avancar_temporada_oscar.executar(temporada_id=temporada.id)
+    echo_resultado(f"{temporada.nome}: {anterior.name.lower()} -> {temporada.status.name.lower()}")
 
 
 @temporada_app.command("data-evento")
@@ -157,13 +184,15 @@ def categoria_listar(
     temporada = resolver_temporada(contexto, temporada_id, clube_id)
     categorias = contexto.categorias.listar_por_temporada(temporada.id)
     echo_tabela(
-        ("ID", "CATEGORIA", "TIPO", "DESCRIÇÃO", "VENCEDOR"),
+        ("ID", "CATEGORIA", "TIPO", "DESCRIÇÃO", "NOMEAÇÕES", "VENCEDOR"),
         [
             (
                 str(categoria.id),
                 categoria.nome,
                 categoria.tipo.name.lower(),
                 formatar_opcional(categoria.descricao),
+                f"{len(contexto.nomeacoes.listar_por_categoria(categoria.id))}"
+                f"/{temporada.nomeacoes_por_categoria}",
                 _vencedor(contexto, categoria.id),
             )
             for categoria in categorias

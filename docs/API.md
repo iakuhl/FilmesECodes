@@ -173,14 +173,15 @@ porque ali a omissão é um gesto explícito de quem digita o comando.)
 | Método e caminho | O que faz |
 |---|---|
 | `GET /clubes/{clube_id}/oscar/temporadas` | Lista as edições do Óscar do clube. |
-| `POST /clubes/{clube_id}/oscar/temporadas` | Abre uma edição. Corpo opcional: `{"ano"?, "nome"?}`. Sem `ano`, usa o corrente; sem `nome`, `"Óscar do <clube> <ano>"`. |
+| `POST /clubes/{clube_id}/oscar/temporadas` | Abre uma edição — uma por ano (`409` `temporada_oscar_duplicada`). Corpo opcional: `{"ano"?, "nome"?, "nomeacoes_por_categoria"?}`. Sem `ano`, usa o corrente; sem `nome`, `"Óscar do <clube> <ano>"`; sem `nomeacoes_por_categoria`, 5 (mínimo 2). |
+| `POST /oscar/temporadas/{temporada_id}/avancar` | Leva a edição à fase seguinte (em preparação → aberta para indicações → em votação → apurada → encerrada). `409` `temporada_incompleta` se faltar algo: categorias, nomeações ou resultados. |
 | `GET /oscar/temporadas/{temporada_id}` | Consulta uma edição. |
 | `PUT /oscar/temporadas/{temporada_id}/data-evento` | Marca (ou remarca) o dia da cerimônia. Corpo: `{"data_evento": "AAAA-MM-DD"}`. `409` se a edição já estiver encerrada. |
 | `GET /oscar/temporadas/{temporada_id}/categorias` | Lista as categorias da edição. |
 | `POST /oscar/temporadas/{temporada_id}/categorias` | Define uma categoria. Corpo: `{"nome", "tipo"?: "fixa" \| "variavel", "descricao"?}`. O padrão é `variavel`. |
 | `GET /oscar/categorias/{categoria_id}` | Consulta uma categoria. |
 | `GET /oscar/categorias/{categoria_id}/nomeacoes` | Lista as nomeações da categoria. |
-| `POST /oscar/categorias/{categoria_id}/nomeacoes` | Nomeia um filme. Corpo: `{"filme_id"}`. O filme precisa ter sido assistido pelo clube **dentro do ano da edição**. |
+| `POST /oscar/categorias/{categoria_id}/nomeacoes` | Nomeia um filme. Corpo: `{"filme_id"}`. O filme precisa ter sido assistido pelo clube **dentro do ano da edição**. `409` fora da fase de indicações (`acao_fora_da_fase`) ou com a categoria completa (`categoria_completa`). |
 | `GET /oscar/nomeacoes/{nomeacao_id}` | Consulta uma nomeação. |
 | `POST /oscar/categorias/{categoria_id}/apuracao` | Apura a categoria e emite o troféu. Corpo: `{"nomeacao_vencedora_id", "membro_vencedor_id"?}`. |
 | `GET /oscar/categorias/{categoria_id}/trofeu` | O troféu da categoria; `404` enquanto ela não tiver sido apurada. |

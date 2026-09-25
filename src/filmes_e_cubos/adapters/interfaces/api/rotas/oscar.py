@@ -55,7 +55,8 @@ def listar_temporadas(clube_id: UUID, contexto: ContextoDep) -> list[TemporadaSa
     status_code=status.HTTP_201_CREATED,
     summary="Abre uma edição do Óscar",
     description="O corpo é opcional: sem `ano`, usa o ano corrente; sem `nome`, "
-    '"Óscar do <clube> <ano>".',
+    '"Óscar do <clube> <ano>"; sem `nomeacoes_por_categoria`, 5. `409` se o clube já tiver '
+    "a edição daquele ano.",
 )
 def abrir_temporada(
     clube_id: UUID,
@@ -69,6 +70,7 @@ def abrir_temporada(
         clube_id=clube.id,
         ano=ano,
         nome=pedido.nome if pedido.nome is not None else nome_padrao_da_temporada(clube.nome, ano),
+        nomeacoes_por_categoria=pedido.nomeacoes_por_categoria,
     )
     return TemporadaSaida.de_dominio(temporada)
 
@@ -76,6 +78,21 @@ def abrir_temporada(
 @roteador.get("/oscar/temporadas/{temporada_id}", summary="Consulta uma edição do Óscar")
 def consultar_temporada(temporada_id: UUID, contexto: ContextoDep) -> TemporadaSaida:
     return TemporadaSaida.de_dominio(obter_temporada(contexto.temporadas, temporada_id))
+
+
+@roteador.post(
+    "/oscar/temporadas/{temporada_id}/avancar",
+    summary="Avança a edição para a fase seguinte",
+    description="Em preparação → aberta para indicações → em votação → apurada → encerrada, "
+    "um passo por vez. Ir à votação exige ao menos uma categoria, cada uma com exatamente o "
+    "número de nomeações da edição; ir a apurada exige resultado em toda categoria (`409` "
+    "`temporada_incompleta` se faltar algo).",
+)
+def avancar_temporada(temporada_id: UUID, contexto: ContextoDep) -> TemporadaSaida:
+    temporada = contexto.avancar_temporada_oscar.executar(
+        temporada_id=TemporadaOscarId(temporada_id)
+    )
+    return TemporadaSaida.de_dominio(temporada)
 
 
 @roteador.put(

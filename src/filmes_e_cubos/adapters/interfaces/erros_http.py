@@ -37,11 +37,15 @@ from filmes_e_cubos.domain.exceptions.indicacao import (
 from filmes_e_cubos.domain.exceptions.membro import MembroInativoError, NomeMembroObrigatorioError
 from filmes_e_cubos.domain.exceptions.oscar import (
     AcaoForaDaFaseError,
+    CategoriaCompletaError,
     CategoriaJaApuradaError,
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,
     NomeacaoInvalidaError,
     NomeCategoriaObrigatorioError,
+    NumeroDeNomeacoesInvalidoError,
+    TemporadaIncompletaError,
+    TemporadaOscarDuplicadaError,
     TemporadaOscarInvalidaError,
     VencedorDemocraciaNaoInformadoError,
 )
@@ -63,6 +67,7 @@ _NAO_ENCONTRADO: Final[tuple[type[DomainError], ...]] = (EntidadeNaoEncontradaEr
 _CONFLITO: Final[tuple[type[DomainError], ...]] = (
     AcaoForaDaFaseError,
     AvaliacaoDuplicadaError,
+    CategoriaCompletaError,
     CategoriaJaApuradaError,
     FilmeRepetidoNoClubeError,
     IndicacaoDuplicadaError,
@@ -73,6 +78,8 @@ _CONFLITO: Final[tuple[type[DomainError], ...]] = (
     RodadaJaEncerradaError,
     RodadaLotadaError,
     RodadaNaoEncerravelError,
+    TemporadaIncompletaError,
+    TemporadaOscarDuplicadaError,
     TemporadaOscarInvalidaError,
     TransicaoDeStatusInvalidaError,
 )
@@ -89,6 +96,7 @@ _ENTRADA_INVALIDA: Final[tuple[type[DomainError], ...]] = (
     NomeMembroObrigatorioError,
     NotaForaDaEscalaError,
     NotaInvalidaError,
+    NumeroDeNomeacoesInvalidoError,
     TamanhoRodadaInvalidoError,
     TituloFilmeObrigatorioError,
     VencedorDemocraciaNaoInformadoError,

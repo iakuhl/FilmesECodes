@@ -180,8 +180,14 @@ Uma edição anual do "Óscar do Filmes e Cubos".
 - `clube_id`
 - `ano`
 - `nome` (ex.: "Óscar do Filmes e Cubos 2025")
-- `status`: `em_preparacao`, `aberta_para_indicacoes`, `apurada`,
-  `encerrada`.
+- `status`: `em_preparacao` (define categorias) → `aberta_para_indicacoes`
+  (nomeia filmes; ainda aceita categorias) → `em_votacao` (os membros
+  votam; nomeações travadas) → `apurada` (toda categoria tem resultado) →
+  `encerrada` (nada muda). O avanço é manual, um passo por vez, e cada
+  ação confere se a fase atual a permite.
+- `nomeacoes_por_categoria`: quantas nomeações **toda** categoria da
+  edição tem — 5 por padrão, escolhido ao abrir a edição, no mínimo 2 (a
+  votação pede duas opções distintas).
 - `data_evento` (opcional até definida): pode ser marcada e remarcada
   em qualquer fase, menos depois de a edição ser encerrada.
 
@@ -195,6 +201,10 @@ Uma categoria de premiação dentro de uma `TemporadaOscar`.
 - `tipo`: `fixa` (se repete todo ano) ou `variavel` (exclusiva daquela
   edição).
 - `descricao` (opcional, para categorias mais específicas/humorísticas).
+
+Uma categoria recebe exatamente `nomeacoes_por_categoria` nomeações da
+sua edição antes da votação — nem mais (a nomeação excedente é recusada),
+nem menos (a edição não vai à votação).
 
 ### NomeacaoOscar
 
@@ -210,6 +220,9 @@ assistido pelo clube dentro do ano daquela temporada.
   de uma indicação `democracia`, que não tem indicador individual — nesse
   caso, quem recebe o troféu é decidido pelo grupo no momento da
   apuração (ver `Trofeu` e regra 7 abaixo).
+
+O mesmo filme pode ocupar várias nomeações da mesma categoria — uma
+categoria pode até ser inteira sobre um filme só.
 
 ### Trofeu
 

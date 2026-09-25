@@ -7,6 +7,7 @@ import pytest
 from filmes_e_cubos.application.use_cases.abrir_temporada_oscar import AbrirTemporadaOscar
 from filmes_e_cubos.domain.entities.clube import Clube
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
+from filmes_e_cubos.domain.exceptions.oscar import TemporadaOscarDuplicadaError
 from filmes_e_cubos.domain.value_objects.identificadores import ClubeId
 from filmes_e_cubos.domain.value_objects.status import StatusTemporadaOscar
 from tests.application.fakes.clube_repositorio_fake import ClubeRepositorioFake
@@ -34,3 +35,25 @@ def test_abrir_temporada_para_clube_inexistente_levanta_erro() -> None:
 
     with pytest.raises(EntidadeNaoEncontradaError):
         caso_de_uso.executar(clube_id=ClubeId(uuid4()), ano=2024, nome="Óscar 2024")
+
+
+def test_uma_edicao_por_clube_por_ano(clube: Clube) -> None:
+    clubes = ClubeRepositorioFake()
+    clubes.salvar(clube)
+    caso_de_uso = AbrirTemporadaOscar(TemporadaOscarRepositorioFake(), clubes)
+    caso_de_uso.executar(clube_id=clube.id, ano=2024, nome="Óscar 2024")
+
+    with pytest.raises(TemporadaOscarDuplicadaError):
+        caso_de_uso.executar(clube_id=clube.id, ano=2024, nome="Outro Óscar 2024")
+    assert caso_de_uso.executar(clube_id=clube.id, ano=2025, nome="Óscar 2025").ano == 2025
+
+
+def test_numero_de_nomeacoes_escolhido_ao_abrir(clube: Clube) -> None:
+    clubes = ClubeRepositorioFake()
+    clubes.salvar(clube)
+
+    temporada = AbrirTemporadaOscar(TemporadaOscarRepositorioFake(), clubes).executar(
+        clube_id=clube.id, ano=2024, nome="Óscar 2024", nomeacoes_por_categoria=3
+    )
+
+    assert temporada.nomeacoes_por_categoria == 3

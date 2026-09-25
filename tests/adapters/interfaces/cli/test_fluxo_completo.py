@@ -68,6 +68,7 @@ def test_temporada_completa_do_clube(cli: CliDeTeste) -> None:
     # Óscar: uma categoria com dois concorrentes, apurada interativamente.
     cli.executar_ok("oscar", "temporada", "abrir")
     categoria = cli.criar("oscar", "categoria", "definir", "Melhor veículo", "--tipo", "variavel")
+    cli.executar_ok("oscar", "temporada", "avancar")
     cli.executar_ok(
         "oscar", "nomear", "--categoria-id", categoria, "--filme-id", filmes["Parasita"]
     )

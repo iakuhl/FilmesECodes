@@ -123,6 +123,7 @@ temporadas_oscar = Table(
     Column("nome", String, nullable=False),
     Column("status", String, nullable=False),
     Column("data_evento", Date, nullable=True),
+    Column("nomeacoes_por_categoria", Integer, nullable=False, server_default="5"),
 )
 
 categorias_oscar = Table(

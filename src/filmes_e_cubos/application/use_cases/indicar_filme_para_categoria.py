@@ -12,6 +12,7 @@ from filmes_e_cubos.domain.entities.indicacao import Indicacao
 from filmes_e_cubos.domain.entities.nomeacao_oscar import NomeacaoOscar
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
 from filmes_e_cubos.domain.exceptions.oscar import (
+    CategoriaCompletaError,
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,
 )
@@ -59,6 +60,15 @@ class IndicarFilmeParaCategoria:
         temporada = self._temporadas.buscar_por_id(categoria.temporada_id)
         if temporada is None:
             raise EntidadeNaoEncontradaError(f"Temporada {categoria.temporada_id} não encontrada.")
+        temporada.verificar_aceita_nomeacoes()
+        if (
+            len(self._nomeacoes.listar_por_categoria(categoria_id))
+            >= temporada.nomeacoes_por_categoria
+        ):
+            raise CategoriaCompletaError(
+                f"A categoria {categoria.nome} já tem as "
+                f"{temporada.nomeacoes_por_categoria} nomeações da edição."
+            )
 
         indicacoes_assistidas = [
             indicacao

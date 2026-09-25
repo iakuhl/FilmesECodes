@@ -16,6 +16,8 @@ from filmes_e_cubos.domain.entities.sessao_exibicao import SessaoExibicao
 from filmes_e_cubos.domain.entities.temporada_oscar import TemporadaOscar
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
 from filmes_e_cubos.domain.exceptions.oscar import (
+    AcaoForaDaFaseError,
+    CategoriaCompletaError,
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,
 )
@@ -25,7 +27,7 @@ from filmes_e_cubos.domain.value_objects.identificadores import (
     FilmeId,
     MembroId,
 )
-from filmes_e_cubos.domain.value_objects.status import TipoCategoriaOscar
+from filmes_e_cubos.domain.value_objects.status import StatusTemporadaOscar, TipoCategoriaOscar
 from tests.application.fakes.categoria_oscar_repositorio_fake import CategoriaOscarRepositorioFake
 from tests.application.fakes.indicacao_repositorio_fake import IndicacaoRepositorioFake
 from tests.application.fakes.nomeacao_oscar_repositorio_fake import NomeacaoOscarRepositorioFake
@@ -49,8 +51,12 @@ class Cenario:
     nomeacoes: NomeacaoOscarRepositorioFake = field(default_factory=NomeacaoOscarRepositorioFake)
 
     def __post_init__(self) -> None:
-        temporada = TemporadaOscar.abrir(clube_id=self.clube_id, ano=2024, nome="Óscar 2024")
+        temporada = TemporadaOscar.abrir(
+            clube_id=self.clube_id, ano=2024, nome="Óscar 2024", nomeacoes_por_categoria=2
+        )
+        temporada.avancar_para(StatusTemporadaOscar.ABERTA_PARA_INDICACOES)
         self.temporadas.salvar(temporada)
+        self.temporada = temporada
         self.categoria = CategoriaOscar.criar(
             temporada_id=temporada.id, nome="Melhor veículo", tipo=TipoCategoriaOscar.VARIAVEL
         )
@@ -149,3 +155,37 @@ def test_indicar_filme_para_categoria_inexistente_levanta_erro() -> None:
         cenario.caso_de_uso.executar(
             categoria_id=CategoriaOscarId(uuid4()), filme_id=FilmeId(uuid4())
         )
+
+
+def test_so_nomeia_com_a_edicao_aberta_para_indicacoes() -> None:
+    cenario = Cenario()
+    filme_id = FilmeId(uuid4())
+    cenario.assistir(filme_id, date(2024, 6, 1), MembroId(uuid4()))
+    cenario.temporada.avancar_para(StatusTemporadaOscar.EM_VOTACAO)
+
+    with pytest.raises(AcaoForaDaFaseError):
+        cenario.caso_de_uso.executar(categoria_id=cenario.categoria.id, filme_id=filme_id)
+
+
+def test_categoria_completa_nao_aceita_mais_nomeacoes() -> None:
+    cenario = Cenario()
+    filmes = [FilmeId(uuid4()) for _ in range(3)]
+    for filme_id in filmes:
+        cenario.assistir(filme_id, date(2024, 6, 1), MembroId(uuid4()))
+    cenario.caso_de_uso.executar(categoria_id=cenario.categoria.id, filme_id=filmes[0])
+    cenario.caso_de_uso.executar(categoria_id=cenario.categoria.id, filme_id=filmes[1])
+
+    with pytest.raises(CategoriaCompletaError):
+        cenario.caso_de_uso.executar(categoria_id=cenario.categoria.id, filme_id=filmes[2])
+
+
+def test_mesmo_filme_pode_ocupar_varias_nomeacoes_da_categoria() -> None:
+    """Decisão 20: uma categoria pode ser inteira sobre um filme só."""
+    cenario = Cenario()
+    filme_id = FilmeId(uuid4())
+    cenario.assistir(filme_id, date(2024, 6, 1), MembroId(uuid4()))
+
+    cenario.caso_de_uso.executar(categoria_id=cenario.categoria.id, filme_id=filme_id)
+    cenario.caso_de_uso.executar(categoria_id=cenario.categoria.id, filme_id=filme_id)
+
+    assert len(cenario.nomeacoes.listar_por_categoria(cenario.categoria.id)) == 2

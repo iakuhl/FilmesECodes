@@ -253,7 +253,7 @@ Ordem recomendada para a próxima sessão de trabalho, a partir do branch
    3. ✅ filme nunca se repete no clube (`IndicarFilme` e
       `AdicionarFilmeDemocracia`; novo `IndicacaoRepository.listar_por_filme`)
       e `IndicarFilmeParaCategoria` restrito às sessões do próprio clube;
-   4. uma edição por ano; número de nomeações por categoria (revisão
+   4. ✅ uma edição por ano; número de nomeações por categoria (revisão
       0004); ciclo da temporada com `EM_VOTACAO` e o caso de uso de
       avanço, restringindo cada ação à sua fase;
    5. votação (revisão 0005: turnos, candidatas, votos e escolhas;

@@ -19,7 +19,12 @@ def temporada(api: ApiDeTeste, clube: Json) -> Json:
 
 @pytest.fixture
 def categoria(api: ApiDeTeste, temporada: Json) -> Json:
-    return api.criar(f"/oscar/temporadas/{temporada['id']}/categorias", {"nome": "Melhor veículo"})
+    """Uma categoria numa edição já aberta para indicações (pronta para nomear filmes)."""
+    categoria: Json = api.criar(
+        f"/oscar/temporadas/{temporada['id']}/categorias", {"nome": "Melhor veículo"}
+    )
+    api.executar(f"/oscar/temporadas/{temporada['id']}/avancar")
+    return categoria
 
 
 @pytest.fixture
@@ -103,6 +108,7 @@ def test_nao_nomeia_filme_assistido_fora_do_ano_da_temporada(
 ) -> None:
     antiga = api.criar(f"/clubes/{clube['id']}/oscar/temporadas", {"ano": ANO - 1})
     categoria = api.criar(f"/oscar/temporadas/{antiga['id']}/categorias", {"nome": "Pior criança"})
+    api.executar(f"/oscar/temporadas/{antiga['id']}/avancar")
 
     resposta = api.post(
         f"/oscar/categorias/{categoria['id']}/nomeacoes", {"filme_id": filme_assistido["id"]}
@@ -216,3 +222,47 @@ def test_marcar_a_data_do_evento(api: ApiDeTeste, temporada: Json) -> None:
     assert atualizada["data_evento"] == "2025-01-18"
     consultada = api.obter(f"/oscar/temporadas/{temporada['id']}")
     assert consultada["data_evento"] == "2025-01-18"
+
+
+def test_edicao_informa_e_aceita_o_numero_de_nomeacoes(api: ApiDeTeste, clube: Json) -> None:
+    padrao = api.criar(f"/clubes/{clube['id']}/oscar/temporadas")
+    escolhida = api.criar(
+        f"/clubes/{clube['id']}/oscar/temporadas", {"ano": 2030, "nomeacoes_por_categoria": 3}
+    )
+    invalida = api.post(
+        f"/clubes/{clube['id']}/oscar/temporadas", {"ano": 2031, "nomeacoes_por_categoria": 1}
+    )
+
+    assert padrao["nomeacoes_por_categoria"] == 5
+    assert escolhida["nomeacoes_por_categoria"] == 3
+    assert_problema(invalida, 422, "numero_de_nomeacoes_invalido")
+
+
+def test_segunda_edicao_no_mesmo_ano_e_409(api: ApiDeTeste, clube: Json, temporada: Json) -> None:
+    resposta = api.post(f"/clubes/{clube['id']}/oscar/temporadas")
+
+    assert_problema(resposta, 409, "temporada_oscar_duplicada")
+
+
+def test_avancar_percorre_o_ciclo_e_confere_as_nomeacoes(api: ApiDeTeste, clube: Json) -> None:
+    temporada = api.criar(f"/clubes/{clube['id']}/oscar/temporadas", {"nomeacoes_por_categoria": 2})
+    api.criar(f"/oscar/temporadas/{temporada['id']}/categorias", {"nome": "Melhor veículo"})
+
+    aberta = api.executar(f"/oscar/temporadas/{temporada['id']}/avancar")
+    sem_nomeacoes = api.post(f"/oscar/temporadas/{temporada['id']}/avancar")
+
+    assert aberta["status"] == "aberta_para_indicacoes"
+    assert_problema(sem_nomeacoes, 409, "temporada_incompleta")
+
+
+def test_categoria_completa_e_409(api: ApiDeTeste, clube: Json, filme_assistido: Json) -> None:
+    edicao = api.criar(f"/clubes/{clube['id']}/oscar/temporadas", {"nomeacoes_por_categoria": 2})
+    categoria = api.criar(f"/oscar/temporadas/{edicao['id']}/categorias", {"nome": "Só ele"})
+    api.executar(f"/oscar/temporadas/{edicao['id']}/avancar")
+    nomear = f"/oscar/categorias/{categoria['id']}/nomeacoes"
+    api.criar(nomear, {"filme_id": filme_assistido["id"]})
+    api.criar(nomear, {"filme_id": filme_assistido["id"]})
+
+    assert_problema(
+        api.post(nomear, {"filme_id": filme_assistido["id"]}), 409, "categoria_completa"
+    )

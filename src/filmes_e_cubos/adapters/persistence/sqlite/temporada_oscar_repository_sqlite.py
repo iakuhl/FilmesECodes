@@ -68,6 +68,7 @@ def _para_linha(temporada: TemporadaOscar) -> dict[str, Any]:
         "nome": temporada.nome,
         "status": temporada.status.name,
         "data_evento": temporada.data_evento,
+        "nomeacoes_por_categoria": temporada.nomeacoes_por_categoria,
     }
 
 
@@ -79,4 +80,5 @@ def _para_entidade(linha: RowMapping) -> TemporadaOscar:
         nome=linha["nome"],
         status=StatusTemporadaOscar[linha["status"]],
         data_evento=linha["data_evento"],
+        nomeacoes_por_categoria=linha["nomeacoes_por_categoria"],
     )

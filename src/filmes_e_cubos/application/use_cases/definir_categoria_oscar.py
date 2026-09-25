@@ -29,8 +29,10 @@ class DefinirCategoriaOscar:
         tipo: TipoCategoriaOscar,
         descricao: str | None = None,
     ) -> CategoriaOscar:
-        if self._temporadas.buscar_por_id(temporada_id) is None:
+        temporada = self._temporadas.buscar_por_id(temporada_id)
+        if temporada is None:
             raise EntidadeNaoEncontradaError(f"Temporada {temporada_id} não encontrada.")
+        temporada.verificar_aceita_categorias()
         categoria = CategoriaOscar.criar(
             temporada_id=temporada_id, nome=nome, tipo=tipo, descricao=descricao
         )

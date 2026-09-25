@@ -33,10 +33,12 @@ from filmes_e_cubos.domain.exceptions.indicacao import (
 )
 from filmes_e_cubos.domain.exceptions.membro import MembroInativoError
 from filmes_e_cubos.domain.exceptions.oscar import (
+    CategoriaCompletaError,
     CategoriaJaApuradaError,
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,
     NomeacaoInvalidaError,
+    TemporadaOscarDuplicadaError,
     VencedorDemocraciaNaoInformadoError,
 )
 from filmes_e_cubos.domain.exceptions.rodada import (
@@ -53,6 +55,7 @@ _CHAVE_NA_SESSAO: Final = "avisos"
 
 MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
     AvaliacaoDuplicadaError: "Esse membro já avaliou esta sessão.",
+    CategoriaCompletaError: "Essa categoria já tem todas as nomeações desta edição.",
     CategoriaJaApuradaError: "Essa categoria já foi apurada.",
     FilmeNaoAssistidoError: "Esse filme ainda não foi assistido pelo clube.",
     FilmeNaoAssistidoNoAnoDaTemporadaError: (
@@ -72,6 +75,7 @@ MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
     RodadaNaoEncerravelError: (
         "A rodada só pode ser encerrada quando todas as indicações tiverem sido assistidas."
     ),
+    TemporadaOscarDuplicadaError: "O clube já tem a edição do Óscar desse ano.",
     TransicaoDeStatusInvalidaError: "Essa indicação já foi assistida.",
     VencedorDemocraciaNaoInformadoError: (
         "O filme vencedor veio de uma sessão democracia: escolha quem leva o troféu."

@@ -41,7 +41,10 @@ from filmes_e_cubos.domain.entities.nomeacao_oscar import NomeacaoOscar
 from filmes_e_cubos.domain.entities.rodada import Rodada
 from filmes_e_cubos.domain.entities.sessao_exibicao import SessaoExibicao
 from filmes_e_cubos.domain.entities.sorteio import Sorteio
-from filmes_e_cubos.domain.entities.temporada_oscar import TemporadaOscar
+from filmes_e_cubos.domain.entities.temporada_oscar import (
+    NOMEACOES_POR_CATEGORIA_PADRAO,
+    TemporadaOscar,
+)
 from filmes_e_cubos.domain.entities.trofeu import Trofeu
 from filmes_e_cubos.domain.value_objects.configuracao_clube import ConfiguracaoClube
 from filmes_e_cubos.domain.value_objects.escala_avaliacao import EscalaAvaliacao
@@ -75,6 +78,7 @@ class StatusAvaliacaoApi(StrEnum):
 class StatusTemporadaOscarApi(StrEnum):
     EM_PREPARACAO = "em_preparacao"
     ABERTA_PARA_INDICACOES = "aberta_para_indicacoes"
+    EM_VOTACAO = "em_votacao"
     APURADA = "apurada"
     ENCERRADA = "encerrada"
 
@@ -413,6 +417,7 @@ class TemporadaSaida(BaseModel):
     nome: str
     status: StatusTemporadaOscarApi
     data_evento: date | None
+    nomeacoes_por_categoria: int
 
     @classmethod
     def de_dominio(cls, temporada: TemporadaOscar) -> TemporadaSaida:
@@ -423,6 +428,7 @@ class TemporadaSaida(BaseModel):
             nome=temporada.nome,
             status=StatusTemporadaOscarApi[temporada.status.name],
             data_evento=temporada.data_evento,
+            nomeacoes_por_categoria=temporada.nomeacoes_por_categoria,
         )
 
 
@@ -430,6 +436,10 @@ class NovaTemporada(_Entrada):
     ano: int | None = Field(default=None, description="Ano da edição. Padrão: o ano corrente.")
     nome: str | None = Field(
         default=None, description='Nome da edição. Padrão: "Óscar do <clube> <ano>".'
+    )
+    nomeacoes_por_categoria: int = Field(
+        default=NOMEACOES_POR_CATEGORIA_PADRAO,
+        description="Quantas nomeações toda categoria da edição terá (mínimo 2).",
     )
 
 

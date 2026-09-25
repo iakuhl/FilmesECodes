@@ -37,3 +37,21 @@ class AcaoForaDaFaseError(DomainError):
     """Levantada ao tentar uma ação que a fase atual da edição do Óscar não permite
     (ex.: mudar qualquer coisa numa edição encerrada).
     """
+
+
+class NumeroDeNomeacoesInvalidoError(DomainError):
+    """Levantada ao abrir uma edição com menos nomeações por categoria do que a votação pede."""
+
+
+class TemporadaOscarDuplicadaError(DomainError):
+    """Levantada ao abrir uma segunda edição do Óscar para o mesmo clube e ano."""
+
+
+class CategoriaCompletaError(DomainError):
+    """Levantada ao nomear um filme para uma categoria que já tem todas as nomeações da edição."""
+
+
+class TemporadaIncompletaError(DomainError):
+    """Levantada ao avançar uma edição que ainda não cumpriu o que a fase atual exige
+    (ex.: ir à votação com categorias sem todas as nomeações).
+    """

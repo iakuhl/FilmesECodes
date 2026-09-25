@@ -52,3 +52,21 @@ def test_listar_por_clube(engine: Engine) -> None:
     anos = {temporada.ano for temporada in repositorio.listar_por_clube(clube.id)}
 
     assert anos == {2023, 2024}
+
+
+def test_preserva_nomeacoes_por_categoria_e_a_fase_de_votacao(engine: Engine) -> None:
+    clube = Clube.criar(nome="Filmes e Cubos")
+    ClubeRepositorioSqlite(engine).salvar(clube)
+    repositorio = TemporadaOscarRepositorioSqlite(engine)
+    temporada = TemporadaOscar.abrir(
+        clube_id=clube.id, ano=2024, nome="Óscar 2024", nomeacoes_por_categoria=3
+    )
+    temporada.avancar_para(StatusTemporadaOscar.ABERTA_PARA_INDICACOES)
+    temporada.avancar_para(StatusTemporadaOscar.EM_VOTACAO)
+
+    repositorio.salvar(temporada)
+    recuperada = repositorio.buscar_por_id(temporada.id)
+
+    assert recuperada is not None
+    assert recuperada.nomeacoes_por_categoria == 3
+    assert recuperada.status is StatusTemporadaOscar.EM_VOTACAO
