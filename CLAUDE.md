@@ -28,10 +28,13 @@ para virar produto multi-clube.
   fixados no início, cédula confirmada, desempates automáticos, placar
   **só por e-mail** (ninguém vê resultado no sistema) e vencedores
   registrados por quem administra depois do evento.
-- **Próximo passo:** a **votação** do Óscar, que ainda usa o critério
-  antigo (escolha informada), em três commits — (a) votação, (b) placar
-  por e-mail, (c) vencedores. O desenho completo está em "Desenho da
-  votação" no [ROADMAP](docs/ROADMAP.md); depois dela, as páginas da web.
+- A etapa (a) da votação está pronta (eleitores, cédulas, confirmação e
+  desempates; revisão 0005). **Próximo passo:** a etapa (b), o placar
+  por e-mail, e depois a (c), os vencedores registrados por quem
+  administra (que remove o critério antigo de apuração). O desenho
+  completo e as notas técnicas estão em "Desenho da votação" e "Como
+  continuar", no [ROADMAP](docs/ROADMAP.md); depois dela, as páginas da
+  web.
   As decisões, numeradas, estão em [docs/PENDENCIAS.md](docs/PENDENCIAS.md)
   — inclusive as interpretações que ainda pedem confirmação.
 - Sessões longas: perto de 50% da janela de contexto, termine a etapa em

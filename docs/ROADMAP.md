@@ -404,7 +404,30 @@ Ordem recomendada para a próxima sessão de trabalho, a partir do branch
       (a) ✅ eleitores, turnos, cédulas, confirmação e desempates
       (revisão 0005); (b) **próximo:** placar por e-mail; (c) vencedores
       registrados por quem administra e remoção de `CriterioApuracaoOscar`
-      (revisão 0006);
+      (revisão 0006). Notas técnicas para as duas:
+      - (b) `EnderecoDeEmail` (value object) e os erros
+        `EnderecoDeEmailInvalidoError` (422), `VotacaoEmAndamentoError`
+        (409) e, para o envio, um erro de "e-mail não configurado" (503) e
+        um de falha do servidor SMTP (502) — os dois pedem título em
+        português em `api/erros.py` (`_TITULOS`). O `Contexto` recebe o
+        enviador como recebe o relógio (parâmetro opcional, padrão lido do
+        ambiente: `FILMES_E_CUBOS_SMTP_HOST`, `_PORTA`, `_USUARIO`,
+        `_SENHA`, `_REMETENTE`...), e a `FabricaDeContexto` da CLI também,
+        para os testes injetarem um enviador fake. O placar sai de
+        `TurnoDeVotacao.pontuacao`, `lideres` e `empate_absoluto`, com o
+        título do filme e o nome de quem indicou (interpretação 15).
+        Testar o adapter SMTP contra um servidor SMTP de verdade, local
+        (ex.: `aiosmtpd` como dependência de desenvolvimento). Vale uma
+        ADR (port de e-mail genérico, reaproveitável nos convites da
+        Fase 5);
+      - (c) `Trofeu.nomeacao_vencedora_id` opcional, `RegistrarVencedorOscar`
+        no lugar de `ApurarCategoriaOscar`, CLI `oscar premiar` e
+        `oscar categoria nomeacoes`, API `POST
+        /oscar/categorias/{id}/trofeu`; remover o port, as duas
+        implementações, o fake, `obter_criterio_apuracao` da CLI e os
+        testes deles; reescrever os dois fluxos de ponta a ponta (CLI e
+        API) votando, enviando o placar e premiando, e o "Um ciclo
+        completo" de CLI.md e API.md;
    6. ✅ contrato do módulo de histórico (só ports e estruturas de dados).
 2. **Páginas da interface web** sobre o domínio já revisado (plano na
    seção da Fase 4), fechando a Fase 4.
