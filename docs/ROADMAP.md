@@ -193,11 +193,12 @@ Plano para o restante (ver "Como continuar"):
 - Testes com o `TestClient` contra o app completo e `beautifulsoup4`
   para ler o HTML; `docs/WEB.md` com a referência das páginas.
 
-## Revisão de regras de 24/09/2026 — próxima etapa
+## Revisão de regras de 24/09/2026 — 🚧 falta a votação
 
 O dono do produto respondeu às questões levantadas na Fase 4. As
 decisões estão detalhadas, numeradas, em [PENDENCIAS.md](PENDENCIAS.md)
-(decisões 3 a 11), com as interpretações que ainda pedem confirmação. Em
+(decisões 3 a 11 e 16 a 20), com as interpretações que ainda pedem
+confirmação. Em
 resumo: só presentes avaliam; um filme nunca se repete no clube; uma
 edição do Óscar por ano; ciclo da temporada com o estado *em votação*;
 apuração por votação ponderada (2/1) com 2º turno, votação por
@@ -206,7 +207,111 @@ membro; data do evento; média das notas armazenada; duração do filme; e o
 contrato de um módulo de histórico de sessões passadas.
 
 Deve vir **antes** das páginas da web, que dependem dessas regras (a
-votação, por exemplo, ganha telas próprias).
+votação, por exemplo, ganha telas próprias). Tudo já está implementado,
+menos a votação — o desenho dela está logo abaixo.
+
+### Desenho da votação (a implementar)
+
+Decisões 8, 16, 18 e 20 de [PENDENCIAS.md](PENDENCIAS.md) e as
+interpretações 1 a 4 e 7 a 9. É o desenho que a sessão anterior deixou
+pronto; decisões técnicas podem ser revistas na implementação, desde que
+registradas em PENDENCIAS.
+
+**Domínio**
+
+- Enumerações novas em `value_objects/status.py`: `ModoDeVotacao`
+  (`DUPLA`: 1ª opção 2 pontos, 2ª opção 1 ponto; `CLASSIFICACAO`: ordena
+  todas as X candidatas, com pesos X, X−1, …, 1) e `StatusTurno`
+  (`ABERTO`, `APURADO`). Precisam de rótulo em `web/formatacao.py` (um
+  teste confere) e de espelho `...Api` na API.
+- Entidade `TurnoDeVotacao`: `id`, `categoria_id`, `numero` (1, 2, ...),
+  `modo`, `candidatas` (tupla **ordenada** de `NomeacaoOscarId` — vota-se
+  em nomeações, não em filmes, porque o mesmo filme pode ocupar várias),
+  `status`, `pontuacao` (preenchida na apuração, para guardar o placar
+  exato mesmo que um membro seja desativado depois) e `data_apuracao`.
+  Métodos: `abrir_primeiro(categoria_id, candidatas)` (modo `DUPLA`);
+  `conferir_escolhas(escolhas)` — turno aberto; na dupla, duas nomeações
+  distintas entre as candidatas (podem ser do mesmo filme); na
+  classificação, uma ordem completa das candidatas; e
+  `apurar(votos, *, eleitores, data_apuracao) -> Desfecho`.
+- Regras da contagem, dentro de `apurar`: `eleitores` são os membros
+  ativos do clube no momento da apuração; o voto de quem não é eleitor é
+  desconsiderado (decisão 18); falta de voto de algum eleitor recusa a
+  apuração (decisão 8.2), listando quem falta. Desfechos (três pequenas
+  dataclasses, para `match` no caso de uso): `Vitoria(nomeacao_id)` se o
+  topo é único; `NovoTurno(turno)` se o topo empata entre parte das
+  candidatas (novo turno `DUPLA` só com as empatadas — decisão 8.4 e
+  interpretação 2) ou se todas empatam num turno `DUPLA` (novo turno
+  `CLASSIFICACAO` com as mesmas — decisão 16); `EmpateAbsoluto` se todas
+  empatam num turno `CLASSIFICACAO` (decisão 8.6). A sequência sempre
+  termina: a cada dois turnos, no máximo, o número de candidatas cai.
+- Entidade `Voto`: `id`, `turno_id`, `membro_id`, `escolhas` (tupla em
+  ordem de preferência), `registrado_em` (`datetime`, via
+  `RelogioService.agora`); `alterar(escolhas, registrado_em)` — o voto
+  muda até a apuração (decisão 8.3).
+- `Trofeu.nomeacao_vencedora_id` passa a ser opcional: `None` no empate
+  absoluto, quando o troféu vai para um membro escolhido pelo grupo.
+- Erros novos (cada um com status em `erros_http.py` e, se aparecer no
+  uso normal, texto em `web/mensagens.py`): `VotoInvalidoError` (422);
+  `TurnoJaApuradoError` (409); `VotacaoIncompletaError` (409);
+  `EscolhaDoGrupoNecessariaError` (422) — substitui
+  `VencedorDemocraciaNaoInformadoError`, cobrindo a vitória de um filme
+  democracia e o empate absoluto; `VotacaoEmAndamentoError` (409); e a
+  recusa de um membro escolhido que não é do clube (interpretação 3).
+
+**Aplicação**
+
+- Ports `TurnoDeVotacaoRepository` (`salvar`, `buscar_por_id`,
+  `buscar_aberto_por_categoria`, `listar_por_categoria`) e
+  `VotoRepository` (`salvar`, `buscar_por_turno_e_membro`,
+  `listar_por_turno`), com fakes em `tests/application/fakes/`.
+- `RegistrarVoto(turno_id, membro_id, escolhas)`: edição `EM_VOTACAO`
+  (um `TemporadaOscar.verificar_em_votacao()` novo), turno aberto, membro
+  ativo e do clube da edição; cria o voto ou substitui as escolhas.
+- `ApurarCategoriaOscar(categoria_id, membro_escolhido_id=None)`, nova:
+  edição `EM_VOTACAO`; apura o turno aberto da categoria; `Vitoria` →
+  troféu para quem indicou a nomeação (ou para o membro escolhido, se ela
+  veio de uma democracia); `EmpateAbsoluto` → troféu sem nomeação, para o
+  membro escolhido; `NovoTurno` → grava o turno seguinte. Se faltar a
+  escolha do grupo, falha **antes de gravar qualquer coisa** — quem chama
+  repete com `membro_escolhido_id` (a contagem é determinística). Devolve
+  um resultado com o turno apurado, o troféu ou o próximo turno. A
+  escolha informada sem necessidade é ignorada.
+- `AvancarTemporadaOscar`: ao entrar em `EM_VOTACAO`, abre o turno 1 de
+  cada categoria, com todas as nomeações na ordem em que foram feitas.
+- `DesativarMembro`: recusa enquanto o clube do membro tiver uma edição
+  `EM_VOTACAO` (interpretação 7).
+- Remover `CriterioApuracaoOscar` e as implementações
+  (`cli/criterio_apuracao_interativo.py`,
+  `servicos/criterio_apuracao_escolha_informada.py`, o fake e os testes),
+  e `Contexto.apurar_categoria_oscar(criterio)` vira um atributo comum.
+
+**Persistência** — revisão 0005: `turnos_votacao` (`id`, `categoria_id`,
+`numero`, `modo`, `status`, `data_apuracao`; único por categoria e
+número), `turno_candidatas` (`turno_id`, `posicao`, `nomeacao_id`,
+`pontos` anulável até a apuração), `votos` (`id`, `turno_id`,
+`membro_id`, `registrado_em`; único por turno e membro), `voto_escolhas`
+(`voto_id`, `posicao`, `nomeacao_id`) e `trofeus.nomeacao_vencedora_id`
+anulável (`batch_alter_table`).
+
+**Interfaces** — antes da apuração, mostram só *quem* já votou; depois,
+a pontuação de cada nomeação; as cédulas não são exibidas
+(interpretação 9, questão em aberto 2).
+
+- CLI: `oscar nomeacoes --categoria-id ID` (posição, filme, quem
+  indicou), `oscar votacao CATEGORIA_ID` (turno aberto: modo, candidatas,
+  quem votou e quem falta), `oscar votar --categoria-id ID --membro-id ID
+  NOMEACAO_ID...` (resolve o turno aberto da categoria) e `oscar apurar
+  CATEGORIA_ID [--membro-escolhido-id ID]` (placar e desfecho).
+- API: `GET /oscar/categorias/{id}/turnos`, `GET /oscar/turnos/{id}`,
+  `PUT /oscar/turnos/{id}/votos/{membro_id}` (corpo `{"escolhas": [...]}`;
+  cria ou substitui) e `POST /oscar/categorias/{id}/apuracao` (corpo
+  `{"membro_escolhido_id"?}`; devolve `{"turno", "trofeu"?,
+  "proximo_turno"?}`).
+- Testes: a tabela de desfechos da contagem no domínio (vitória, empate
+  parcial, empate geral na dupla e na classificação, voto de desativado
+  ignorado, voto faltando), os casos de uso, os repositórios, CLI e API,
+  e os dois fluxos completos votando em vez de escolher.
 
 ## Fase 5 — Evolução comercial
 
@@ -256,11 +361,13 @@ Ordem recomendada para a próxima sessão de trabalho, a partir do branch
    4. ✅ uma edição por ano; número de nomeações por categoria (revisão
       0004); ciclo da temporada com `EM_VOTACAO` e o caso de uso de
       avanço, restringindo cada ação à sua fase;
-   5. votação (revisão 0005: turnos, candidatas, votos e escolhas;
+   5. **próximo passo:** votação, conforme o "Desenho da votação"
+      acima (revisão 0005: turnos, candidatas, votos e escolhas;
       `trofeus.nomeacao_vencedora_id` anulável para o empate absoluto):
       entidades `TurnoDeVotacao` e `Voto`, contagem como regra do domínio,
       `RegistrarVoto` e a nova `ApurarCategoriaOscar`; desativar membro
-      bloqueado durante a votação; remoção de `CriterioApuracaoOscar`;
+      bloqueado durante a votação; remoção de `CriterioApuracaoOscar`.
+      Grande o bastante para pedir uma sessão só para ela;
    6. ✅ contrato do módulo de histórico (só ports e estruturas de dados).
 2. **Páginas da interface web** sobre o domínio já revisado (plano na
    seção da Fase 4), fechando a Fase 4.

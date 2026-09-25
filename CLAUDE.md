@@ -18,11 +18,18 @@ para virar produto multi-clube.
 - Branch de trabalho: `roadmap/fases-4-e-5` (local, sem push).
 - Fases 1–3 concluídas; Fase 4 com a API pronta, migrações com Alembic e
   os módulos de apoio da web; as páginas da web ainda não existem.
-- **Próximo passo:** a revisão de regras decidida pelo dono do produto em
-  24/09/2026, antes das páginas da web. A ordem está em "Como continuar"
-  no [ROADMAP](docs/ROADMAP.md); as decisões, detalhadas e numeradas, em
-  [docs/PENDENCIAS.md](docs/PENDENCIAS.md) — inclusive as interpretações
-  que ainda pedem confirmação.
+- Revisão de regras de 24/09/2026 quase toda implementada (duração,
+  reativação, data do evento, só presentes avaliam, média como fração em
+  estrelas, filme não se repete, uma edição por ano, nomeações fixas por
+  categoria, ciclo com *em votação*, contrato do histórico).
+- **Próximo passo:** a **votação** do Óscar, que ainda usa o critério
+  antigo (escolha informada). O desenho completo está em "Desenho da
+  votação" no [ROADMAP](docs/ROADMAP.md); depois dela, as páginas da web.
+  As decisões, numeradas, estão em [docs/PENDENCIAS.md](docs/PENDENCIAS.md)
+  — inclusive as interpretações que ainda pedem confirmação.
+- Sessões longas: perto de 50% da janela de contexto, termine a etapa em
+  curso, documente como continuar (aqui, no ROADMAP e no PENDENCIAS) e
+  pare com um resumo — preferência do dono.
 
 ## Comandos
 
