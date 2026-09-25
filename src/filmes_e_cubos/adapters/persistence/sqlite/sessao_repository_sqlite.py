@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -18,6 +19,7 @@ from filmes_e_cubos.domain.value_objects.identificadores import (
     MembroId,
     SessaoExibicaoId,
 )
+from filmes_e_cubos.domain.value_objects.media_das_notas import MediaDasNotas
 
 
 class SessaoRepositorioSqlite:
@@ -89,17 +91,26 @@ class SessaoRepositorioSqlite:
 
 
 def _para_linha(sessao: SessaoExibicao) -> dict[str, Any]:
+    media = sessao.media_das_notas
     return {
         "id": str(sessao.id),
         "indicacao_id": str(sessao.indicacao_id),
         "data_sessao": sessao.data_sessao,
+        "soma_das_notas": str(media.soma) if media is not None else "0",
+        "quantidade_de_notas": media.quantidade if media is not None else 0,
     }
 
 
 def _para_entidade(linha: RowMapping, presentes: frozenset[MembroId]) -> SessaoExibicao:
+    quantidade = linha["quantidade_de_notas"]
     return SessaoExibicao(
         id=SessaoExibicaoId(UUID(linha["id"])),
         indicacao_id=IndicacaoId(UUID(linha["indicacao_id"])),
         data_sessao=linha["data_sessao"],
         membros_presentes=presentes,
+        media_das_notas=(
+            MediaDasNotas(soma=Decimal(linha["soma_das_notas"]), quantidade=quantidade)
+            if quantidade > 0
+            else None
+        ),
     )

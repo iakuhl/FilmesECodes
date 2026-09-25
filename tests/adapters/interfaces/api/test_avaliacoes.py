@@ -98,3 +98,24 @@ def test_sessao_ou_membro_inexistente_e_404(api: ApiDeTeste, sessao: Json, membr
     assert_problema(_avaliar(api, fantasma, membro, nota=4), 404, "entidade_nao_encontrada")
     assert_problema(_avaliar(api, sessao, fantasma, nota=4), 404, "entidade_nao_encontrada")
     assert_problema(api.get(f"/sessoes/{uuid4()}/avaliacoes"), 404, "entidade_nao_encontrada")
+
+
+def test_quem_nao_esteve_na_sessao_nao_avalia(api: ApiDeTeste, clube: Json, sessao: Json) -> None:
+    chegou_depois = api.criar(f"/clubes/{clube['id']}/membros", {"nome": "Caio"})
+
+    resposta = _avaliar(api, sessao, chegou_depois, nota=4)
+
+    assert_problema(resposta, 409, "membro_ausente_na_sessao")
+
+
+def test_sessao_expoe_a_media_como_fracao_e_em_estrelas(
+    api: ApiDeTeste, indicacao: Json, membro: Json, outro_membro: Json
+) -> None:
+    sessao = api.criar(f"/indicacoes/{indicacao['id']}/sessao")
+    assert sessao["media_das_notas"] is None
+
+    _avaliar(api, sessao, membro, nota="4")
+    _avaliar(api, sessao, outro_membro, nota="3.5")
+
+    media = api.obter(f"/sessoes/{sessao['id']}")["media_das_notas"]
+    assert media == {"soma_das_notas": "7.5", "quantidade_de_notas": 2, "estrelas": "★★★¾"}

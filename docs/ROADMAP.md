@@ -245,7 +245,7 @@ Ordem recomendada para a próxima sessão de trabalho, a partir do branch
    a sua própria revisão do Alembic, no commit da regra que a pede:
    1. ✅ duração do filme (revisão 0002: `filmes.duracao_minutos`);
       reativar membro; data do evento do Óscar;
-   2. só presentes avaliam (`AvaliarFilme` passa a deduzir o clube da
+   2. ✅ só presentes avaliam (`AvaliarFilme` passa a deduzir o clube da
       própria sessão, e o `--clube-id` da avaliação sai da CLI); média
       guardada como fração — soma e quantidade das notas na sessão
       (revisão 0003, que calcula as das sessões já avaliadas) —,

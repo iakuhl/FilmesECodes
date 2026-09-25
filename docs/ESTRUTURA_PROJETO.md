@@ -43,6 +43,7 @@ FilmesECodes/
 │           └── interfaces/
 │               ├── convencoes.py      # padrões deduzidos, iguais em todas as interfaces
 │               ├── consultas.py       # buscas por id que precisam encontrar a entidade
+│               ├── estrelas.py        # a média das notas em estrelas (★★★⅔)
 │               ├── erros_http.py      # erro de domínio -> status HTTP (API e web)
 │               ├── contexto_http.py   # injeção do Contexto nas rotas HTTP
 │               ├── escritas_em_fila.py  # middleware: uma escrita HTTP por vez

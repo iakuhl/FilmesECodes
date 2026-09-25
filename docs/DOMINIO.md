@@ -136,7 +136,15 @@ normalmente ou via DEMOCRACIA).
 - `id`
 - `indicacao_id`
 - `data_sessao`
-- `membros_presentes`: subconjunto dos membros do clube.
+- `membros_presentes`: subconjunto dos membros do clube — **só eles
+  avaliam** o filme.
+- `media_das_notas` (value object `MediaDasNotas`, opcional): a média das
+  notas recebidas, guardada como **fração exata** — a soma e a quantidade
+  das notas —, sem arredondamento. Dorminhocos não entram. É refeita a
+  partir de todas as avaliações da sessão a cada avaliação nova; fica
+  ausente enquanto ninguém deu nota. As interfaces a exibem em estrelas:
+  uma por inteiro e a fração restante com denominador de 2 a 10 (11/3 →
+  ★★★⅔).
 
 **Invariante**: uma sessão só existe para uma indicação com status
 `pendente` ou `sorteada`; ao ser criada, a indicação correspondente passa
@@ -149,7 +157,8 @@ registro de que o membro cochilou.
 
 - `id`
 - `sessao_id`
-- `membro_id`: quem avaliou (ou cochilou).
+- `membro_id`: quem avaliou (ou cochilou) — precisa ter estado presente
+  na sessão.
 - `status`: `nota_registrada` ou `dorminhoco`.
 - `nota`: valor entre 0,5 e 5,0, em passos de 0,5 (10 valores possíveis).
   Presente apenas quando `status` é `nota_registrada`; ausente
@@ -235,7 +244,8 @@ venceu.
 4. A escala de notas (0,5 a 5,0 em passos de 0,5) é uma configuração do
    clube, verificada como invariante de `Avaliacao` quando uma nota é
    informada. Uma avaliação sem nota vira `dorminhoco` e é ignorada em
-   qualquer cálculo de média.
+   qualquer cálculo de média. Só avalia quem esteve presente na sessão, e
+   a média da sessão fica guardada como fração exata (soma ÷ quantidade).
 5. O troféu de uma categoria do Óscar aponta para o membro que
    originalmente indicou o filme vencedor no clube — é essa rastreabilidade
    entre `Indicacao` e `NomeacaoOscar` que torna a apuração possível. Para

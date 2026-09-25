@@ -181,6 +181,20 @@ implementando, salvo correção:
     restrições por fase.
 14. **Reativar é idempotente**, como desativar: reativar um membro ativo
     não é erro.
+15. **Estrelas num módulo compartilhado** (`adapters/interfaces/estrelas.py`):
+    a regra de exibição é do produto, então CLI, API e web a usam do
+    mesmo lugar. As frações sem caractere próprio no Unicode (2/7, 5/9,
+    7/10...) são compostas com algarismos sobrescritos e subscritos em
+    torno da barra de fração: `²⁄₇`.
+16. **Média refeita a partir de todas as avaliações** a cada avaliação
+    nova, em vez de somar só a última: se uma gravação falhar no meio, a
+    próxima avaliação corrige a média.
+17. **Sessão sem notas guarda soma 0 e quantidade 0** (colunas não
+    anuláveis), e o domínio as lê como "sem média"; a API expõe a soma, a
+    quantidade e as estrelas, sem nenhum valor arredondado.
+18. **`AvaliarFilme` deduz o clube da própria sessão**, e o `--clube-id`
+    saiu de `avaliacao registrar`: informar o clube permitia avaliar com a
+    escala de outro clube.
 
 ## Dívidas técnicas conhecidas
 

@@ -21,7 +21,10 @@ from typing import Final, Literal
 
 from starlette.requests import Request
 
-from filmes_e_cubos.domain.exceptions.avaliacao import AvaliacaoDuplicadaError
+from filmes_e_cubos.domain.exceptions.avaliacao import (
+    AvaliacaoDuplicadaError,
+    MembroAusenteNaSessaoError,
+)
 from filmes_e_cubos.domain.exceptions.base import DomainError
 from filmes_e_cubos.domain.exceptions.indicacao import (
     IndicacaoDuplicadaError,
@@ -55,6 +58,7 @@ MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
         "Só concorrem filmes assistidos pelo clube no ano desta edição."
     ),
     IndicacaoDuplicadaError: "Esse membro já indicou um filme nesta rodada.",
+    MembroAusenteNaSessaoError: "Só quem esteve na sessão pode avaliá-la.",
     MembroInativoError: "Esse membro está desativado.",
     NenhumaIndicacaoElegivelError: "Não há indicações pendentes para sortear.",
     NomeacaoInvalidaError: "Escolha uma das nomeações desta categoria.",

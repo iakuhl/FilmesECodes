@@ -1,6 +1,7 @@
 """Testes de integração de `SessaoRepositorioSqlite` contra um SQLite real."""
 
 from datetime import date
+from decimal import Decimal
 
 from sqlalchemy import Engine
 
@@ -28,6 +29,7 @@ from filmes_e_cubos.domain.entities.indicacao import Indicacao
 from filmes_e_cubos.domain.entities.membro import Membro
 from filmes_e_cubos.domain.entities.rodada import Rodada
 from filmes_e_cubos.domain.entities.sessao_exibicao import SessaoExibicao
+from filmes_e_cubos.domain.value_objects.media_das_notas import MediaDasNotas
 
 
 def _indicacao_salva(engine: Engine) -> tuple[Indicacao, list[Membro]]:
@@ -105,3 +107,37 @@ def test_sessao_sem_presentes_recupera_conjunto_vazio(engine: Engine) -> None:
 
     assert recuperada is not None
     assert recuperada.membros_presentes == frozenset()
+
+
+def test_media_das_notas_e_preservada_como_fracao_exata(engine: Engine) -> None:
+    indicacao, membros = _indicacao_salva(engine)
+    repositorio = SessaoRepositorioSqlite(engine)
+    sessao = SessaoExibicao(
+        id=SessaoExibicao.registrar(
+            indicacao_id=indicacao.id, data_sessao=date(2024, 1, 7), membros_presentes=frozenset()
+        ).id,
+        indicacao_id=indicacao.id,
+        data_sessao=date(2024, 1, 7),
+        membros_presentes=frozenset({membros[0].id}),
+        media_das_notas=MediaDasNotas(soma=Decimal("11.0"), quantidade=3),
+    )
+
+    repositorio.salvar(sessao)
+    recuperada = repositorio.buscar_por_id(sessao.id)
+
+    assert recuperada is not None
+    assert recuperada.media_das_notas == MediaDasNotas(soma=Decimal("11.0"), quantidade=3)
+
+
+def test_sessao_sem_notas_volta_sem_media(engine: Engine) -> None:
+    indicacao, _ = _indicacao_salva(engine)
+    repositorio = SessaoRepositorioSqlite(engine)
+    sessao = SessaoExibicao.registrar(
+        indicacao_id=indicacao.id, data_sessao=date(2024, 1, 7), membros_presentes=frozenset()
+    )
+
+    repositorio.salvar(sessao)
+
+    recuperada = repositorio.buscar_por_id(sessao.id)
+    assert recuperada is not None
+    assert recuperada.media_das_notas is None

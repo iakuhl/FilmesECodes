@@ -98,8 +98,8 @@ O catálogo é compartilhado: um filme não pertence a um clube.
 
 | Comando | O que faz |
 |---|---|
-| `avaliacao registrar --sessao-id ID --membro-id ID [--nota X] [--comentario X]` | Registra a nota de um membro. **Sem `--nota`, registra que ele cochilou** (`dorminhoco`): o voto fica para a posteridade, mas é ignorado em médias. Cada membro avalia cada sessão uma vez só. |
-| `avaliacao listar SESSAO_ID` | Lista as avaliações da sessão. |
+| `avaliacao registrar --sessao-id ID --membro-id ID [--nota X] [--comentario X]` | Registra a nota de um membro **presente** na sessão, na escala do clube dono dela. **Sem `--nota`, registra que ele cochilou** (`dorminhoco`): o voto fica para a posteridade, mas é ignorado na média. Cada membro avalia cada sessão uma vez só. Mostra a média da sessão atualizada. |
+| `avaliacao listar SESSAO_ID` | Lista as avaliações da sessão e a média em estrelas (ex.: `Média da sessão: ★★★⅔ (3 notas)`). |
 
 ### `oscar`
 

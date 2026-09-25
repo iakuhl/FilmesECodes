@@ -17,3 +17,7 @@ class NotaForaDaEscalaError(DomainError):
 
 class AvaliacaoDuplicadaError(DomainError):
     """Levantada quando um membro tenta avaliar a mesma sessão mais de uma vez."""
+
+
+class MembroAusenteNaSessaoError(DomainError):
+    """Levantada quando alguém que não esteve presente na sessão tenta avaliá-la."""

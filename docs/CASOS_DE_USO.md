@@ -108,10 +108,14 @@ os ports (repositórios/serviços) de que depende.
   nota (e comentário opcional), ou, sem nota, o registro de que cochilou
   (`dorminhoco`).
 - **Ports**: `SessaoRepository`, `AvaliacaoRepository`, `MembroRepository`,
-  `ClubeRepository`.
-- **Regras**: nota, quando informada, precisa estar dentro da
-  `escala_avaliacao` do clube; um membro avalia cada sessão no máximo uma
-  vez, dê nota ou fique `dorminhoco`.
+  `IndicacaoRepository`, `RodadaRepository`, `ClubeRepository`.
+- **Regras**: só avalia quem esteve presente na sessão
+  (`MembroAusenteNaSessaoError`); nota, quando informada, precisa estar
+  dentro da `escala_avaliacao` do clube dono da sessão — deduzido da
+  própria sessão (indicação → rodada → clube), nunca informado por quem
+  chama; um membro avalia cada sessão no máximo uma vez, dê nota ou fique
+  `dorminhoco`. A cada avaliação, a média da sessão (soma e quantidade das
+  notas) é refeita a partir de todas as avaliações e gravada.
 
 ## Óscar do Filmes e Cubos
 

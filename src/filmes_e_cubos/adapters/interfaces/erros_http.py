@@ -16,6 +16,7 @@ from typing import Final
 from filmes_e_cubos.domain.exceptions.avaliacao import (
     AvaliacaoDuplicadaError,
     EscalaAvaliacaoInvalidaError,
+    MembroAusenteNaSessaoError,
     NotaForaDaEscalaError,
     NotaInvalidaError,
 )
@@ -63,6 +64,7 @@ _CONFLITO: Final[tuple[type[DomainError], ...]] = (
     AvaliacaoDuplicadaError,
     CategoriaJaApuradaError,
     IndicacaoDuplicadaError,
+    MembroAusenteNaSessaoError,
     MembroInativoError,
     NenhumaIndicacaoElegivelError,
     RodadaJaAbertaError,

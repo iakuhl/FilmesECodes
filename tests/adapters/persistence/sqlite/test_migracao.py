@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
+from uuid import UUID
 
 from alembic import command
 from alembic.autogenerate import compare_metadata
@@ -19,7 +21,12 @@ from filmes_e_cubos.adapters.persistence.sqlite.migracao import (
     REVISAO_INICIAL,
     configuracao_alembic,
 )
+from filmes_e_cubos.adapters.persistence.sqlite.sessao_repository_sqlite import (
+    SessaoRepositorioSqlite,
+)
 from filmes_e_cubos.domain.entities.clube import Clube
+from filmes_e_cubos.domain.value_objects.identificadores import SessaoExibicaoId
+from filmes_e_cubos.domain.value_objects.media_das_notas import MediaDasNotas
 
 
 def _revisao_mais_recente() -> str | None:
@@ -73,3 +80,60 @@ def test_abrir_o_mesmo_banco_de_novo_nao_muda_nada(tmp_path: Path) -> None:
     ClubeRepositorioSqlite(criar_engine(caminho)).salvar(Clube.criar(nome="Filmes e Cubos"))
 
     assert len(ClubeRepositorioSqlite(criar_engine(caminho)).listar_todos()) == 1
+
+
+_ANTES_DA_MEDIA = "0002"
+"""Última revisão em que a sessão ainda não guardava a média das notas."""
+
+_SESSAO_AVALIADA = "00000000-0000-0000-0000-00000000000a"
+_SESSAO_SO_DE_DORMINHOCOS = "00000000-0000-0000-0000-00000000000b"
+_INDICACAO_I = "00000000-0000-0000-0000-000000000001"
+_INDICACAO_J = "00000000-0000-0000-0000-000000000002"
+
+
+def test_migracao_calcula_a_media_das_sessoes_ja_avaliadas(tmp_path: Path) -> None:
+    """A revisão 0003 preenche a média de quem já tinha notas, sem contar dorminhocos.
+
+    O banco "antigo" é montado com SQL puro, na revisão anterior: os
+    repositórios atuais já gravam as colunas novas e não serviriam aqui.
+    """
+    caminho = tmp_path / "com_avaliacoes.db"
+    antigo = create_engine(f"sqlite:///{caminho}")
+    configuracao = configuracao_alembic()
+    with antigo.begin() as conexao:
+        configuracao.attributes["connection"] = conexao
+        command.upgrade(configuracao, _ANTES_DA_MEDIA)
+        for sql in (
+            "INSERT INTO clubes VALUES ('c', 'Clube', 5, '0.5', '5.0', '0.5')",
+            "INSERT INTO rodadas VALUES ('r', 'c', 1, 'ABERTA', '2024-01-01', NULL)",
+            "INSERT INTO filmes VALUES ('f', 'Duna', NULL, NULL, NULL, NULL)",
+            "INSERT INTO filmes VALUES ('g', 'Tár', NULL, NULL, NULL, NULL)",
+            f"INSERT INTO indicacoes VALUES ('{_INDICACAO_I}', 'r', NULL, 'f', 'DEMOCRACIA',"
+            " 'ASSISTIDA', '2024-01-02')",
+            f"INSERT INTO indicacoes VALUES ('{_INDICACAO_J}', 'r', NULL, 'g', 'DEMOCRACIA',"
+            " 'ASSISTIDA', '2024-01-02')",
+            f"INSERT INTO sessoes_exibicao VALUES ('{_SESSAO_AVALIADA}', '{_INDICACAO_I}',"
+            " '2024-01-07')",
+            f"INSERT INTO sessoes_exibicao VALUES ('{_SESSAO_SO_DE_DORMINHOCOS}',"
+            f" '{_INDICACAO_J}', '2024-01-14')",
+            f"INSERT INTO avaliacoes VALUES ('a1', '{_SESSAO_AVALIADA}', 'm1', 'NOTA_REGISTRADA',"
+            " '4.0', NULL)",
+            f"INSERT INTO avaliacoes VALUES ('a2', '{_SESSAO_AVALIADA}', 'm2', 'NOTA_REGISTRADA',"
+            " '3.5', NULL)",
+            f"INSERT INTO avaliacoes VALUES ('a3', '{_SESSAO_AVALIADA}', 'm3', 'NOTA_REGISTRADA',"
+            " '3.5', NULL)",
+            f"INSERT INTO avaliacoes VALUES ('a4', '{_SESSAO_AVALIADA}', 'm4', 'DORMINHOCO',"
+            " NULL, NULL)",
+            f"INSERT INTO avaliacoes VALUES ('a5', '{_SESSAO_SO_DE_DORMINHOCOS}', 'm1',"
+            " 'DORMINHOCO', NULL, NULL)",
+        ):
+            conexao.execute(text(sql))
+
+    sessoes = SessaoRepositorioSqlite(criar_engine(caminho))
+
+    avaliada = sessoes.buscar_por_id(SessaoExibicaoId(UUID(_SESSAO_AVALIADA)))
+    so_de_dorminhocos = sessoes.buscar_por_id(SessaoExibicaoId(UUID(_SESSAO_SO_DE_DORMINHOCOS)))
+    assert avaliada is not None
+    assert so_de_dorminhocos is not None
+    assert avaliada.media_das_notas == MediaDasNotas(soma=Decimal("11.0"), quantidade=3)
+    assert so_de_dorminhocos.media_das_notas is None

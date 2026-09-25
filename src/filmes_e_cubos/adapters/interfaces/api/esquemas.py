@@ -30,6 +30,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from filmes_e_cubos.adapters.interfaces.estrelas import media_em_estrelas
 from filmes_e_cubos.domain.entities.avaliacao import Avaliacao
 from filmes_e_cubos.domain.entities.categoria_oscar import CategoriaOscar
 from filmes_e_cubos.domain.entities.clube import Clube
@@ -44,6 +45,7 @@ from filmes_e_cubos.domain.entities.temporada_oscar import TemporadaOscar
 from filmes_e_cubos.domain.entities.trofeu import Trofeu
 from filmes_e_cubos.domain.value_objects.configuracao_clube import ConfiguracaoClube
 from filmes_e_cubos.domain.value_objects.escala_avaliacao import EscalaAvaliacao
+from filmes_e_cubos.domain.value_objects.media_das_notas import MediaDasNotas
 from filmes_e_cubos.domain.value_objects.status import TipoCategoriaOscar
 
 # --- Enumerações -------------------------------------------------------------
@@ -323,19 +325,43 @@ class SorteioSaida(BaseModel):
 # --- Sessões e avaliações ----------------------------------------------------
 
 
+class MediaSaida(BaseModel):
+    """A média exata é `soma_das_notas / quantidade_de_notas`; nada é arredondado."""
+
+    soma_das_notas: Decimal
+    quantidade_de_notas: int
+    estrelas: str = Field(
+        description="A média como as interfaces a exibem: uma estrela por inteiro e a "
+        "fração restante com denominador de 2 a 10 (ex.: `★★★⅔`)."
+    )
+
+    @classmethod
+    def de_dominio(cls, media: MediaDasNotas) -> MediaSaida:
+        return cls(
+            soma_das_notas=media.soma,
+            quantidade_de_notas=media.quantidade,
+            estrelas=media_em_estrelas(media.valor),
+        )
+
+
 class SessaoSaida(BaseModel):
     id: UUID
     indicacao_id: UUID
     data_sessao: date
     membros_presentes: list[UUID]
+    media_das_notas: MediaSaida | None = Field(
+        description="`null` enquanto ninguém deu nota (dorminhocos não contam)."
+    )
 
     @classmethod
     def de_dominio(cls, sessao: SessaoExibicao) -> SessaoSaida:
+        media = sessao.media_das_notas
         return cls(
             id=sessao.id,
             indicacao_id=sessao.indicacao_id,
             data_sessao=sessao.data_sessao,
             membros_presentes=sorted(sessao.membros_presentes, key=str),
+            media_das_notas=MediaSaida.de_dominio(media) if media is not None else None,
         )
 
 

@@ -150,14 +150,14 @@ também a lista `erros`, com o campo e o motivo:
 |---|---|
 | `POST /indicacoes/{indicacao_id}/sessao` | Registra que o filme foi assistido e marca a indicação como assistida. Corpo opcional: `{"membros_presentes"?: [ids]}`. Sem a lista, assume todos os membros ativos do clube; uma lista vazia registra a sessão sem presentes. |
 | `GET /indicacoes/{indicacao_id}/sessao` | A sessão da indicação; `404` enquanto ela não tiver sido assistida. |
-| `GET /sessoes/{sessao_id}` | Consulta uma sessão. |
+| `GET /sessoes/{sessao_id}` | Consulta uma sessão, com a média das notas: `{"soma_das_notas", "quantidade_de_notas", "estrelas"}` — a média exata é a soma dividida pela quantidade; `null` enquanto ninguém deu nota. |
 
 ### Avaliações
 
 | Método e caminho | O que faz |
 |---|---|
 | `GET /sessoes/{sessao_id}/avaliacoes` | Lista as avaliações da sessão. |
-| `POST /sessoes/{sessao_id}/avaliacoes` | Registra a avaliação de um membro. Corpo: `{"membro_id", "nota", "comentario"?}`. |
+| `POST /sessoes/{sessao_id}/avaliacoes` | Registra a avaliação de um membro presente na sessão (`409` para quem não esteve). Corpo: `{"membro_id", "nota", "comentario"?}`. A média da sessão é refeita a cada avaliação. |
 
 A escala que vale é a do clube dono da sessão — a API a descobre pela
 própria sessão, sem pedir o clube.

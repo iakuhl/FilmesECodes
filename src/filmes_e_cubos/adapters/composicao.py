@@ -192,6 +192,8 @@ class Contexto:
             avaliacao_repository=self.avaliacoes,
             sessao_repository=self.sessoes,
             membro_repository=self.membros,
+            indicacao_repository=self.indicacoes,
+            rodada_repository=self.rodadas,
             clube_repository=self.clubes,
         )
         self.abrir_temporada_oscar = AbrirTemporadaOscar(

@@ -89,3 +89,30 @@ def _avaliar(
     )
     assert resultado.exit_code == esperado, resultado.output
     return resultado
+
+
+def test_quem_nao_esteve_na_sessao_nao_avalia(
+    cli: CliDeTeste, sessao_id: str, membro_id: str
+) -> None:
+    chegou_depois = cli.criar("membro", "cadastrar", "Caio")
+
+    resultado = _avaliar(cli, sessao_id, chegou_depois, "--nota", "4", esperado=1)
+
+    assert "não esteve presente" in resultado.stderr
+
+
+def test_media_da_sessao_aparece_em_estrelas(
+    cli: CliDeTeste, indicacao_id: str, membro_id: str, outro_membro_id: str
+) -> None:
+    sessao_id = cli.criar("sessao", "registrar", indicacao_id)
+    terceiro = cli.criar("membro", "cadastrar", "Caio")
+    cli.executar_ok(
+        "avaliacao", "registrar", "--sessao-id", sessao_id, "--membro-id", membro_id,
+        "--nota", "4",
+    )  # fmt: skip
+    _avaliar(cli, sessao_id, outro_membro_id, "--nota", "3,5")
+
+    listagem = cli.executar_ok("avaliacao", "listar", sessao_id).stdout
+
+    assert "Média da sessão: ★★★¾ (2 notas)" in listagem
+    assert _avaliar(cli, sessao_id, terceiro, esperado=1)

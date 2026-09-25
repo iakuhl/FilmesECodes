@@ -1,8 +1,8 @@
 """Esquema SQLAlchemy Core do banco SQLite: tabelas e tipos, sem lógica de domínio.
 
-Ids são armazenados como texto (`str(uuid.UUID)`), valores decimais (notas e
-escala de avaliação) como texto (`str(Decimal)`, para preservar precisão
-exata) e enums como o nome do membro (ex.: `"ABERTA"`).
+Ids são armazenados como texto (`str(uuid.UUID)`), valores decimais (notas,
+soma das notas e escala de avaliação) como texto (`str(Decimal)`, para
+preservar precisão exata) e enums como o nome do membro (ex.: `"ABERTA"`).
 """
 
 from sqlalchemy import (
@@ -91,6 +91,9 @@ sessoes_exibicao = Table(
     Column("id", String, primary_key=True),
     Column("indicacao_id", String, ForeignKey("indicacoes.id"), nullable=False, unique=True),
     Column("data_sessao", Date, nullable=False),
+    # A média das notas, como fração: soma ÷ quantidade. Sem notas, 0 e 0.
+    Column("soma_das_notas", String, nullable=False, server_default="0"),
+    Column("quantidade_de_notas", Integer, nullable=False, server_default="0"),
 )
 
 sessao_membros_presentes = Table(

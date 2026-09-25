@@ -16,7 +16,7 @@ from filmes_e_cubos.adapters.interfaces.cli.apresentacao import (
 )
 from filmes_e_cubos.adapters.interfaces.cli.contexto import obter_contexto
 from filmes_e_cubos.adapters.interfaces.cli.conversores import converter_nota
-from filmes_e_cubos.adapters.interfaces.cli.resolucao import resolver_clube
+from filmes_e_cubos.adapters.interfaces.estrelas import media_em_estrelas
 from filmes_e_cubos.domain.entities.avaliacao import Avaliacao
 from filmes_e_cubos.domain.value_objects.identificadores import MembroId, SessaoExibicaoId
 from filmes_e_cubos.domain.value_objects.status_avaliacao import StatusAvaliacao
@@ -39,21 +39,20 @@ def registrar(
     comentario: Annotated[
         str | None, typer.Option("--comentario", help="Comentário do membro sobre o filme.")
     ] = None,
-    clube_id: Annotated[
-        UUID | None, typer.Option("--clube-id", help="Clube cuja escala de notas vale.")
-    ] = None,
 ) -> None:
-    """Registra a nota de um membro — ou que ele cochilou, se `--nota` for omitida."""
+    """Registra a nota de um membro presente — ou que ele cochilou, se `--nota` for omitida.
+
+    A escala de notas é a do clube dono da sessão.
+    """
     contexto = obter_contexto(ctx)
-    clube = resolver_clube(contexto, clube_id)
     avaliacao = contexto.avaliar_filme.executar(
         sessao_id=SessaoExibicaoId(sessao_id),
         membro_id=MembroId(membro_id),
-        clube_id=clube.id,
         nota=converter_nota(nota),
         comentario=comentario,
     )
     echo_resultado(f"Avaliação registrada: {_resultado(avaliacao)} ({avaliacao.id})")
+    _echo_media(contexto, avaliacao.sessao_id)
 
 
 @app.command("listar")
@@ -76,6 +75,8 @@ def listar(
         ],
         vazio="Nenhuma avaliação registrada para esta sessão.",
     )
+    if avaliacoes:
+        _echo_media(contexto, SessaoExibicaoId(sessao_id))
 
 
 def _resultado(avaliacao: Avaliacao) -> str:
@@ -83,6 +84,17 @@ def _resultado(avaliacao: Avaliacao) -> str:
     if avaliacao.status is StatusAvaliacao.DORMINHOCO or avaliacao.nota is None:
         return "dorminhoco"
     return formatar_decimal(avaliacao.nota.valor)
+
+
+def _echo_media(contexto: Contexto, sessao_id: SessaoExibicaoId) -> None:
+    """A média da sessão em estrelas, ou o aviso de que só houve dorminhocos."""
+    sessao = contexto.sessoes.buscar_por_id(sessao_id)
+    media = sessao.media_das_notas if sessao is not None else None
+    if media is None:
+        typer.echo("Média da sessão: sem notas (só dorminhocos).")
+        return
+    notas = "nota" if media.quantidade == 1 else "notas"
+    typer.echo(f"Média da sessão: {media_em_estrelas(media.valor)} ({media.quantidade} {notas})")
 
 
 def _nome_do_membro(contexto: Contexto, avaliacao: Avaliacao) -> str:
