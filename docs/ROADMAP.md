@@ -187,22 +187,24 @@ Plano para o restante (ver "Como continuar"):
   verificação de que a entidade do caminho pertence ao clube: início
   (sem clube → criar; um clube → redireciona; vários → escolher), painel
   (rodada aberta, próxima sessão, indicar, democracia, sortear,
-  encerrar), membros, filmes, histórico de rodadas, nova sessão
+  encerrar), membros (o botão de reativar só aparece para quem está
+  inativo — decisão 33), filmes, histórico de rodadas, nova sessão
   (presença), sessão (avaliações e média), Óscar (edições, categorias,
-  nomeações, votação e apuração).
+  nomeações, cédula e confirmação, envio do placar e registro dos
+  vencedores).
 - Testes com o `TestClient` contra o app completo e `beautifulsoup4`
   para ler o HTML; `docs/WEB.md` com a referência das páginas.
 
-## Revisão de regras de 24/09/2026 — 🚧 falta a votação
+## Revisão de regras de 24 e 25/09/2026 — 🚧 falta a votação
 
 O dono do produto respondeu às questões levantadas na Fase 4. As
 decisões estão detalhadas, numeradas, em [PENDENCIAS.md](PENDENCIAS.md)
-(decisões 3 a 11 e 16 a 20), com as interpretações que ainda pedem
-confirmação. Em
-resumo: só presentes avaliam; um filme nunca se repete no clube; uma
-edição do Óscar por ano; ciclo da temporada com o estado *em votação*;
-apuração por votação ponderada (2/1) com 2º turno, votação por
-classificação e empate absoluto; voto alterável até a apuração; reativar
+(decisões 3 a 11 e 16 a 33), com as interpretações que ainda pedem
+confirmação. Em resumo: só presentes avaliam; um filme nunca se repete
+no clube; uma edição do Óscar por ano; ciclo da temporada com o estado
+*em votação*; votação ponderada (2/1) com eleitores definidos, cédula
+confirmada e desempates automáticos, cujo placar vai por e-mail para quem
+monta a cerimônia; vencedores registrados depois do evento; reativar
 membro; data do evento; média das notas armazenada; duração do filme; e o
 contrato de um módulo de histórico de sessões passadas.
 
@@ -212,106 +214,142 @@ menos a votação — o desenho dela está logo abaixo.
 
 ### Desenho da votação (a implementar)
 
-Decisões 8, 16, 18 e 20 de [PENDENCIAS.md](PENDENCIAS.md) e as
-interpretações 1 a 4 e 7 a 9. É o desenho que a sessão anterior deixou
-pronto; decisões técnicas podem ser revistas na implementação, desde que
-registradas em PENDENCIAS.
+Decisões 8, 16, 20 e 21 a 29 de [PENDENCIAS.md](PENDENCIAS.md) e as
+interpretações 1 a 3 e 12 a 15. O sistema recolhe os votos e desfaz os
+empates, mas não mostra resultado a ninguém: o placar só sai por e-mail,
+para quem monta a cerimônia, e o vencedor de cada categoria é registrado
+por quem administra depois do evento. Decisões técnicas podem ser revistas
+na implementação, desde que registradas em PENDENCIAS.
+
+O fluxo, dentro da fase *em votação* da edição:
+
+1. Ao entrar na fase, a **votação** começa: os eleitores são os membros
+   ativos do clube naquele momento, e cada categoria abre o 1º turno com
+   todas as suas nomeações.
+2. Cada eleitor preenche a sua **cédula** do turno — em cada categoria, a
+   1ª e a 2ª opção (ou, num turno de classificação, a ordem completa) —,
+   altera o que quiser e a **confirma**. Confirmada, não muda mais.
+3. A confirmação do último eleitor **encerra o turno**: o sistema apura
+   cada categoria sem mostrar nada. Topo empatado abre, na categoria, um
+   turno seguinte só com as empatadas (dupla; ou classificação, se todas
+   empataram numa dupla); as demais categorias estão decididas — por
+   vitória ou por empate absoluto. Se algum turno novo foi aberto, os
+   eleitores voltam ao passo 2; se não, a votação termina.
+4. Terminada a votação, quem administra **envia o placar** a um e-mail,
+   quantas vezes precisar, até a edição ser encerrada.
+5. Depois da cerimônia, quem administra **registra o vencedor** de cada
+   categoria; com todas registradas, a edição pode avançar a *apurada*.
 
 **Domínio**
 
-- Enumerações novas em `value_objects/status.py`: `ModoDeVotacao`
-  (`DUPLA`: 1ª opção 2 pontos, 2ª opção 1 ponto; `CLASSIFICACAO`: ordena
-  todas as X candidatas, com pesos X, X−1, …, 1) e `StatusTurno`
-  (`ABERTO`, `APURADO`). Precisam de rótulo em `web/formatacao.py` (um
-  teste confere) e de espelho `...Api` na API.
-- Entidade `TurnoDeVotacao`: `id`, `categoria_id`, `numero` (1, 2, ...),
-  `modo`, `candidatas` (tupla **ordenada** de `NomeacaoOscarId` — vota-se
-  em nomeações, não em filmes, porque o mesmo filme pode ocupar várias),
-  `status`, `pontuacao` (preenchida na apuração, para guardar o placar
-  exato mesmo que um membro seja desativado depois) e `data_apuracao`.
-  Métodos: `abrir_primeiro(categoria_id, candidatas)` (modo `DUPLA`);
-  `conferir_escolhas(escolhas)` — turno aberto; na dupla, duas nomeações
+- `ModoDeVotacao` em `value_objects/status.py`: `DUPLA` (1ª opção 2
+  pontos, 2ª opção 1 ponto) e `CLASSIFICACAO` (ordena as X candidatas,
+  com pesos X, X−1, …, 1). Precisa de rótulo em `web/formatacao.py` (um
+  teste confere) e de espelho `ModoDeVotacaoApi` na API.
+- `VotacaoOscar`: `id`, `temporada_id`, `eleitores` (conjunto fixo de
+  `MembroId`), `iniciada_em`, `turno_atual` (1, 2, ...) e `encerrada_em`.
+  `iniciar(temporada_id, eleitores, momento)` recusa uma lista vazia;
+  `verificar_eleitor`, `verificar_aberta`, `pendentes(confirmados)`,
+  `abrir_turno_seguinte()` e `encerrar(momento)`.
+- `TurnoDeVotacao` — o turno de uma categoria: `id`, `categoria_id`,
+  `numero` (o turno da votação em que acontece), `modo`, `candidatas`
+  (tupla **ordenada** de `NomeacaoOscarId` — vota-se em nomeações) e,
+  depois de apurado, `pontuacao` (os pontos de cada candidata, na mesma
+  ordem) e `apurado_em`. `abrir_primeiro(categoria_id, candidatas)` (modo
+  `DUPLA`); `conferir_escolhas(escolhas)` — na dupla, duas nomeações
   distintas entre as candidatas (podem ser do mesmo filme); na
-  classificação, uma ordem completa das candidatas; e
-  `apurar(votos, *, eleitores, data_apuracao) -> Desfecho`.
-- Regras da contagem, dentro de `apurar`: `eleitores` são os membros
-  ativos do clube no momento da apuração; o voto de quem não é eleitor é
-  desconsiderado (decisão 18); falta de voto de algum eleitor recusa a
-  apuração (decisão 8.2), listando quem falta. Desfechos (três pequenas
-  dataclasses, para `match` no caso de uso): `Vitoria(nomeacao_id)` se o
-  topo é único; `NovoTurno(turno)` se o topo empata entre parte das
-  candidatas (novo turno `DUPLA` só com as empatadas — decisão 8.4 e
-  interpretação 2) ou se todas empatam num turno `DUPLA` (novo turno
-  `CLASSIFICACAO` com as mesmas — decisão 16); `EmpateAbsoluto` se todas
-  empatam num turno `CLASSIFICACAO` (decisão 8.6). A sequência sempre
-  termina: a cada dois turnos, no máximo, o número de candidatas cai.
-- Entidade `Voto`: `id`, `turno_id`, `membro_id`, `escolhas` (tupla em
-  ordem de preferência), `registrado_em` (`datetime`, via
-  `RelogioService.agora`); `alterar(escolhas, registrado_em)` — o voto
-  muda até a apuração (decisão 8.3).
-- `Trofeu.nomeacao_vencedora_id` passa a ser opcional: `None` no empate
-  absoluto, quando o troféu vai para um membro escolhido pelo grupo.
-- Erros novos (cada um com status em `erros_http.py` e, se aparecer no
-  uso normal, texto em `web/mensagens.py`): `VotoInvalidoError` (422);
-  `TurnoJaApuradoError` (409); `VotacaoIncompletaError` (409);
-  `EscolhaDoGrupoNecessariaError` (422) — substitui
-  `VencedorDemocraciaNaoInformadoError`, cobrindo a vitória de um filme
-  democracia e o empate absoluto; `VotacaoEmAndamentoError` (409); e a
-  recusa de um membro escolhido que não é do clube (interpretação 3).
+  classificação, uma ordem completa; `apurar(escolhas_das_cedulas,
+  momento) -> TurnoDeVotacao | None` devolve o turno seguinte quando o
+  topo empata (parcial → dupla com as empatadas, decisão 8.4 e
+  interpretação 2; total numa dupla → classificação com as mesmas,
+  decisão 16) e `None` quando a categoria se decidiu (topo único, ou
+  empate total numa classificação: empate absoluto, decisão 8.6). A
+  sequência sempre termina: a cada dois turnos, no máximo, o número de
+  candidatas cai. Leituras para o placar: `lideres` e `empate_absoluto`.
+- `Cedula` — as escolhas de um eleitor num turno: `id`, `votacao_id`,
+  `turno`, `membro_id`, `escolhas` (por categoria, em ordem de
+  preferência) e `confirmada_em`. `votar(categoria_id, escolhas)` e
+  `confirmar(categorias_do_turno, momento)`, que exige voto em todas;
+  depois de confirmada, as duas recusam.
+- `TemporadaOscar.verificar_em_votacao()`.
+- Erros novos, cada um com status em `erros_http.py` e, se aparecer no
+  uso normal, texto em `web/mensagens.py`: `VotoInvalidoError` (422),
+  `CedulaConfirmadaError` (409), `CedulaIncompletaError` (409),
+  `MembroForaDaVotacaoError` (409), `CategoriaForaDoTurnoError` (409),
+  `VotacaoEncerradaError` (409) e `VotacaoEmAndamentoError` (409). Ir à
+  votação sem nenhum membro ativo é um `TemporadaIncompletaError`.
 
 **Aplicação**
 
-- Ports `TurnoDeVotacaoRepository` (`salvar`, `buscar_por_id`,
-  `buscar_aberto_por_categoria`, `listar_por_categoria`) e
-  `VotoRepository` (`salvar`, `buscar_por_turno_e_membro`,
-  `listar_por_turno`), com fakes em `tests/application/fakes/`.
-- `RegistrarVoto(turno_id, membro_id, escolhas)`: edição `EM_VOTACAO`
-  (um `TemporadaOscar.verificar_em_votacao()` novo), turno aberto, membro
-  ativo e do clube da edição; cria o voto ou substitui as escolhas.
-- `ApurarCategoriaOscar(categoria_id, membro_escolhido_id=None)`, nova:
-  edição `EM_VOTACAO`; apura o turno aberto da categoria; `Vitoria` →
-  troféu para quem indicou a nomeação (ou para o membro escolhido, se ela
-  veio de uma democracia); `EmpateAbsoluto` → troféu sem nomeação, para o
-  membro escolhido; `NovoTurno` → grava o turno seguinte. Se faltar a
-  escolha do grupo, falha **antes de gravar qualquer coisa** — quem chama
-  repete com `membro_escolhido_id` (a contagem é determinística). Devolve
-  um resultado com o turno apurado, o troféu ou o próximo turno. A
-  escolha informada sem necessidade é ignorada.
-- `AvancarTemporadaOscar`: ao entrar em `EM_VOTACAO`, abre o turno 1 de
-  cada categoria, com todas as nomeações na ordem em que foram feitas.
-- `DesativarMembro`: recusa enquanto o clube do membro tiver uma edição
-  `EM_VOTACAO` (interpretação 7).
-- Remover `CriterioApuracaoOscar` e as implementações
-  (`cli/criterio_apuracao_interativo.py`,
-  `servicos/criterio_apuracao_escolha_informada.py`, o fake e os testes),
-  e `Contexto.apurar_categoria_oscar(criterio)` vira um atributo comum.
+- Ports `VotacaoOscarRepository` (`salvar`, `buscar_por_temporada`),
+  `TurnoDeVotacaoRepository` (`salvar`, `listar_por_categoria`) e
+  `CedulaRepository` (`salvar`, `buscar`, `listar_por_turno`), com fakes
+  em `tests/application/fakes/`.
+- `AvancarTemporadaOscar`: ao entrar em `EM_VOTACAO`, inicia a votação e
+  abre o 1º turno de cada categoria, com as nomeações na ordem em que
+  foram feitas.
+- `RegistrarVoto(categoria_id, membro_id, escolhas)`: edição em votação,
+  votação aberta, eleitor, categoria no turno atual e cédula não
+  confirmada; cria a cédula do turno ou troca as escolhas da categoria.
+- `ConfirmarCedula(temporada_id, membro_id)`: confere que a cédula tem
+  voto em todas as categorias do turno (a recusa lista as que faltam),
+  confirma e, se era o último eleitor, encerra o turno — apura cada
+  categoria, grava os turnos seguintes e avança ou termina a votação.
+  Devolve a votação atualizada, se o turno se encerrou e quem falta.
+- `EnviarPlacarOscar(temporada_id, destinatario)`: votação terminada e
+  edição não encerrada; monta o placar (categorias, turnos, nomeações com
+  filme, quem indicou e pontos) e o envia pelo port `EnviadorDeEmail`.
+- `RegistrarVencedorOscar(categoria_id, nomeacao_id?,
+  membro_escolhido_id?)`: votação terminada, categoria sem troféu; com a
+  nomeação, o troféu vai para quem a indicou (ou para o membro escolhido,
+  se ela veio de uma democracia); sem nomeação, é um empate absoluto e o
+  membro escolhido é obrigatório (`EscolhaDoGrupoNecessariaError`, 422,
+  no lugar de `VencedorDemocraciaNaoInformadoError`); o membro escolhido
+  precisa ser do clube (`MembroDeOutroClubeError`, 422, interpretação 3).
+  Substitui `ApurarCategoriaOscar`, que sai junto com o port
+  `CriterioApuracaoOscar` e as suas implementações (decisão técnica 24).
+- `DesativarMembro` não muda: desativar continua permitido na votação.
 
-**Persistência** — revisão 0005: `turnos_votacao` (`id`, `categoria_id`,
-`numero`, `modo`, `status`, `data_apuracao`; único por categoria e
-número), `turno_candidatas` (`turno_id`, `posicao`, `nomeacao_id`,
-`pontos` anulável até a apuração), `votos` (`id`, `turno_id`,
-`membro_id`, `registrado_em`; único por turno e membro), `voto_escolhas`
-(`voto_id`, `posicao`, `nomeacao_id`) e `trofeus.nomeacao_vencedora_id`
-anulável (`batch_alter_table`).
+**Infraestrutura** — port `EnviadorDeEmail` (`enviar(MensagemDeEmail)`),
+genérico: o convite por código da Fase 5 pode usá-lo. Adapter SMTP (da
+biblioteca padrão) configurado por variáveis de ambiente; sem
+configuração, o envio é recusado com uma mensagem que diz o que
+configurar. `EnderecoDeEmail` é value object do domínio.
 
-**Interfaces** — antes da apuração, mostram só *quem* já votou; depois,
-a pontuação de cada nomeação; as cédulas não são exibidas
-(interpretação 9, questão em aberto 2).
+**Persistência** — revisão 0005 (votação): `votacoes_oscar` (única por
+temporada), `votacao_eleitores`, `turnos_votacao` (único por categoria e
+número), `turno_candidatas` (`posicao`, `nomeacao_id`, `pontos` anulável
+até a apuração), `cedulas` (única por votação, turno e membro) e
+`cedula_escolhas`; as edições que já estiverem *em votação* ganham a sua
+votação na migração. Revisão 0006 (vencedores):
+`trofeus.nomeacao_vencedora_id` anulável, para o empate absoluto.
 
-- CLI: `oscar nomeacoes --categoria-id ID` (posição, filme, quem
-  indicou), `oscar votacao CATEGORIA_ID` (turno aberto: modo, candidatas,
-  quem votou e quem falta), `oscar votar --categoria-id ID --membro-id ID
-  NOMEACAO_ID...` (resolve o turno aberto da categoria) e `oscar apurar
-  CATEGORIA_ID [--membro-escolhido-id ID]` (placar e desfecho).
-- API: `GET /oscar/categorias/{id}/turnos`, `GET /oscar/turnos/{id}`,
-  `PUT /oscar/turnos/{id}/votos/{membro_id}` (corpo `{"escolhas": [...]}`;
-  cria ou substitui) e `POST /oscar/categorias/{id}/apuracao` (corpo
-  `{"membro_escolhido_id"?}`; devolve `{"turno", "trofeu"?,
-  "proximo_turno"?}`).
+**Interfaces** — mostram só quem já votou e em quantas categorias; nunca
+as cédulas nem o placar (decisão 26).
+
+- CLI: `oscar votacao` (turno atual, categorias com as candidatas
+  numeradas, eleitores e andamento), `oscar votar --membro-id ID
+  --categoria-id ID ESCOLHA...` (pela posição da candidata ou pelo id da
+  nomeação), `oscar confirmar --membro-id ID`, `oscar enviar-placar
+  EMAIL`, `oscar categoria nomeacoes CATEGORIA_ID` e `oscar premiar
+  CATEGORIA_ID [--nomeacao-id ID] [--membro-escolhido-id ID]`, que
+  substitui `oscar apurar`.
+- API: `GET /oscar/temporadas/{id}/votacao`,
+  `PUT /oscar/categorias/{id}/votos/{membro_id}` (corpo
+  `{"escolhas": [...]}`),
+  `POST /oscar/temporadas/{id}/votacao/cedulas/{membro_id}/confirmacao`,
+  `POST /oscar/temporadas/{id}/placar/envios` (corpo `{"destinatario"}`) e
+  `POST /oscar/categorias/{id}/trofeu` (corpo `{"nomeacao_id"?,
+  "membro_escolhido_id"?}`), que substitui `/apuracao`.
 - Testes: a tabela de desfechos da contagem no domínio (vitória, empate
-  parcial, empate geral na dupla e na classificação, voto de desativado
-  ignorado, voto faltando), os casos de uso, os repositórios, CLI e API,
-  e os dois fluxos completos votando em vez de escolher.
+  parcial, empate geral na dupla e na classificação), cédula e
+  confirmação, casos de uso, repositórios, migração, SMTP, CLI e API, e
+  os dois fluxos completos votando, enviando o placar e premiando.
+
+Ordem de implementação, um commit por etapa: **(a)** votação — eleitores,
+turnos, cédulas, confirmação e desempates (revisão 0005); **(b)** placar
+por e-mail; **(c)** vencedores registrados e remoção do critério antigo
+(revisão 0006).
 
 ## Fase 5 — Evolução comercial
 
@@ -344,7 +382,7 @@ quanto) a guardar só o resultado final.
 Ordem recomendada para a próxima sessão de trabalho, a partir do branch
 `roadmap/fases-4-e-5`:
 
-1. **Revisão de regras de 24/09** (decisões 3 a 11 e 16 a 20 de
+1. **Revisão de regras de 24 e 25/09** (decisões 3 a 11 e 16 a 33 de
    [PENDENCIAS.md](PENDENCIAS.md)), em commits pequenos, cada um com CLI,
    API, testes e documentação atualizados. Cada mudança de esquema ganha
    a sua própria revisão do Alembic, no commit da regra que a pede:
@@ -362,12 +400,10 @@ Ordem recomendada para a próxima sessão de trabalho, a partir do branch
       0004); ciclo da temporada com `EM_VOTACAO` e o caso de uso de
       avanço, restringindo cada ação à sua fase;
    5. **próximo passo:** votação, conforme o "Desenho da votação"
-      acima (revisão 0005: turnos, candidatas, votos e escolhas;
-      `trofeus.nomeacao_vencedora_id` anulável para o empate absoluto):
-      entidades `TurnoDeVotacao` e `Voto`, contagem como regra do domínio,
-      `RegistrarVoto` e a nova `ApurarCategoriaOscar`; desativar membro
-      bloqueado durante a votação; remoção de `CriterioApuracaoOscar`.
-      Grande o bastante para pedir uma sessão só para ela;
+      acima (redesenhado com as decisões de 25/09), em três commits:
+      (a) eleitores, turnos, cédulas, confirmação e desempates (revisão
+      0005); (b) placar por e-mail; (c) vencedores registrados por quem
+      administra e remoção de `CriterioApuracaoOscar` (revisão 0006);
    6. ✅ contrato do módulo de histórico (só ports e estruturas de dados).
 2. **Páginas da interface web** sobre o domínio já revisado (plano na
    seção da Fase 4), fechando a Fase 4.
@@ -383,5 +419,5 @@ Ordem recomendada para a próxima sessão de trabalho, a partir do branch
 | Tecnologia da API | ✅ Resolvida: FastAPI, erros RFC 9457 | Fase 4 |
 | Tecnologia da interface web | ✅ Resolvida: páginas renderizadas no servidor (Jinja2) | Fase 4 |
 | Evolução do esquema do banco | ✅ Resolvida: migrações com Alembic | Fase 4 |
-| Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | ✅ Decidida em 24/09/2026: votação ponderada (2/1), com 2º turno, classificação e empate absoluto — a implementar | Hoje a CLI e a API ainda delegam a escolha a quem opera (port `CriterioApuracaoOscar`); a votação substitui esse port. Ver [PENDENCIAS.md](PENDENCIAS.md), decisão 8. |
+| Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | ✅ Decidida em 24 e 25/09/2026: votação ponderada (2/1) com eleitores definidos, cédula confirmada e desempates no sistema; placar enviado por e-mail e apuração fora do sistema; vencedores registrados depois do evento — a implementar | Hoje a CLI e a API ainda delegam a escolha a quem opera (port `CriterioApuracaoOscar`), que sai na etapa dos vencedores. Ver [PENDENCIAS.md](PENDENCIAS.md), decisões 8 e 21 a 29. |
 | Módulo de histórico de sessões passadas | Contrato criado (`LeitorDeHistorico`); implementação em aberto | Ver [PENDENCIAS.md](PENDENCIAS.md), decisão 3 e questão em aberto 1. |

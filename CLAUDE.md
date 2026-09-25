@@ -16,15 +16,21 @@ para virar produto multi-clube.
 ## Onde parou e como continuar
 
 - Branch de trabalho: `roadmap/fases-4-e-5`, publicado em `origin` a pedido
-  do dono em 24/09/2026 e ainda não mesclado em `main`.
+  do dono em 24/09/2026. Em 25/09, também a pedido dele, foi mesclado em
+  `main` (fast-forward, só local: a `main` não foi enviada ao `origin`).
 - Fases 1–3 concluídas; Fase 4 com a API pronta, migrações com Alembic e
   os módulos de apoio da web; as páginas da web ainda não existem.
 - Revisão de regras de 24/09/2026 quase toda implementada (duração,
   reativação, data do evento, só presentes avaliam, média como fração em
   estrelas, filme não se repete, uma edição por ano, nomeações fixas por
   categoria, ciclo com *em votação*, contrato do histórico).
+- Em 25/09 o dono redesenhou a votação (decisões 21 a 33): eleitores
+  fixados no início, cédula confirmada, desempates automáticos, placar
+  **só por e-mail** (ninguém vê resultado no sistema) e vencedores
+  registrados por quem administra depois do evento.
 - **Próximo passo:** a **votação** do Óscar, que ainda usa o critério
-  antigo (escolha informada). O desenho completo está em "Desenho da
+  antigo (escolha informada), em três commits — (a) votação, (b) placar
+  por e-mail, (c) vencedores. O desenho completo está em "Desenho da
   votação" no [ROADMAP](docs/ROADMAP.md); depois dela, as páginas da web.
   As decisões, numeradas, estão em [docs/PENDENCIAS.md](docs/PENDENCIAS.md)
   — inclusive as interpretações que ainda pedem confirmação.
@@ -89,7 +95,8 @@ ruff format.
   ARQUITETURA (ADRs), ESTRUTURA_PROJETO, CLI.md/API.md, DOMINIO e
   CASOS_DE_USO quando regras mudarem, e PENDENCIAS.
 - **Git:** um commit por etapa concluída, no branch local, sem push e sem
-  mesclar em `main` (preferência confirmada pelo dono). Mensagens em
+  mesclar em `main` — push e merge só quando o dono pedir (preferência
+  confirmada por ele). Mensagens em
   português: título no imperativo, corpo explicando o porquê, e a linha
   `Co-Authored-By` ao final.
 - Checklists de perguntas ao usuário sempre numerados.

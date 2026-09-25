@@ -33,7 +33,9 @@ implementado ainda, exceto onde indicado.
    categorias são apuradas; nomeações travadas) → apurada (só quando
    todas as categorias tiverem resultado) → encerrada (nada muda).
    Avanço manual, um passo por vez.
-8. **Apuração por votação ponderada**, no lugar da escolha manual:
+8. **Apuração por votação ponderada**, no lugar da escolha manual (os
+   itens 2 e 3 foram substituídos pela decisão 25, e o item 6 ganhou
+   a forma da decisão 29):
    1. cada membro ativo do clube dá, por categoria, uma 1ª opção
       (**2 pontos**) e uma 2ª opção (**1 ponto**); votar no filme que o
       próprio membro indicou é permitido — os pesos existem justamente
@@ -79,9 +81,11 @@ número 1, 3, 4, 6, 7 e 9 foram respondidas ou superadas aqui).
     entre os filmes empatados; os eliminados não voltam.
 17. **Nomeações por categoria:** todas as categorias de uma edição têm o
     mesmo número de nomeações — 5 por padrão, editável ao abrir a edição.
-18. **Membro desativado e votação:** durante uma votação ativa não é
+18. ~~**Membro desativado e votação:** durante uma votação ativa não é
     possível desativar um membro; se, por defeito, algum for desativado
-    mesmo assim, o voto dele é desconsiderado.
+    mesmo assim, o voto dele é desconsiderado.~~ Revogada pelo dono em
+    25/09 (decisão 23): a votação tem eleitores definidos, e mexer nos
+    membros não a afeta. Nunca chegou a ser implementada.
 19. **Média como fração:** a média guarda a soma e a quantidade das notas
     (soma ÷ quantidade), sem arredondar, e é exibida em estrelas — uma
     por inteiro, mais a fração restante com denominador de 2 a 10 (ex.:
@@ -89,45 +93,89 @@ número 1, 3, 4, 6, 7 e 9 foram respondidas ou superadas aqui).
 20. **Mesmo filme várias vezes na categoria:** continua permitido; uma
     categoria pode ser inteira sobre um único filme.
 
-### Interpretações minhas, para confirmar
+## Decisões do dono do produto em 25/09/2026
 
-Pontos que as respostas não fecharam por completo; é assim que estou
-implementando, salvo correção:
+Respostas às interpretações de 24/09 e às perguntas feitas ao redesenhar
+a votação. O sistema existe para que o clube brinque no mundo real: ele
+recolhe os votos, mas quem conhece o resultado é só quem monta a
+cerimônia.
+
+21. **Nomeações por categoria:** no mínimo 2 (a votação dupla pede duas
+    opções), sem máximo; 5 por padrão. O número é o mesmo em todas as
+    categorias e é definido junto das demais configurações da edição, ao
+    abri-la. *Já implementado.*
+22. **Ir à votação** exige ao menos uma categoria, cada uma com exatamente
+    o número de nomeações da edição; nomear além dele é recusado. *Já
+    implementado.*
+23. **A votação é um evento com eleitores definidos:** começa quando a
+    edição entra *em votação* ("votação ativa" é a edição estar nessa
+    fase) e habilita só os membros cadastrados e ativos naquele momento.
+    Cadastrar, desativar ou reativar membros continua permitido durante a
+    votação, mas não muda os eleitores: quem foi desativado continua
+    votando, e quem entrou ou voltou depois não vota. Substitui a
+    decisão 18.
+24. **Vota-se em nomeações, não em filmes:** as duas opções da votação
+    dupla precisam ser nomeações diferentes, mas podem ser do mesmo filme.
+25. **Cédula e confirmação:** o eleitor vota em todas as categorias do
+    turno e então confirma a cédula. Até confirmar, pode alterar os votos
+    à vontade; depois, nada muda. Quando todos os eleitores confirmam, o
+    turno se encerra. Substitui os itens 2 e 3 da decisão 8.
+26. **Voto secreto:** as telas mostram só quem já votou; as cédulas ficam
+    guardadas e nunca aparecem. Nenhuma tela mostra o placar.
+27. **Apuração fora do sistema:** terminada a votação, quem administra
+    informa um e-mail, sem ver o resultado, e o sistema envia para ele o
+    **placar** — a pontuação de cada nomeação, no corpo do e-mail, nunca
+    as cédulas. Quem recebe monta as apresentações da cerimônia. O envio
+    pode ser repetido, para o mesmo ou outro endereço, até a edição ser
+    encerrada.
+28. **Desempates dentro do sistema:** ao encerrar um turno, o sistema
+    detecta sozinho os empates no topo, sem mostrá-los, e abre um novo
+    turno só com as nomeações empatadas, pelas regras das decisões 8.4,
+    8.5 e 16. O placar só pode ser enviado quando não restar empate a
+    desfazer.
+29. **Vencedores registrados depois do evento:** quem administra informa
+    o vencedor de cada categoria — a nomeação (o troféu vai para quem a
+    indicou) ou, numa vitória de filme democracia ou num empate absoluto,
+    o membro escolhido pelo grupo. O histórico de troféus continua no
+    sistema, e a edição fica *apurada* quando toda categoria tiver
+    vencedor.
+30. **Estrelas com mais de 10 notas:** a fração mostrada é a mais próxima
+    com denominador até 10; as frações sem caractere próprio aparecem
+    compostas, como ²⁄₇. *Já implementado.*
+31. **Data do evento** pode mudar em qualquer fase, menos depois de a
+    edição ser encerrada. *Já implementado.*
+32. **A duração é o único dado do filme editável** depois do cadastro.
+    *Já implementado.*
+33. **Reativar um membro que já está ativo** não deve aparecer como
+    opção nas telas, mas, se acontecer (latência, clique duplo), também
+    não é erro. *Já implementado* (a regra das telas vale para a web).
+
+### Interpretações para confirmar
+
+As interpretações 4 a 11 de 24/09 foram respondidas pelas decisões 21 a
+33 (a 4 virou a decisão técnica 24). Continuam valendo, salvo correção:
 
 1. No 2º turno com apenas dois filmes, a 1ª e a 2ª opção cobrem os dois.
 2. Empate parcial numa votação por classificação leva a um novo turno de
    votação dupla só com os empatados.
 3. O membro escolhido pelo grupo (vitória democracia ou empate absoluto)
    precisa ser membro do clube (ativo ou não).
-4. Como o mecanismo de apuração foi decidido, o port plugável
-   `CriterioApuracaoOscar` e suas implementações (a interativa da CLI e a
-   `CriterioEscolhaInformada` da API) deixam de existir; a contagem de
-   votos vira regra do domínio.
-5. **Mínimo de 2 nomeações por categoria** (decisão 17): a votação dupla
-   pede duas opções distintas. Não há máximo. Com isso, a antiga
-   interpretação "categoria com uma única nomeação vence sem votação"
-   deixa de existir.
-6. Nomear além do número da edição é recusado; passar para *em votação*
-   exige que **toda categoria tenha exatamente esse número** de nomeações
-   e que a edição tenha **ao menos uma categoria**.
-7. **"Votação ativa"** (decisão 18) é a edição do Óscar do clube estar no
-   estado *em votação*. Cadastrar ou reativar um membro nesse período
-   continua permitido: ele passa a votar, e os turnos abertos esperam o
-   voto dele.
-8. **Vota-se em nomeações, não em filmes:** como o mesmo filme pode ser
-   nomeado várias vezes na mesma categoria (decisão 20), cada escolha do
-   voto aponta uma nomeação. As duas opções da votação dupla precisam ser
-   nomeações diferentes (podem ser do mesmo filme).
-9. **Sigilo do voto:** antes da apuração, as interfaces mostram só *quem*
-   já votou; depois, a pontuação de cada nomeação. As cédulas
-   individuais ficam guardadas (para relatórios), mas nenhuma interface
-   as exibe — ver a questão em aberto 2.
-10. **Estrelas com mais de 10 notas:** quando a fração exata tem
-    denominador maior que 10, exibe-se a fração mais próxima com
-    denominador até 10 (ex.: 34/11 = 3,09… → ★★★⅒); se ela arredondar
-    para zero ou para um inteiro, só aparecem estrelas inteiras.
-11. **Data do evento** pode ser definida ou trocada em qualquer estado da
-    edição, menos *encerrada* ("nada muda", decisão 7).
+
+Novas, do redesenho de 25/09:
+
+12. **Os mesmos eleitores em todos os turnos:** o 2º turno (e os
+    seguintes) é parte da mesma votação; cada eleitor preenche uma cédula
+    nova só com as categorias empatadas e confirma de novo.
+13. **Andamento de cada eleitor à mostra:** além de quem confirmou, as
+    telas mostram em quantas categorias do turno cada eleitor já votou —
+    nunca em quê.
+14. **Registro do vencedor** só depois de terminada a votação, com a
+    edição ainda *em votação*, e sem conferência com o placar: a apuração
+    é de quem recebeu o e-mail. Uma vez registrado, o vencedor da
+    categoria não muda (como a antiga apuração).
+15. **O e-mail traz o placar de cada turno** da categoria (1º, 2º...), em
+    ordem de pontos, e assinala o empate absoluto e as nomeações de filme
+    democracia (sem indicador: o grupo escolhe quem leva o troféu).
 
 ## Questões ainda em aberto
 
@@ -135,9 +183,12 @@ implementando, salvo correção:
    arquivo aceitos, como casar nomes de membros e títulos de filmes com
    os cadastrados, se sessões antigas pertencem a rodadas (e quais), e
    como o histórico convive com a regra de não repetir filmes.
-2. **Sigilo do voto:** as cédulas individuais podem ser exibidas (a todos,
-   só depois da apuração, ou nunca)? Hoje nenhuma interface as mostra
-   (interpretação 9).
+2. ~~**Sigilo do voto**~~ — respondida pela decisão 26: as cédulas nunca
+   aparecem.
+3. **Eleitor que não confirma:** se alguém da lista de eleitores nunca
+   confirmar a cédula (por exemplo, saiu do clube durante a votação), o
+   turno não se encerra. Por ora a votação espera todos (decisão do
+   dono); uma saída será decidida se o caso acontecer.
 
 ## Decisões técnicas tomadas sem consulta
 
@@ -221,6 +272,11 @@ implementando, salvo correção:
     com cadastros, escolher rodadas e gravar dependem da questão em
     aberto 1 e serão casos de uso próprios. O conteúdo chega em bytes para
     servir à CLI (arquivo local) e à web (envio de arquivo).
+24. **Fim do critério de apuração plugável:** com a contagem de votos
+    como regra do domínio (decisão 28) e o vencedor informado por quem
+    administra (decisão 29), o port `CriterioApuracaoOscar` e suas
+    implementações (a interativa da CLI e a `CriterioEscolhaInformada` da
+    API) deixam de existir. *A implementar na etapa dos vencedores.*
 
 ## Dívidas técnicas conhecidas
 
