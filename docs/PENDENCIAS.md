@@ -18,7 +18,8 @@ implementado ainda, exceto onde indicado.
    Sessões passadas ganham um **módulo específico de histórico**, que
    também importa em massa arquivos de fontes diversas. Nesta etapa, só o
    **contrato** do módulo (ports e estruturas de dados); a implementação
-   será decidida depois.
+   será decidida depois. *Contrato criado:*
+   `application/ports/leitor_de_historico.py`.
 4. **Só quem estava presente avalia** uma sessão (nota ou dorminhoco).
 5. **Filme não se repete no clube:** é proibido indicar um filme que o
    clube já assistiu — inclusive em sessões democracia — ou que já está
@@ -214,6 +215,12 @@ implementando, salvo correção:
     quem opera) e ainda não é restrita à fase *em votação*: a etapa da
     votação a substitui por inteiro, com as suas restrições. Até lá, a
     passagem para *apurada* conta os troféus emitidos por ela.
+23. **O contrato do histórico cobre só a leitura** (`LeitorDeHistorico`):
+    um adapter por formato, que devolve os registros com os nomes como
+    vieram na fonte e relata as linhas ilegíveis sem parar. Casar nomes
+    com cadastros, escolher rodadas e gravar dependem da questão em
+    aberto 1 e serão casos de uso próprios. O conteúdo chega em bytes para
+    servir à CLI (arquivo local) e à web (envio de arquivo).
 
 ## Dívidas técnicas conhecidas
 

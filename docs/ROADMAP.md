@@ -261,7 +261,7 @@ Ordem recomendada para a próxima sessão de trabalho, a partir do branch
       entidades `TurnoDeVotacao` e `Voto`, contagem como regra do domínio,
       `RegistrarVoto` e a nova `ApurarCategoriaOscar`; desativar membro
       bloqueado durante a votação; remoção de `CriterioApuracaoOscar`;
-   6. contrato do módulo de histórico (só ports e estruturas de dados).
+   6. ✅ contrato do módulo de histórico (só ports e estruturas de dados).
 2. **Páginas da interface web** sobre o domínio já revisado (plano na
    seção da Fase 4), fechando a Fase 4.
 3. **Fase 5**: verificações entre clubes, login com convites e
@@ -277,4 +277,4 @@ Ordem recomendada para a próxima sessão de trabalho, a partir do branch
 | Tecnologia da interface web | ✅ Resolvida: páginas renderizadas no servidor (Jinja2) | Fase 4 |
 | Evolução do esquema do banco | ✅ Resolvida: migrações com Alembic | Fase 4 |
 | Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | ✅ Decidida em 24/09/2026: votação ponderada (2/1), com 2º turno, classificação e empate absoluto — a implementar | Hoje a CLI e a API ainda delegam a escolha a quem opera (port `CriterioApuracaoOscar`); a votação substitui esse port. Ver [PENDENCIAS.md](PENDENCIAS.md), decisão 8. |
-| Módulo de histórico de sessões passadas | Contrato a criar; implementação em aberto | Ver [PENDENCIAS.md](PENDENCIAS.md), decisão 3 e questão em aberto 1. |
+| Módulo de histórico de sessões passadas | Contrato criado (`LeitorDeHistorico`); implementação em aberto | Ver [PENDENCIAS.md](PENDENCIAS.md), decisão 3 e questão em aberto 1. |

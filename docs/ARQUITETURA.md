@@ -94,6 +94,14 @@ fora:
   de uma categoria do Óscar — existe porque esse mecanismo (votação,
   média de notas, etc.) ainda não foi decidido para o produto; o caso de
   uso `ApurarCategoriaOscar` não fica acoplado a essa decisão em aberto.
+  (A votação decidida em 24/09/2026 vai substituí-lo pela contagem de
+  votos no domínio — ver o ROADMAP.)
+- `LeitorDeHistorico`: contrato do módulo de histórico de sessões
+  passadas — um adapter por formato de arquivo, que entrega os registros
+  com os nomes como vieram (`SessaoHistorica`, `NotaHistorica`) e relata
+  os trechos ilegíveis (`ProblemaDeLeitura`) sem interromper a leitura.
+  Só o contrato existe: conciliar com os cadastros e gravar depende de
+  regras ainda em aberto.
 
 ### Adapters
 

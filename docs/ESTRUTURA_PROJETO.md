@@ -31,7 +31,8 @@ FilmesECodes/
 │       ├── application/
 │       │   ├── use_cases/             # um módulo por caso de uso (19)
 │       │   └── ports/                 # Protocols: repositórios, SorteadorService,
-│       │                              # RelogioService, CriterioApuracaoOscar
+│       │                              # RelogioService, CriterioApuracaoOscar,
+│       │                              # LeitorDeHistorico (só o contrato)
 │       └── adapters/
 │           ├── composicao.py          # composition root: engine -> repos -> casos de uso
 │           ├── persistence/
