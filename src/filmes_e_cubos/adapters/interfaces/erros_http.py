@@ -30,6 +30,7 @@ from filmes_e_cubos.domain.exceptions.filme import (
     TituloFilmeObrigatorioError,
 )
 from filmes_e_cubos.domain.exceptions.indicacao import (
+    FilmeRepetidoNoClubeError,
     IndicacaoDuplicadaError,
     TransicaoDeStatusInvalidaError,
 )
@@ -63,6 +64,7 @@ _CONFLITO: Final[tuple[type[DomainError], ...]] = (
     AcaoForaDaFaseError,
     AvaliacaoDuplicadaError,
     CategoriaJaApuradaError,
+    FilmeRepetidoNoClubeError,
     IndicacaoDuplicadaError,
     MembroAusenteNaSessaoError,
     MembroInativoError,

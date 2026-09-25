@@ -5,6 +5,7 @@ from __future__ import annotations
 from filmes_e_cubos.application.ports.categoria_oscar_repository import CategoriaOscarRepository
 from filmes_e_cubos.application.ports.indicacao_repository import IndicacaoRepository
 from filmes_e_cubos.application.ports.nomeacao_oscar_repository import NomeacaoOscarRepository
+from filmes_e_cubos.application.ports.rodada_repository import RodadaRepository
 from filmes_e_cubos.application.ports.sessao_repository import SessaoRepository
 from filmes_e_cubos.application.ports.temporada_oscar_repository import TemporadaOscarRepository
 from filmes_e_cubos.domain.entities.indicacao import Indicacao
@@ -14,13 +15,19 @@ from filmes_e_cubos.domain.exceptions.oscar import (
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,
 )
-from filmes_e_cubos.domain.value_objects.identificadores import CategoriaOscarId, FilmeId
+from filmes_e_cubos.domain.value_objects.identificadores import (
+    CategoriaOscarId,
+    ClubeId,
+    FilmeId,
+)
 
 
 class IndicarFilmeParaCategoria:
     """Nomeia, para uma categoria, um filme assistido pelo clube dentro do
     ano da temporada dessa categoria (sessões DEMOCRACIA contam
     normalmente, pois também geram uma sessão de exibição de verdade).
+    Só contam as sessões do clube dono da temporada: o mesmo filme
+    assistido por outro clube não o qualifica.
 
     A nomeação herda `indicado_por_membro_id` da `Indicacao` semanal
     original assistida (pode ser `None`, se a indicação for DEMOCRACIA) —
@@ -35,12 +42,14 @@ class IndicarFilmeParaCategoria:
         temporada_repository: TemporadaOscarRepository,
         indicacao_repository: IndicacaoRepository,
         sessao_repository: SessaoRepository,
+        rodada_repository: RodadaRepository,
     ) -> None:
         self._nomeacoes = nomeacao_repository
         self._categorias = categoria_repository
         self._temporadas = temporada_repository
         self._indicacoes = indicacao_repository
         self._sessoes = sessao_repository
+        self._rodadas = rodada_repository
 
     def executar(self, *, categoria_id: CategoriaOscarId, filme_id: FilmeId) -> NomeacaoOscar:
         categoria = self._categorias.buscar_por_id(categoria_id)
@@ -51,7 +60,11 @@ class IndicarFilmeParaCategoria:
         if temporada is None:
             raise EntidadeNaoEncontradaError(f"Temporada {categoria.temporada_id} não encontrada.")
 
-        indicacoes_assistidas = self._indicacoes.listar_assistidas_por_filme(filme_id)
+        indicacoes_assistidas = [
+            indicacao
+            for indicacao in self._indicacoes.listar_assistidas_por_filme(filme_id)
+            if self._pertence_ao_clube(indicacao, temporada.clube_id)
+        ]
         if not indicacoes_assistidas:
             raise FilmeNaoAssistidoError(f"Filme {filme_id} ainda não foi assistido pelo clube.")
 
@@ -68,6 +81,10 @@ class IndicarFilmeParaCategoria:
         )
         self._nomeacoes.salvar(nomeacao)
         return nomeacao
+
+    def _pertence_ao_clube(self, indicacao: Indicacao, clube_id: ClubeId) -> bool:
+        rodada = self._rodadas.buscar_por_id(indicacao.rodada_id)
+        return rodada is not None and rodada.clube_id == clube_id
 
     def _buscar_indicacao_no_ano(
         self, indicacoes_assistidas: list[Indicacao], ano: int

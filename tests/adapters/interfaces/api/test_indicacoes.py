@@ -85,14 +85,16 @@ def test_nao_indica_em_rodada_encerrada(
     assert_problema(resposta, 409, "rodada_ja_encerrada")
 
 
-def test_democracia_nao_tem_indicador_nem_conta_na_cota(api: ApiDeTeste, filme: Json) -> None:
+def test_democracia_nao_tem_indicador_nem_conta_na_cota(
+    api: ApiDeTeste, filme: Json, outro_filme: Json
+) -> None:
     clube = api.criar("/clubes", {"nome": "Solo", "configuracao": {"tamanho_rodada": 1}})
     iano = api.criar(f"/clubes/{clube['id']}/membros", {"nome": "Iano"})
     rodada = api.criar(f"/clubes/{clube['id']}/rodadas")
     _indicar(api, rodada, iano, filme)
 
     democracia = api.criar(
-        f"/clubes/{clube['id']}/indicacoes-democracia", {"filme_id": filme["id"]}
+        f"/clubes/{clube['id']}/indicacoes-democracia", {"filme_id": outro_filme["id"]}
     )
 
     assert democracia["tipo"] == "democracia"
@@ -146,3 +148,18 @@ def test_indicacao_inexistente_e_404(api: ApiDeTeste) -> None:
     assert_problema(api.get(f"/indicacoes/{uuid4()}"), 404, "entidade_nao_encontrada")
     assert_problema(api.get(f"/rodadas/{uuid4()}/indicacoes"), 404, "entidade_nao_encontrada")
     assert_problema(api.get(f"/rodadas/{uuid4()}/sorteios"), 404, "entidade_nao_encontrada")
+
+
+def test_filme_nao_se_repete_no_clube(
+    api: ApiDeTeste, clube: Json, rodada: Json, membro: Json, outro_membro: Json, filme: Json
+) -> None:
+    _indicar(api, rodada, membro, filme)
+
+    repetida = api.post(
+        f"/rodadas/{rodada['id']}/indicacoes",
+        {"membro_id": outro_membro["id"], "filme_id": filme["id"]},
+    )
+    democracia = api.post(f"/clubes/{clube['id']}/indicacoes-democracia", {"filme_id": filme["id"]})
+
+    assert_problema(repetida, 409, "filme_repetido_no_clube")
+    assert_problema(democracia, 409, "filme_repetido_no_clube")

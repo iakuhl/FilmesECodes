@@ -138,7 +138,7 @@ também a lista `erros`, com o campo e o motivo:
 | Método e caminho | O que faz |
 |---|---|
 | `GET /rodadas/{rodada_id}/indicacoes` | Lista as indicações da rodada. |
-| `POST /rodadas/{rodada_id}/indicacoes` | Indicação semanal de um membro. Corpo: `{"membro_id", "filme_id"}`. |
+| `POST /rodadas/{rodada_id}/indicacoes` | Indicação semanal de um membro. Corpo: `{"membro_id", "filme_id"}`. `409` (`filme_repetido_no_clube`) se o filme já passou pelo clube — assistido, ou indicado e ainda pendente; vale também para a democracia. |
 | `POST /clubes/{clube_id}/indicacoes-democracia` | Sessão extra escolhida em grupo, na rodada aberta do clube. Corpo: `{"filme_id"}`. Não tem membro indicador e não consome a cota da rodada. |
 | `GET /indicacoes/{indicacao_id}` | Consulta uma indicação. |
 | `GET /rodadas/{rodada_id}/sorteios` | Lista os sorteios da rodada. |

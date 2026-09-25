@@ -8,6 +8,9 @@ from filmes_e_cubos.application.ports.indicacao_repository import IndicacaoRepos
 from filmes_e_cubos.application.ports.membro_repository import MembroRepository
 from filmes_e_cubos.application.ports.relogio_service import RelogioService
 from filmes_e_cubos.application.ports.rodada_repository import RodadaRepository
+from filmes_e_cubos.application.use_cases._filme_inedito import (
+    verificar_filme_inedito_no_clube,
+)
 from filmes_e_cubos.domain.entities.indicacao import Indicacao
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
 from filmes_e_cubos.domain.exceptions.indicacao import IndicacaoDuplicadaError
@@ -65,6 +68,13 @@ class IndicarFilme:
             raise EntidadeNaoEncontradaError(f"Clube {rodada.clube_id} não encontrado.")
         if len(indicacoes_normais_da_rodada) >= clube.configuracao.tamanho_rodada:
             raise RodadaLotadaError(f"Rodada {rodada_id} já atingiu o tamanho máximo.")
+
+        verificar_filme_inedito_no_clube(
+            filme_id=filme_id,
+            clube_id=clube.id,
+            indicacoes=self._indicacoes,
+            rodadas=self._rodadas,
+        )
 
         indicacao = Indicacao.criar(
             rodada_id=rodada_id,

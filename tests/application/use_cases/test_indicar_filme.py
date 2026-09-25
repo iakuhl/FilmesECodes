@@ -12,7 +12,10 @@ from filmes_e_cubos.domain.entities.indicacao import Indicacao
 from filmes_e_cubos.domain.entities.membro import Membro
 from filmes_e_cubos.domain.entities.rodada import Rodada
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
-from filmes_e_cubos.domain.exceptions.indicacao import IndicacaoDuplicadaError
+from filmes_e_cubos.domain.exceptions.indicacao import (
+    FilmeRepetidoNoClubeError,
+    IndicacaoDuplicadaError,
+)
 from filmes_e_cubos.domain.exceptions.membro import MembroInativoError
 from filmes_e_cubos.domain.exceptions.rodada import RodadaJaEncerradaError, RodadaLotadaError
 from filmes_e_cubos.domain.value_objects.configuracao_clube import ConfiguracaoClube
@@ -173,3 +176,55 @@ def test_indicacao_democracia_nao_conta_na_cota_nem_bloqueia_membro(clube: Clube
     )
 
     assert indicacao.membro_id == membro.id
+
+
+def _clube_com_rodada(
+    clube: Clube,
+) -> tuple[IndicarFilme, IndicacaoRepositorioFake, Rodada, list[Membro], Filme]:
+    caso_de_uso, clubes, membros, filmes, rodadas, indicacoes = _montar_caso_de_uso()
+    clubes.salvar(clube)
+    ana = Membro.criar(clube_id=clube.id, nome="Ana", data_ingresso=date(2024, 1, 1))
+    bia = Membro.criar(clube_id=clube.id, nome="Bia", data_ingresso=date(2024, 1, 1))
+    membros.salvar(ana)
+    membros.salvar(bia)
+    filme = Filme.criar(titulo="Duna")
+    filmes.salvar(filme)
+    rodada = Rodada.abrir(clube_id=clube.id, numero=2, data_inicio=date(2024, 2, 1))
+    rodadas.salvar(rodada)
+    return caso_de_uso, indicacoes, rodada, [ana, bia], filme
+
+
+def test_filme_ja_indicado_e_nao_assistido_nao_e_indicado_de_novo(clube: Clube) -> None:
+    caso_de_uso, _, rodada, (ana, bia), filme = _clube_com_rodada(clube)
+    caso_de_uso.executar(rodada_id=rodada.id, membro_id=ana.id, filme_id=filme.id)
+
+    with pytest.raises(FilmeRepetidoNoClubeError, match="já está indicado"):
+        caso_de_uso.executar(rodada_id=rodada.id, membro_id=bia.id, filme_id=filme.id)
+
+
+def test_filme_ja_assistido_pelo_clube_nao_e_indicado_de_novo(clube: Clube) -> None:
+    caso_de_uso, indicacoes, rodada, (ana, _), filme = _clube_com_rodada(clube)
+    antiga = Indicacao.criar_democracia(
+        rodada_id=rodada.id, filme_id=filme.id, data_indicacao=date(2024, 2, 2)
+    )
+    antiga.marcar_assistida()
+    indicacoes.salvar(antiga)
+
+    with pytest.raises(FilmeRepetidoNoClubeError, match="já foi assistido"):
+        caso_de_uso.executar(rodada_id=rodada.id, membro_id=ana.id, filme_id=filme.id)
+
+
+def test_filme_que_passou_por_outro_clube_pode_ser_indicado(clube: Clube) -> None:
+    caso_de_uso, indicacoes, rodada, (ana, _), filme = _clube_com_rodada(clube)
+    de_outro_clube = Indicacao.criar_democracia(
+        rodada_id=Rodada.abrir(
+            clube_id=Clube.criar(nome="Outro").id, numero=1, data_inicio=date(2024, 1, 1)
+        ).id,
+        filme_id=filme.id,
+        data_indicacao=date(2024, 1, 2),
+    )
+    indicacoes.salvar(de_outro_clube)
+
+    indicacao = caso_de_uso.executar(rodada_id=rodada.id, membro_id=ana.id, filme_id=filme.id)
+
+    assert indicacao.filme_id == filme.id

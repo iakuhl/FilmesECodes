@@ -67,7 +67,9 @@ os ports (repositórios/serviços) de que depende.
 - **Regras**: a rodada precisa estar `aberta`; um membro não pode indicar
   duas vezes na mesma rodada; a rodada não pode exceder o
   `tamanho_rodada` configurado. Indicações `democracia` não entram nessas
-  contagens (ver `AdicionarFilmeDemocracia`).
+  contagens (ver `AdicionarFilmeDemocracia`). O filme não pode ter
+  passado pelo clube — nem assistido, nem indicado e ainda pendente
+  (`FilmeRepetidoNoClubeError`).
 
 ### AdicionarFilmeDemocracia
 - **Intenção**: registrar uma indicação `democracia` — sessão extra,
@@ -76,7 +78,8 @@ os ports (repositórios/serviços) de que depende.
 - **Ports**: `RodadaRepository`, `IndicacaoRepository`, `FilmeRepository`.
 - **Regras**: precisa haver uma rodada `aberta` para o clube; não exige
   (nem aceita) um membro indicador; não conta na cota de `tamanho_rodada`
-  nem na checagem de indicação duplicada por membro.
+  nem na checagem de indicação duplicada por membro. Como na indicação
+  normal, o filme não pode ter passado pelo clube.
 
 ### RealizarSorteio
 - **Intenção**: sortear uma das indicações `pendente` da rodada corrente
@@ -141,9 +144,11 @@ os ports (repositórios/serviços) de que depende.
 - **Intenção**: nomear um filme, assistido pelo clube **dentro do ano da
   temporada**, para concorrer em uma categoria.
 - **Ports**: `NomeacaoOscarRepository`, `CategoriaOscarRepository`,
-  `TemporadaOscarRepository`, `IndicacaoRepository`, `SessaoRepository`.
-- **Regras**: o filme precisa ter sido assistido pelo clube (existir uma
-  `Indicacao` `assistida` correspondente) e essa sessão precisa ter
+  `TemporadaOscarRepository`, `IndicacaoRepository`, `SessaoRepository`,
+  `RodadaRepository`.
+- **Regras**: o filme precisa ter sido assistido pelo clube dono da
+  temporada (existir uma `Indicacao` `assistida` numa rodada desse clube —
+  sessões de outros clubes não contam) e essa sessão precisa ter
   ocorrido dentro do ano da temporada da categoria — um filme assistido
   em outro ano não é elegível, mesmo já tendo sido assistido alguma vez.
   A `NomeacaoOscar` herda o `indicado_por_membro_id` da indicação

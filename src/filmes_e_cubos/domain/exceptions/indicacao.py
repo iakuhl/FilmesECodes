@@ -9,3 +9,11 @@ class IndicacaoDuplicadaError(DomainError):
 
 class TransicaoDeStatusInvalidaError(DomainError):
     """Levantada quando uma indicação tenta uma transição de status não permitida."""
+
+
+class FilmeRepetidoNoClubeError(DomainError):
+    """Levantada ao indicar um filme que o clube já assistiu ou que já está indicado nele.
+
+    Um filme passa pelo clube uma vez só — inclusive em sessões democracia
+    (decisão 5 de docs/PENDENCIAS.md).
+    """

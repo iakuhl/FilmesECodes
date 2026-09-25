@@ -6,6 +6,9 @@ from filmes_e_cubos.application.ports.filme_repository import FilmeRepository
 from filmes_e_cubos.application.ports.indicacao_repository import IndicacaoRepository
 from filmes_e_cubos.application.ports.relogio_service import RelogioService
 from filmes_e_cubos.application.ports.rodada_repository import RodadaRepository
+from filmes_e_cubos.application.use_cases._filme_inedito import (
+    verificar_filme_inedito_no_clube,
+)
 from filmes_e_cubos.domain.entities.indicacao import Indicacao
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
 from filmes_e_cubos.domain.exceptions.rodada import RodadaJaEncerradaError
@@ -18,7 +21,8 @@ class AdicionarFilmeDemocracia:
     Não é uma substituição de nenhuma indicação normal, por isso não
     passa pelas checagens de cota nem de duplicidade por membro que
     `IndicarFilme` aplica — o filme é escolhido pelo grupo, não por um
-    membro específico.
+    membro específico. A regra "filme não se repete no clube", essa sim,
+    vale igual.
     """
 
     def __init__(
@@ -42,6 +46,13 @@ class AdicionarFilmeDemocracia:
 
         if self._filmes.buscar_por_id(filme_id) is None:
             raise EntidadeNaoEncontradaError(f"Filme {filme_id} não encontrado.")
+
+        verificar_filme_inedito_no_clube(
+            filme_id=filme_id,
+            clube_id=clube_id,
+            indicacoes=self._indicacoes,
+            rodadas=self._rodadas,
+        )
 
         indicacao = Indicacao.criar_democracia(
             rodada_id=rodada.id,

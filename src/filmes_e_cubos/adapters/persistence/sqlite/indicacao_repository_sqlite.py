@@ -47,6 +47,15 @@ class IndicacaoRepositorioSqlite:
             )
         return [_para_entidade(linha) for linha in linhas]
 
+    def listar_por_filme(self, filme_id: FilmeId) -> list[Indicacao]:
+        with self._engine.connect() as conexao:
+            linhas = (
+                conexao.execute(indicacoes.select().where(indicacoes.c.filme_id == str(filme_id)))
+                .mappings()
+                .all()
+            )
+        return [_para_entidade(linha) for linha in linhas]
+
     def listar_assistidas_por_filme(self, filme_id: FilmeId) -> list[Indicacao]:
         with self._engine.connect() as conexao:
             linhas = (

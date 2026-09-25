@@ -22,6 +22,11 @@ class IndicacaoRepositorioFake:
             indicacao for indicacao in self._indicacoes.values() if indicacao.rodada_id == rodada_id
         ]
 
+    def listar_por_filme(self, filme_id: FilmeId) -> list[Indicacao]:
+        return [
+            indicacao for indicacao in self._indicacoes.values() if indicacao.filme_id == filme_id
+        ]
+
     def listar_assistidas_por_filme(self, filme_id: FilmeId) -> list[Indicacao]:
         return [
             indicacao

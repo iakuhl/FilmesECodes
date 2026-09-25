@@ -12,10 +12,11 @@ from filmes_e_cubos.domain.value_objects.identificadores import FilmeId
 
 
 class Filme:
-    """Um filme, potencialmente indicado e assistido em uma ou mais sessões.
+    """Um filme do catálogo, que um clube pode indicar e assistir.
 
-    Não pertence a um clube específico: o mesmo filme pode, em tese, ser
-    indicado em clubes diferentes numa futura versão multi-clube.
+    Não pertence a um clube específico: o mesmo filme pode ser indicado em
+    clubes diferentes. Dentro de um clube, porém, ele passa uma vez só —
+    indicado uma vez, assistido uma vez (ver `IndicarFilme`).
     """
 
     def __init__(

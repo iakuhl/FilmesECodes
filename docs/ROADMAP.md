@@ -250,7 +250,7 @@ Ordem recomendada para a próxima sessão de trabalho, a partir do branch
       guardada como fração — soma e quantidade das notas na sessão
       (revisão 0003, que calcula as das sessões já avaliadas) —,
       recalculada a cada avaliação e exibida em estrelas;
-   3. filme nunca se repete no clube (`IndicarFilme` e
+   3. ✅ filme nunca se repete no clube (`IndicarFilme` e
       `AdicionarFilmeDemocracia`; novo `IndicacaoRepository.listar_por_filme`)
       e `IndicarFilmeParaCategoria` restrito às sessões do próprio clube;
    4. uma edição por ano; número de nomeações por categoria (revisão

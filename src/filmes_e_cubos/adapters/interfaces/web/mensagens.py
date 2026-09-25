@@ -27,6 +27,7 @@ from filmes_e_cubos.domain.exceptions.avaliacao import (
 )
 from filmes_e_cubos.domain.exceptions.base import DomainError
 from filmes_e_cubos.domain.exceptions.indicacao import (
+    FilmeRepetidoNoClubeError,
     IndicacaoDuplicadaError,
     TransicaoDeStatusInvalidaError,
 )
@@ -56,6 +57,9 @@ MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
     FilmeNaoAssistidoError: "Esse filme ainda não foi assistido pelo clube.",
     FilmeNaoAssistidoNoAnoDaTemporadaError: (
         "Só concorrem filmes assistidos pelo clube no ano desta edição."
+    ),
+    FilmeRepetidoNoClubeError: (
+        "Esse filme já passou pelo clube: foi assistido ou já está indicado."
     ),
     IndicacaoDuplicadaError: "Esse membro já indicou um filme nesta rodada.",
     MembroAusenteNaSessaoError: "Só quem esteve na sessão pode avaliá-la.",

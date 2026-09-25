@@ -213,6 +213,7 @@ class Contexto:
             temporada_repository=self.temporadas,
             indicacao_repository=self.indicacoes,
             sessao_repository=self.sessoes,
+            rodada_repository=self.rodadas,
         )
 
     def apurar_categoria_oscar(self, criterio: CriterioApuracaoOscar) -> ApurarCategoriaOscar:

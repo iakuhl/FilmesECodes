@@ -96,3 +96,14 @@ def test_sortear_sem_indicacao_pendente_falha(cli: CliDeTeste, indicacao_id: str
     resultado = cli.executar("indicacao", "sortear")
     assert resultado.exit_code == 1
     assert resultado.stderr.strip() != ""
+
+
+def test_filme_ja_indicado_no_clube_e_recusado(
+    cli: CliDeTeste, indicacao_id: str, outro_membro_id: str, filme_id: str
+) -> None:
+    resultado = cli.executar(
+        "indicacao", "indicar", "--membro-id", outro_membro_id, "--filme-id", filme_id
+    )
+
+    assert resultado.exit_code == 1
+    assert "já está indicado" in resultado.stderr

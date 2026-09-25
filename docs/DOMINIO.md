@@ -58,7 +58,8 @@ Uma pessoa do clube.
 
 ### Filme
 
-Um filme indicado e potencialmente assistido pelo clube.
+Um filme do catálogo, compartilhado entre clubes. Dentro de um clube,
+ele passa **uma vez só**: é indicado uma vez e assistido uma vez.
 
 - `id`
 - `titulo`
@@ -262,4 +263,9 @@ venceu.
 8. Uma categoria do Óscar só aceita nomear filmes assistidos pelo clube
    **dentro do ano da temporada em questão** — um filme assistido em
    outro ano não pode concorrer, mesmo que já tenha sido assistido
-   alguma vez.
+   alguma vez. Só contam as sessões do próprio clube.
+9. **Um filme não se repete no clube**: não se indica (nem em sessão
+   `democracia`) um filme que o clube já assistiu ou que já está indicado
+   e ainda não foi assistido. Por isso cada filme é assistido no máximo
+   uma vez por clube, e a nomeação ao Óscar sempre tem um indicador
+   inequívoco.

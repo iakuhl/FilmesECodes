@@ -195,6 +195,13 @@ implementando, salvo correção:
 18. **`AvaliarFilme` deduz o clube da própria sessão**, e o `--clube-id`
     saiu de `avaliacao registrar`: informar o clube permitia avaliar com a
     escala de outro clube.
+19. **"Filme já passou pelo clube" = ter qualquer indicação no clube**,
+    em qualquer situação: como a rodada só se encerra com tudo assistido,
+    toda indicação do clube ou foi assistida ou está pendente na rodada
+    aberta. A regra mora num módulo de apoio dos casos de uso
+    (`application/use_cases/_filme_inedito.py`), usado pela indicação
+    normal e pela democracia, com mensagens distintas para "já assistido"
+    e "já indicado".
 
 ## Dívidas técnicas conhecidas
 
@@ -207,7 +214,7 @@ implementando, salvo correção:
    comando por processo). Vários processos servidores exigiriam uma Unit
    of Work (ADR 10).
 3. **Verificações entre clubes incompletas.** Com mais de um clube, nada
-   impede hoje que um membro de um clube indique na rodada de outro, e
-   `IndicarFilmeParaCategoria` considera sessões de qualquer clube
-   (contrariando a regra 8 do domínio, "assistido pelo clube"). Parte
-   disso se resolve com as decisões 4 e 5; o restante está na Fase 5.
+   impede hoje que um membro de um clube indique na rodada de outro.
+   Já resolvido: a avaliação usa a escala do clube da sessão, a nomeação
+   ao Óscar só considera sessões do próprio clube e a regra de filme
+   repetido olha só o clube da rodada. O restante está na Fase 5.

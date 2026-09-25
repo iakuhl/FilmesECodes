@@ -98,3 +98,21 @@ def test_listar_por_rodada_e_listar_assistidas_por_filme(engine: Engine) -> None
 
     assert [i.id for i in repositorio.listar_por_rodada(rodada.id)] == [indicacao.id]
     assert [i.id for i in repositorio.listar_assistidas_por_filme(filme.id)] == [indicacao.id]
+
+
+def test_listar_por_filme_traz_indicacoes_em_qualquer_situacao(engine: Engine) -> None:
+    rodada, membro, filme = _preparar(engine)
+    repositorio = IndicacaoRepositorioSqlite(engine)
+    pendente = Indicacao.criar(
+        rodada_id=rodada.id, membro_id=membro.id, filme_id=filme.id, data_indicacao=date(2024, 1, 2)
+    )
+    assistida = Indicacao.criar_democracia(
+        rodada_id=rodada.id, filme_id=filme.id, data_indicacao=date(2024, 1, 3)
+    )
+    assistida.marcar_assistida()
+    repositorio.salvar(pendente)
+    repositorio.salvar(assistida)
+
+    encontradas = repositorio.listar_por_filme(filme.id)
+
+    assert {indicacao.id for indicacao in encontradas} == {pendente.id, assistida.id}

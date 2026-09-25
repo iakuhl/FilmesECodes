@@ -84,8 +84,8 @@ O catálogo é compartilhado: um filme não pertence a um clube.
 
 | Comando | O que faz |
 |---|---|
-| `indicacao indicar --membro-id ID --filme-id ID [--rodada-id ID]` | Indicação semanal de um membro. Um membro indica uma vez por rodada, e a rodada respeita o `tamanho_rodada` do clube. |
-| `indicacao democracia --filme-id ID [--clube-id ID]` | Sessão extra escolhida em grupo, para quando a sessão programada é adiada. Não tem membro indicador e não consome a cota da rodada. |
+| `indicacao indicar --membro-id ID --filme-id ID [--rodada-id ID]` | Indicação semanal de um membro. Um membro indica uma vez por rodada, e a rodada respeita o `tamanho_rodada` do clube. Um filme que já passou pelo clube (assistido, ou indicado e ainda pendente) é recusado. |
+| `indicacao democracia --filme-id ID [--clube-id ID]` | Sessão extra escolhida em grupo, para quando a sessão programada é adiada. Não tem membro indicador e não consome a cota da rodada. O filme também não pode ter passado pelo clube. |
 | `indicacao sortear [--rodada-id ID] [--clube-id ID]` | Sorteia uma das indicações pendentes. É apoio **opcional**: nada impede de registrar a sessão de uma indicação que nunca passou pelo sorteio. |
 
 ### `sessao`
