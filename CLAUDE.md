@@ -15,7 +15,8 @@ para virar produto multi-clube.
 
 ## Onde parou e como continuar
 
-- Branch de trabalho: `roadmap/fases-4-e-5` (local, sem push).
+- Branch de trabalho: `roadmap/fases-4-e-5`, publicado em `origin` a pedido
+  do dono em 24/09/2026 e ainda não mesclado em `main`.
 - Fases 1–3 concluídas; Fase 4 com a API pronta, migrações com Alembic e
   os módulos de apoio da web; as páginas da web ainda não existem.
 - Revisão de regras de 24/09/2026 quase toda implementada (duração,
