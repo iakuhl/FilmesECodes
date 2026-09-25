@@ -183,8 +183,21 @@ porque ali a omissão é um gesto explícito de quem digita o comando.)
 | `GET /oscar/categorias/{categoria_id}/nomeacoes` | Lista as nomeações da categoria. |
 | `POST /oscar/categorias/{categoria_id}/nomeacoes` | Nomeia um filme. Corpo: `{"filme_id"}`. O filme precisa ter sido assistido pelo clube **dentro do ano da edição**. `409` fora da fase de indicações (`acao_fora_da_fase`) ou com a categoria completa (`categoria_completa`). |
 | `GET /oscar/nomeacoes/{nomeacao_id}` | Consulta uma nomeação. |
+| `GET /oscar/temporadas/{temporada_id}/votacao` | A situação da votação: o turno atual, as categorias em disputa (`modo` `dupla` ou `classificacao`, candidatas com `posicao`, `nomeacao_id`, `filme_id` e `indicado_por_membro_id`) e os eleitores, cada um com `categorias_votadas` e `confirmou`. `404` antes de a edição chegar à votação. |
+| `PUT /oscar/categorias/{categoria_id}/votos/{membro_id}` | Registra ou troca o voto do eleitor na categoria. Corpo: `{"escolhas": [nomeacao_id, ...]}`, em ordem de preferência — a 1ª e a 2ª opção (nomeações diferentes, que podem ser do mesmo filme) ou, num turno de classificação, todas as candidatas. Devolve a cédula **sem as escolhas**. `409` `membro_fora_da_votacao`, `categoria_fora_do_turno` ou `cedula_confirmada`; `422` `voto_invalido`. |
+| `POST /oscar/temporadas/{temporada_id}/votacao/cedulas/{membro_id}/confirmacao` | Confirma a cédula do eleitor; depois disso, os votos não mudam. `409` `cedula_incompleta` (com as categorias que faltam). Devolve `{"turno_encerrado", "votacao"}`: a última confirmação encerra o turno e, se houve empate, abre o seguinte. |
 | `POST /oscar/categorias/{categoria_id}/apuracao` | Apura a categoria e emite o troféu. Corpo: `{"nomeacao_vencedora_id", "membro_vencedor_id"?}`. |
 | `GET /oscar/categorias/{categoria_id}/trofeu` | O troféu da categoria; `404` enquanto ela não tiver sido apurada. |
+
+#### A votação
+
+Os eleitores são os membros ativos quando a edição entra em votação, e
+não mudam mais: quem for desativado depois continua votando, e quem for
+cadastrado ou reativado depois não vota. Cada eleitor vota em todas as
+categorias do turno e confirma a cédula; a última confirmação encerra o
+turno, e o sistema apura sem mostrar nada — os empates no topo abrem o
+turno seguinte só com as empatadas. O voto é secreto: nenhuma rota
+devolve as escolhas de alguém, nem o placar.
 
 #### Como a apuração decide o vencedor
 

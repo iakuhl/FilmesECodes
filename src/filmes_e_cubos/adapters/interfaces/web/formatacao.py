@@ -15,6 +15,7 @@ from typing import Final
 
 from filmes_e_cubos.domain.value_objects.escala_avaliacao import EscalaAvaliacao
 from filmes_e_cubos.domain.value_objects.status import (
+    ModoDeVotacao,
     StatusIndicacao,
     StatusRodada,
     StatusTemporadaOscar,
@@ -40,6 +41,8 @@ ROTULOS: Final[dict[Enum, str]] = {
     StatusTemporadaOscar.ENCERRADA: "Encerrada",
     TipoCategoriaOscar.FIXA: "Fixa",
     TipoCategoriaOscar.VARIAVEL: "Variável",
+    ModoDeVotacao.DUPLA: "1ª e 2ª opção",
+    ModoDeVotacao.CLASSIFICACAO: "Classificação",
 }
 """Rótulo de cada membro das enumerações do domínio exibidas na web."""
 

@@ -38,9 +38,13 @@ from filmes_e_cubos.domain.exceptions.membro import MembroInativoError, NomeMemb
 from filmes_e_cubos.domain.exceptions.oscar import (
     AcaoForaDaFaseError,
     CategoriaCompletaError,
+    CategoriaForaDoTurnoError,
     CategoriaJaApuradaError,
+    CedulaConfirmadaError,
+    CedulaIncompletaError,
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,
+    MembroForaDaVotacaoError,
     NomeacaoInvalidaError,
     NomeCategoriaObrigatorioError,
     NumeroDeNomeacoesInvalidoError,
@@ -48,6 +52,8 @@ from filmes_e_cubos.domain.exceptions.oscar import (
     TemporadaOscarDuplicadaError,
     TemporadaOscarInvalidaError,
     VencedorDemocraciaNaoInformadoError,
+    VotacaoEncerradaError,
+    VotoInvalidoError,
 )
 from filmes_e_cubos.domain.exceptions.rodada import (
     RodadaJaAbertaError,
@@ -68,10 +74,14 @@ _CONFLITO: Final[tuple[type[DomainError], ...]] = (
     AcaoForaDaFaseError,
     AvaliacaoDuplicadaError,
     CategoriaCompletaError,
+    CategoriaForaDoTurnoError,
     CategoriaJaApuradaError,
+    CedulaConfirmadaError,
+    CedulaIncompletaError,
     FilmeRepetidoNoClubeError,
     IndicacaoDuplicadaError,
     MembroAusenteNaSessaoError,
+    MembroForaDaVotacaoError,
     MembroInativoError,
     NenhumaIndicacaoElegivelError,
     RodadaJaAbertaError,
@@ -82,6 +92,7 @@ _CONFLITO: Final[tuple[type[DomainError], ...]] = (
     TemporadaOscarDuplicadaError,
     TemporadaOscarInvalidaError,
     TransicaoDeStatusInvalidaError,
+    VotacaoEncerradaError,
 )
 
 # Os dados enviados violam uma regra de negócio, independentemente do estado.
@@ -100,6 +111,7 @@ _ENTRADA_INVALIDA: Final[tuple[type[DomainError], ...]] = (
     TamanhoRodadaInvalidoError,
     TituloFilmeObrigatorioError,
     VencedorDemocraciaNaoInformadoError,
+    VotoInvalidoError,
 )
 
 # Defeito do próprio servidor: o sorteador devolveu um candidato inexistente.

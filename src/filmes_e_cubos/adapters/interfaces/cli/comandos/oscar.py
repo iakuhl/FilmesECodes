@@ -1,8 +1,12 @@
-"""Comandos do Óscar do Filmes e Cubos: temporadas, categorias e apuração.
+"""Comandos do Óscar do Filmes e Cubos: temporadas, categorias, votação e apuração.
 
 Os comandos estão agrupados em dois sub-apps (`temporada` e `categoria`)
-mais duas ações diretas (`nomear` e `apurar`), acompanhando as três
-etapas reais do evento: montar a edição, nomear os concorrentes e premiar.
+mais as ações diretas, que acompanham as etapas reais do evento: montar
+a edição, nomear os concorrentes (`nomear`), votar (`votacao`, `votar` e
+`confirmar`) e premiar (`apurar`).
+
+O voto é secreto (decisão 26 de docs/PENDENCIAS.md): nenhum comando
+mostra em que alguém votou, nem o placar.
 """
 
 from __future__ import annotations
@@ -15,8 +19,10 @@ import typer
 
 from filmes_e_cubos.adapters.composicao import Contexto
 from filmes_e_cubos.adapters.interfaces.cli.apresentacao import (
+    echo_aviso,
     echo_resultado,
     echo_tabela,
+    echo_titulo,
     formatar_opcional,
 )
 from filmes_e_cubos.adapters.interfaces.cli.contexto import (
@@ -24,16 +30,28 @@ from filmes_e_cubos.adapters.interfaces.cli.contexto import (
     obter_criterio_apuracao,
 )
 from filmes_e_cubos.adapters.interfaces.cli.conversores import TipoCategoriaCli
-from filmes_e_cubos.adapters.interfaces.cli.resolucao import resolver_clube, resolver_temporada
+from filmes_e_cubos.adapters.interfaces.cli.resolucao import (
+    resolver_clube,
+    resolver_escolhas,
+    resolver_temporada,
+)
 from filmes_e_cubos.adapters.interfaces.convencoes import nome_padrao_da_temporada
+from filmes_e_cubos.adapters.interfaces.situacao_da_votacao import situacao_da_votacao
+from filmes_e_cubos.domain.entities.nomeacao_oscar import NomeacaoOscar
 from filmes_e_cubos.domain.entities.temporada_oscar import NOMEACOES_POR_CATEGORIA_PADRAO
 from filmes_e_cubos.domain.value_objects.identificadores import (
     CategoriaOscarId,
     FilmeId,
     MembroId,
 )
+from filmes_e_cubos.domain.value_objects.status import ModoDeVotacao
 
 app = typer.Typer(help="Óscar do Filmes e Cubos.", no_args_is_help=True)
+
+_COMO_VOTAR = {
+    ModoDeVotacao.DUPLA: "vote na 1ª e na 2ª opção",
+    ModoDeVotacao.CLASSIFICACAO: "ordene todas as candidatas",
+}
 
 temporada_app = typer.Typer(help="Edições anuais do Óscar.", no_args_is_help=True)
 categoria_app = typer.Typer(help="Categorias de uma temporada.", no_args_is_help=True)
@@ -215,6 +233,120 @@ def nomear(
     echo_resultado(f"Nomeação registrada: {nomeacao.id}")
 
 
+@app.command("votacao")
+def votacao(
+    ctx: typer.Context,
+    temporada_id: Annotated[
+        UUID | None,
+        typer.Option("--temporada-id", help="Temporada da votação (padrão: a do ano corrente)."),
+    ] = None,
+    clube_id: Annotated[UUID | None, typer.Option("--clube-id", help="Clube da temporada.")] = None,
+) -> None:
+    """Mostra o turno atual da votação: as categorias em disputa e quem já votou.
+
+    As candidatas aparecem numeradas: `oscar votar` aceita essas posições.
+    De cada eleitor, só se vê em quantas categorias já votou — nunca em quê.
+    """
+    contexto = obter_contexto(ctx)
+    temporada = resolver_temporada(contexto, temporada_id, clube_id)
+    situacao = situacao_da_votacao(contexto, temporada)
+    if situacao.votacao.encerrada:
+        echo_resultado(f"A votação de {temporada.nome} terminou: o placar já pode ser enviado.")
+    else:
+        echo_titulo(f"{temporada.nome}: {situacao.votacao.turno_atual}º turno da votação")
+    for disputa in situacao.disputas:
+        typer.echo()
+        echo_titulo(
+            f"{disputa.categoria.nome} ({disputa.categoria.id}) — {_COMO_VOTAR[disputa.turno.modo]}"
+        )
+        echo_tabela(
+            ("#", "NOMEAÇÃO", "FILME", "INDICADO POR"),
+            [
+                (str(posicao), str(nomeacao.id), *_filme_e_indicador(contexto, nomeacao))
+                for posicao, nomeacao in enumerate(disputa.candidatas, start=1)
+            ],
+        )
+    typer.echo()
+    echo_titulo("Eleitores")
+    echo_tabela(
+        ("MEMBRO", "CÉDULA"),
+        [
+            (
+                eleitor.membro.nome,
+                "confirmada"
+                if eleitor.confirmou
+                else f"votou em {eleitor.categorias_votadas} de {len(situacao.disputas)}",
+            )
+            for eleitor in situacao.eleitores
+        ],
+    )
+
+
+@app.command("votar")
+def votar(
+    ctx: typer.Context,
+    escolhas: Annotated[
+        list[str],
+        typer.Argument(
+            help="As nomeações escolhidas, em ordem de preferência — pela posição que "
+            "`oscar votacao` mostra (1, 2...) ou pelo id. Na votação dupla, a 1ª e a 2ª "
+            "opção; na classificação, todas as candidatas.",
+            show_default=False,
+        ),
+    ],
+    membro_id: Annotated[UUID, typer.Option("--membro-id", help="Quem vota.")],
+    categoria_id: Annotated[UUID, typer.Option("--categoria-id", help="Categoria votada.")],
+) -> None:
+    """Registra (ou troca) o voto de um eleitor numa categoria do turno atual.
+
+    O voto vale até a cédula ser confirmada com `oscar confirmar`.
+    """
+    contexto = obter_contexto(ctx)
+    categoria = CategoriaOscarId(categoria_id)
+    cedula = contexto.registrar_voto.executar(
+        categoria_id=categoria,
+        membro_id=MembroId(membro_id),
+        escolhas=resolver_escolhas(contexto, categoria, escolhas),
+    )
+    echo_resultado(
+        f"Voto registrado na cédula do {cedula.turno}º turno. Quando votar em todas as "
+        "categorias, confirme com `oscar confirmar`."
+    )
+
+
+@app.command("confirmar")
+def confirmar(
+    ctx: typer.Context,
+    membro_id: Annotated[UUID, typer.Option("--membro-id", help="Dono da cédula.")],
+    temporada_id: Annotated[
+        UUID | None,
+        typer.Option("--temporada-id", help="Temporada da votação (padrão: a do ano corrente)."),
+    ] = None,
+    clube_id: Annotated[UUID | None, typer.Option("--clube-id", help="Clube da temporada.")] = None,
+) -> None:
+    """Confirma a cédula do eleitor no turno atual — depois disso, os votos não mudam.
+
+    A última confirmação encerra o turno: o sistema apura sem mostrar nada
+    e, se houve empate em alguma categoria, abre o turno seguinte.
+    """
+    contexto = obter_contexto(ctx)
+    temporada = resolver_temporada(contexto, temporada_id, clube_id)
+    resultado = contexto.confirmar_cedula.executar(
+        temporada_id=temporada.id, membro_id=MembroId(membro_id)
+    )
+    echo_resultado("Cédula confirmada.")
+    if not resultado.turno_encerrado:
+        pendentes = sorted(_nome_do_membro(contexto, membro) for membro in resultado.pendentes)
+        echo_aviso(f"Ainda faltam confirmar: {', '.join(pendentes)}.")
+    elif resultado.votacao.encerrada:
+        echo_resultado("Todos confirmaram: a votação terminou, e o placar já pode ser enviado.")
+    else:
+        echo_resultado(
+            "Todos confirmaram. Houve empate no topo de alguma categoria: começou o "
+            f"{resultado.votacao.turno_atual}º turno (veja `oscar votacao`)."
+        )
+
+
 @app.command("apurar")
 def apurar(
     ctx: typer.Context,
@@ -244,6 +376,19 @@ def apurar(
     membro = contexto.membros.buscar_por_id(trofeu.membro_vencedor_id)
     vencedor = membro.nome if membro is not None else str(trofeu.membro_vencedor_id)
     echo_resultado(f"Troféu para {vencedor} ({trofeu.id})")
+
+
+def _filme_e_indicador(contexto: Contexto, nomeacao: NomeacaoOscar) -> tuple[str, str]:
+    filme = contexto.filmes.buscar_por_id(nomeacao.filme_id)
+    titulo = filme.titulo if filme is not None else str(nomeacao.filme_id)
+    if nomeacao.indicado_por_membro_id is None:
+        return titulo, "democracia"
+    return titulo, _nome_do_membro(contexto, nomeacao.indicado_por_membro_id)
+
+
+def _nome_do_membro(contexto: Contexto, membro_id: MembroId) -> str:
+    membro = contexto.membros.buscar_por_id(membro_id)
+    return membro.nome if membro is not None else str(membro_id)
 
 
 def _vencedor(contexto: Contexto, categoria_id: CategoriaOscarId) -> str:

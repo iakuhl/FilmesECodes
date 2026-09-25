@@ -20,7 +20,9 @@ from filmes_e_cubos.domain.entities.clube import Clube
 from filmes_e_cubos.domain.entities.rodada import Rodada
 from filmes_e_cubos.domain.entities.temporada_oscar import TemporadaOscar
 from filmes_e_cubos.domain.value_objects.identificadores import (
+    CategoriaOscarId,
     ClubeId,
+    NomeacaoOscarId,
     RodadaId,
     TemporadaOscarId,
 )
@@ -84,3 +86,39 @@ def resolver_temporada(
             "Abra uma com `filmes-e-cubos oscar temporada abrir` ou informe --temporada-id."
         )
     return temporada
+
+
+def resolver_escolhas(
+    contexto: Contexto, categoria_id: CategoriaOscarId, escolhas: list[str]
+) -> list[NomeacaoOscarId]:
+    """As nomeações de um voto, dadas pela posição na cédula (`1`, `2`...) ou pelo id.
+
+    A posição é a que `oscar votacao` mostra: a ordem das candidatas no
+    turno aberto da categoria. Sem turno aberto não há posições — e o voto
+    seria recusado de qualquer jeito —, então as escolhas vão vazias e o
+    próprio caso de uso explica por que a categoria não aceita votos.
+    """
+    turno = next(
+        (turno for turno in contexto.turnos.listar_por_categoria(categoria_id) if turno.aberto),
+        None,
+    )
+    if turno is None:
+        return []
+    nomeacoes = []
+    for escolha in escolhas:
+        if escolha.isdigit():
+            posicao = int(escolha)
+            if not 1 <= posicao <= len(turno.candidatas):
+                raise CliError(
+                    f"Não há candidata na posição {posicao}: o turno tem "
+                    f"{len(turno.candidatas)} (veja `oscar votacao`)."
+                )
+            nomeacoes.append(turno.candidatas[posicao - 1])
+            continue
+        try:
+            nomeacoes.append(NomeacaoOscarId(UUID(escolha)))
+        except ValueError:
+            raise CliError(
+                f'"{escolha}" não é a posição de uma candidata nem o id de uma nomeação.'
+            ) from None
+    return nomeacoes

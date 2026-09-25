@@ -15,6 +15,7 @@ from sqlalchemy import (
     MetaData,
     String,
     Table,
+    UniqueConstraint,
 )
 
 metadata = MetaData()
@@ -153,4 +154,63 @@ trofeus = Table(
     Column("nomeacao_vencedora_id", String, ForeignKey("nomeacoes_oscar.id"), nullable=False),
     Column("membro_vencedor_id", String, ForeignKey("membros.id"), nullable=False),
     Column("data_apuracao", Date, nullable=False),
+)
+
+votacoes_oscar = Table(
+    "votacoes_oscar",
+    metadata,
+    Column("id", String, primary_key=True),
+    Column("temporada_id", String, ForeignKey("temporadas_oscar.id"), nullable=False, unique=True),
+    Column("iniciada_em", DateTime, nullable=False),
+    Column("turno_atual", Integer, nullable=False),
+    Column("encerrada_em", DateTime, nullable=True),
+)
+
+votacao_eleitores = Table(
+    "votacao_eleitores",
+    metadata,
+    Column("votacao_id", String, ForeignKey("votacoes_oscar.id"), primary_key=True),
+    Column("membro_id", String, ForeignKey("membros.id"), primary_key=True),
+)
+
+turnos_votacao = Table(
+    "turnos_votacao",
+    metadata,
+    Column("id", String, primary_key=True),
+    Column("categoria_id", String, ForeignKey("categorias_oscar.id"), nullable=False),
+    Column("numero", Integer, nullable=False),
+    Column("modo", String, nullable=False),
+    Column("apurado_em", DateTime, nullable=True),
+    UniqueConstraint("categoria_id", "numero"),
+)
+
+turno_candidatas = Table(
+    "turno_candidatas",
+    metadata,
+    Column("turno_id", String, ForeignKey("turnos_votacao.id"), primary_key=True),
+    Column("posicao", Integer, primary_key=True),
+    Column("nomeacao_id", String, ForeignKey("nomeacoes_oscar.id"), nullable=False),
+    # Os pontos da candidata, gravados quando o turno é apurado.
+    Column("pontos", Integer, nullable=True),
+)
+
+cedulas = Table(
+    "cedulas",
+    metadata,
+    Column("id", String, primary_key=True),
+    Column("votacao_id", String, ForeignKey("votacoes_oscar.id"), nullable=False),
+    Column("turno", Integer, nullable=False),
+    Column("membro_id", String, ForeignKey("membros.id"), nullable=False),
+    Column("confirmada_em", DateTime, nullable=True),
+    UniqueConstraint("votacao_id", "turno", "membro_id"),
+)
+
+cedula_escolhas = Table(
+    "cedula_escolhas",
+    metadata,
+    Column("cedula_id", String, ForeignKey("cedulas.id"), primary_key=True),
+    Column("categoria_id", String, ForeignKey("categorias_oscar.id"), primary_key=True),
+    # Ordem de preferência: 1 é a 1ª opção.
+    Column("posicao", Integer, primary_key=True),
+    Column("nomeacao_id", String, ForeignKey("nomeacoes_oscar.id"), nullable=False),
 )

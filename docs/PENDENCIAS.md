@@ -277,6 +277,30 @@ Novas, do redesenho de 25/09:
     administra (decisão 29), o port `CriterioApuracaoOscar` e suas
     implementações (a interativa da CLI e a `CriterioEscolhaInformada` da
     API) deixam de existir. *A implementar na etapa dos vencedores.*
+25. **Ir à votação exige ao menos um membro ativo**
+    (`TemporadaIncompletaError`): sem eleitores, a votação nunca
+    terminaria.
+26. **O turno atual de cada categoria é o seu turno aberto:** quando um
+    turno se encerra, todos os abertos são apurados juntos, então "aberto"
+    e "do turno atual da votação" coincidem, sem guardar em cada categoria
+    qual turno vale.
+27. **A situação da votação é montada num módulo compartilhado**
+    (`adapters/interfaces/situacao_da_votacao.py`), para que CLI, API e
+    web mostrem o mesmo — quem confirmou e em quantas categorias cada
+    eleitor votou (interpretação 13) — e nenhuma mostre mais.
+28. **A API devolve a cédula sem as escolhas** (só as categorias votadas e
+    se foi confirmada): nem quem acabou de votar recebe o voto de volta.
+29. **Na CLI, o voto aceita a posição da candidata** (a numeração de
+    `oscar votacao`) ou o id da nomeação: colar dois UUIDs por voto seria
+    ruído.
+30. **Edições já em votação antes da revisão 0005** ganham a sua votação
+    na migração, com os membros ativos de agora como eleitores — a melhor
+    aproximação de "ativos quando a votação começou". Categorias que já
+    têm troféu (da apuração antiga) ou menos de duas nomeações não abrem
+    turno.
+31. **Sem login, qualquer um opera o voto de qualquer eleitor** pela CLI
+    ou pela API, como já acontece com as avaliações; "votar só em nome
+    próprio" chega com o login da Fase 5 (decisão 13).
 
 ## Dívidas técnicas conhecidas
 

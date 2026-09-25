@@ -24,8 +24,20 @@ from filmes_e_cubos.adapters.persistence.sqlite.migracao import (
 from filmes_e_cubos.adapters.persistence.sqlite.sessao_repository_sqlite import (
     SessaoRepositorioSqlite,
 )
+from filmes_e_cubos.adapters.persistence.sqlite.turno_de_votacao_repository_sqlite import (
+    TurnoDeVotacaoRepositorioSqlite,
+)
+from filmes_e_cubos.adapters.persistence.sqlite.votacao_oscar_repository_sqlite import (
+    VotacaoOscarRepositorioSqlite,
+)
 from filmes_e_cubos.domain.entities.clube import Clube
-from filmes_e_cubos.domain.value_objects.identificadores import SessaoExibicaoId
+from filmes_e_cubos.domain.value_objects.identificadores import (
+    CategoriaOscarId,
+    MembroId,
+    NomeacaoOscarId,
+    SessaoExibicaoId,
+    TemporadaOscarId,
+)
 from filmes_e_cubos.domain.value_objects.media_das_notas import MediaDasNotas
 
 
@@ -137,3 +149,67 @@ def test_migracao_calcula_a_media_das_sessoes_ja_avaliadas(tmp_path: Path) -> No
     assert so_de_dorminhocos is not None
     assert avaliada.media_das_notas == MediaDasNotas(soma=Decimal("11.0"), quantidade=3)
     assert so_de_dorminhocos.media_das_notas is None
+
+
+_ANTES_DA_VOTACAO = "0004"
+"""Última revisão em que a edição em votação não tinha votação registrada."""
+
+
+def _id(numero: int) -> str:
+    return f"00000000-0000-0000-0000-{numero:012d}"
+
+
+def test_migracao_inicia_a_votacao_das_edicoes_que_ja_estavam_em_votacao(tmp_path: Path) -> None:
+    """A revisão 0005 dá votação às edições em votação: eleitores são os ativos de agora,
+    e só as categorias sem troféu (e com ao menos duas nomeações) abrem o 1º turno.
+    """
+    caminho = tmp_path / "em_votacao.db"
+    antigo = create_engine(f"sqlite:///{caminho}")
+    configuracao = configuracao_alembic()
+    clube, iano, bia, caio = _id(1), _id(2), _id(3), _id(4)
+    em_votacao, aberta = _id(10), _id(11)
+    disputada, premiada, esvaziada = _id(20), _id(21), _id(22)
+    primeira, segunda, vencedora, outra, sozinha = _id(30), _id(31), _id(32), _id(33), _id(34)
+    with antigo.begin() as conexao:
+        configuracao.attributes["connection"] = conexao
+        command.upgrade(configuracao, _ANTES_DA_VOTACAO)
+        for sql in (
+            f"INSERT INTO clubes VALUES ('{clube}', 'Clube', 5, '0.5', '5.0', '0.5')",
+            f"INSERT INTO membros VALUES ('{iano}', '{clube}', 'Iano', NULL, '2024-01-01', 1)",
+            f"INSERT INTO membros VALUES ('{bia}', '{clube}', 'Bia', NULL, '2024-01-01', 1)",
+            f"INSERT INTO membros VALUES ('{caio}', '{clube}', 'Caio', NULL, '2024-01-01', 0)",
+            f"INSERT INTO temporadas_oscar VALUES ('{em_votacao}', '{clube}', 2024, 'Óscar',"
+            " 'EM_VOTACAO', NULL, 2)",
+            f"INSERT INTO temporadas_oscar VALUES ('{aberta}', '{clube}', 2025, 'Óscar',"
+            " 'ABERTA_PARA_INDICACOES', NULL, 2)",
+            f"INSERT INTO categorias_oscar VALUES ('{disputada}', '{em_votacao}', 'Veículo',"
+            " 'VARIAVEL', NULL)",
+            f"INSERT INTO categorias_oscar VALUES ('{premiada}', '{em_votacao}', 'Criança',"
+            " 'VARIAVEL', NULL)",
+            f"INSERT INTO categorias_oscar VALUES ('{esvaziada}', '{em_votacao}', 'Sono',"
+            " 'VARIAVEL', NULL)",
+            f"INSERT INTO nomeacoes_oscar VALUES ('{segunda}', '{disputada}', 'f', '{iano}')",
+            f"INSERT INTO nomeacoes_oscar VALUES ('{primeira}', '{disputada}', 'g', NULL)",
+            f"INSERT INTO nomeacoes_oscar VALUES ('{vencedora}', '{premiada}', 'f', '{iano}')",
+            f"INSERT INTO nomeacoes_oscar VALUES ('{outra}', '{premiada}', 'g', NULL)",
+            f"INSERT INTO nomeacoes_oscar VALUES ('{sozinha}', '{esvaziada}', 'f', '{bia}')",
+            f"INSERT INTO trofeus VALUES ('t', '{premiada}', '{vencedora}', '{iano}',"
+            " '2024-12-20')",
+        ):
+            conexao.execute(text(sql))
+
+    engine = criar_engine(caminho)
+    votacoes = VotacaoOscarRepositorioSqlite(engine)
+    turnos = TurnoDeVotacaoRepositorioSqlite(engine)
+
+    votacao = votacoes.buscar_por_temporada(TemporadaOscarId(UUID(em_votacao)))
+    assert votacao is not None
+    assert votacao.eleitores == {MembroId(UUID(iano)), MembroId(UUID(bia))}
+    assert votacao.turno_atual == 1
+    assert not votacao.encerrada
+    [turno] = turnos.listar_por_categoria(CategoriaOscarId(UUID(disputada)))
+    assert turno.candidatas == (NomeacaoOscarId(UUID(segunda)), NomeacaoOscarId(UUID(primeira)))
+    assert turno.aberto
+    assert turnos.listar_por_categoria(CategoriaOscarId(UUID(premiada))) == []
+    assert turnos.listar_por_categoria(CategoriaOscarId(UUID(esvaziada))) == []
+    assert votacoes.buscar_por_temporada(TemporadaOscarId(UUID(aberta))) is None

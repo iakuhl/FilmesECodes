@@ -210,9 +210,9 @@ contrato de um módulo de histórico de sessões passadas.
 
 Deve vir **antes** das páginas da web, que dependem dessas regras (a
 votação, por exemplo, ganha telas próprias). Tudo já está implementado,
-menos a votação — o desenho dela está logo abaixo.
+menos parte da votação — o desenho dela está logo abaixo.
 
-### Desenho da votação (a implementar)
+### Desenho da votação (em implementação: etapa (a) pronta)
 
 Decisões 8, 16, 20 e 21 a 29 de [PENDENCIAS.md](PENDENCIAS.md) e as
 interpretações 1 a 3 e 12 a 15. O sistema recolhe os votos e desfaz os
@@ -346,10 +346,10 @@ as cédulas nem o placar (decisão 26).
   confirmação, casos de uso, repositórios, migração, SMTP, CLI e API, e
   os dois fluxos completos votando, enviando o placar e premiando.
 
-Ordem de implementação, um commit por etapa: **(a)** votação — eleitores,
-turnos, cédulas, confirmação e desempates (revisão 0005); **(b)** placar
-por e-mail; **(c)** vencedores registrados e remoção do critério antigo
-(revisão 0006).
+Ordem de implementação, um commit por etapa: **(a)** ✅ votação —
+eleitores, turnos, cédulas, confirmação e desempates (revisão 0005);
+**(b)** placar por e-mail; **(c)** vencedores registrados e remoção do
+critério antigo (revisão 0006).
 
 ## Fase 5 — Evolução comercial
 
@@ -401,9 +401,10 @@ Ordem recomendada para a próxima sessão de trabalho, a partir do branch
       avanço, restringindo cada ação à sua fase;
    5. **próximo passo:** votação, conforme o "Desenho da votação"
       acima (redesenhado com as decisões de 25/09), em três commits:
-      (a) eleitores, turnos, cédulas, confirmação e desempates (revisão
-      0005); (b) placar por e-mail; (c) vencedores registrados por quem
-      administra e remoção de `CriterioApuracaoOscar` (revisão 0006);
+      (a) ✅ eleitores, turnos, cédulas, confirmação e desempates
+      (revisão 0005); (b) **próximo:** placar por e-mail; (c) vencedores
+      registrados por quem administra e remoção de `CriterioApuracaoOscar`
+      (revisão 0006);
    6. ✅ contrato do módulo de histórico (só ports e estruturas de dados).
 2. **Páginas da interface web** sobre o domínio já revisado (plano na
    seção da Fase 4), fechando a Fase 4.

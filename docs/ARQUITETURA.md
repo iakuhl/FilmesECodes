@@ -60,7 +60,8 @@ indefinidas sem travar o desenvolvimento do núcleo.
 
 Contém as entidades (`Membro`, `Filme`, `Rodada`, `Indicacao`, `Sorteio`,
 `SessaoExibicao`, `Avaliacao`, `TemporadaOscar`, `CategoriaOscar`,
-`Trofeu`, entre outras — ver [DOMINIO.md](DOMINIO.md)) e as regras de
+`VotacaoOscar`, `TurnoDeVotacao`, `Cedula`, `Trofeu`, entre outras — ver
+[DOMINIO.md](DOMINIO.md)) e as regras de
 negócio que essas entidades garantem sobre si mesmas. Não conhece banco
 de dados, não conhece interface, não conhece formato de I/O. É a camada
 com maior valor de portfólio: é onde a modelagem orientada a objetos é
@@ -80,7 +81,9 @@ fora:
   `FilmeRepository`, `RodadaRepository`, `IndicacaoRepository`,
   `SorteioRepository`, `SessaoRepository`, `AvaliacaoRepository`,
   `TemporadaOscarRepository`, `CategoriaOscarRepository`,
-  `NomeacaoOscarRepository`, `TrofeuRepository`): contratos de
+  `NomeacaoOscarRepository`, `TrofeuRepository`,
+  `VotacaoOscarRepository`, `TurnoDeVotacaoRepository`,
+  `CedulaRepository`): contratos de
   persistência, implementados na Fase 2. `Clube` tem seu
   próprio repositório porque `Membro`, `Rodada` e `TemporadaOscar` se
   referenciam a ele por `clube_id`, não por composição direta (ver
@@ -94,8 +97,9 @@ fora:
   de uma categoria do Óscar — existe porque esse mecanismo (votação,
   média de notas, etc.) ainda não foi decidido para o produto; o caso de
   uso `ApurarCategoriaOscar` não fica acoplado a essa decisão em aberto.
-  (A votação decidida em 24/09/2026 vai substituí-lo pela contagem de
-  votos no domínio — ver o ROADMAP.)
+  (A votação decidida em 24 e 25/09/2026 já conta os votos no domínio;
+  o port sai quando o vencedor passar a ser registrado por quem
+  administra — ver o ROADMAP.)
 - `LeitorDeHistorico`: contrato do módulo de histórico de sessões
   passadas — um adapter por formato de arquivo, que entrega os registros
   com os nomes como vieram (`SessaoHistorica`, `NotaHistorica`) e relata

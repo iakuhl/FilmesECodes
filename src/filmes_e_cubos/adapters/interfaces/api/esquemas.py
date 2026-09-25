@@ -31,8 +31,10 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from filmes_e_cubos.adapters.interfaces.estrelas import media_em_estrelas
+from filmes_e_cubos.adapters.interfaces.situacao_da_votacao import SituacaoDaVotacao
 from filmes_e_cubos.domain.entities.avaliacao import Avaliacao
 from filmes_e_cubos.domain.entities.categoria_oscar import CategoriaOscar
+from filmes_e_cubos.domain.entities.cedula import Cedula
 from filmes_e_cubos.domain.entities.clube import Clube
 from filmes_e_cubos.domain.entities.filme import Filme
 from filmes_e_cubos.domain.entities.indicacao import Indicacao
@@ -89,6 +91,11 @@ class TipoCategoriaOscarApi(StrEnum):
 
     def para_dominio(self) -> TipoCategoriaOscar:
         return TipoCategoriaOscar[self.name]
+
+
+class ModoDeVotacaoApi(StrEnum):
+    DUPLA = "dupla"
+    CLASSIFICACAO = "classificacao"
 
 
 # --- Bases -------------------------------------------------------------------
@@ -507,6 +514,123 @@ class PedidoDeApuracao(_Entrada):
         description="Quem leva o troféu quando a nomeação vencedora veio de uma sessão "
         "democracia (sem membro indicador). Ignorado nos demais casos.",
     )
+
+
+class CandidataSaida(BaseModel):
+    posicao: int = Field(description="Posição na cédula, a partir de 1.")
+    nomeacao_id: UUID
+    filme_id: UUID
+    indicado_por_membro_id: UUID | None = Field(
+        description="`null` quando o filme veio de uma sessão democracia."
+    )
+
+
+class DisputaSaida(BaseModel):
+    """Uma categoria em disputa no turno atual."""
+
+    categoria_id: UUID
+    nome: str
+    modo: ModoDeVotacaoApi = Field(
+        description="`dupla`: o voto tem a 1ª opção (2 pontos) e a 2ª (1 ponto); "
+        "`classificacao`: o voto ordena todas as candidatas."
+    )
+    candidatas: list[CandidataSaida]
+
+
+class EleitorSaida(BaseModel):
+    membro_id: UUID
+    nome: str
+    categorias_votadas: int = Field(
+        description="Em quantas categorias do turno o eleitor já votou — nunca em quê."
+    )
+    confirmou: bool = Field(description="Se a cédula do turno já foi confirmada.")
+
+
+class VotacaoSaida(BaseModel):
+    """A situação da votação. O voto é secreto: nem as cédulas nem o placar aparecem."""
+
+    temporada_id: UUID
+    turno: int = Field(description="O turno atual (ou o último, se a votação terminou).")
+    iniciada_em: datetime
+    encerrada_em: datetime | None = Field(
+        description="Quando a votação terminou; `null` enquanto há empate a desfazer."
+    )
+    categorias: list[DisputaSaida] = Field(
+        description="As categorias em disputa no turno atual; vazia quando a votação termina."
+    )
+    eleitores: list[EleitorSaida] = Field(
+        description="Os membros ativos quando a votação começou, em ordem alfabética."
+    )
+
+    @classmethod
+    def de_situacao(cls, situacao: SituacaoDaVotacao) -> VotacaoSaida:
+        votacao = situacao.votacao
+        return cls(
+            temporada_id=votacao.temporada_id,
+            turno=votacao.turno_atual,
+            iniciada_em=votacao.iniciada_em,
+            encerrada_em=votacao.encerrada_em,
+            categorias=[
+                DisputaSaida(
+                    categoria_id=disputa.categoria.id,
+                    nome=disputa.categoria.nome,
+                    modo=ModoDeVotacaoApi[disputa.turno.modo.name],
+                    candidatas=[
+                        CandidataSaida(
+                            posicao=posicao,
+                            nomeacao_id=nomeacao.id,
+                            filme_id=nomeacao.filme_id,
+                            indicado_por_membro_id=nomeacao.indicado_por_membro_id,
+                        )
+                        for posicao, nomeacao in enumerate(disputa.candidatas, start=1)
+                    ],
+                )
+                for disputa in situacao.disputas
+            ],
+            eleitores=[
+                EleitorSaida(
+                    membro_id=eleitor.membro.id,
+                    nome=eleitor.membro.nome,
+                    categorias_votadas=eleitor.categorias_votadas,
+                    confirmou=eleitor.confirmou,
+                )
+                for eleitor in situacao.eleitores
+            ],
+        )
+
+
+class NovoVoto(_Entrada):
+    escolhas: list[UUID] = Field(
+        description="Ids das nomeações, em ordem de preferência: na votação dupla, a 1ª e a "
+        "2ª opção (nomeações diferentes, que podem ser do mesmo filme); na classificação, "
+        "todas as candidatas do turno."
+    )
+
+
+class CedulaSaida(BaseModel):
+    """A cédula do eleitor, sem as escolhas: o voto é secreto."""
+
+    membro_id: UUID
+    turno: int
+    categorias_votadas: list[UUID] = Field(description="Categorias em que já há voto.")
+    confirmada: bool
+
+    @classmethod
+    def de_dominio(cls, cedula: Cedula) -> CedulaSaida:
+        return cls(
+            membro_id=cedula.membro_id,
+            turno=cedula.turno,
+            categorias_votadas=sorted(cedula.categorias_votadas, key=str),
+            confirmada=cedula.confirmada,
+        )
+
+
+class ConfirmacaoSaida(BaseModel):
+    turno_encerrado: bool = Field(
+        description="Se esta foi a última cédula do turno. Nesse caso, ou a votação terminou "
+        "(`votacao.encerrada_em`), ou começou o turno seguinte, com as categorias empatadas."
+    )
+    votacao: VotacaoSaida
 
 
 class TrofeuSaida(BaseModel):

@@ -55,3 +55,29 @@ class TemporadaIncompletaError(DomainError):
     """Levantada ao avançar uma edição que ainda não cumpriu o que a fase atual exige
     (ex.: ir à votação com categorias sem todas as nomeações).
     """
+
+
+class VotoInvalidoError(DomainError):
+    """Levantada quando as escolhas de um voto não servem ao turno da categoria
+    (quantidade errada, nomeação repetida ou fora das candidatas).
+    """
+
+
+class CedulaConfirmadaError(DomainError):
+    """Levantada ao alterar ou confirmar de novo uma cédula já confirmada."""
+
+
+class CedulaIncompletaError(DomainError):
+    """Levantada ao confirmar uma cédula sem voto em todas as categorias do turno."""
+
+
+class MembroForaDaVotacaoError(DomainError):
+    """Levantada quando quem vota não está entre os eleitores definidos no início da votação."""
+
+
+class CategoriaForaDoTurnoError(DomainError):
+    """Levantada ao votar numa categoria que não está em disputa no turno atual."""
+
+
+class VotacaoEncerradaError(DomainError):
+    """Levantada ao votar, confirmar ou apurar depois de a votação (ou o turno) terminar."""

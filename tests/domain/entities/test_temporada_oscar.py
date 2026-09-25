@@ -137,3 +137,14 @@ def test_so_a_fase_de_indicacoes_aceita_nomeacoes(
     else:
         with pytest.raises(AcaoForaDaFaseError):
             temporada.verificar_aceita_nomeacoes()
+
+
+@pytest.mark.parametrize("status", list(StatusTemporadaOscar))
+def test_so_a_fase_de_votacao_aceita_votos(clube: Clube, status: StatusTemporadaOscar) -> None:
+    temporada = _na_fase(clube, status)
+
+    if status is StatusTemporadaOscar.EM_VOTACAO:
+        temporada.verificar_em_votacao()
+    else:
+        with pytest.raises(AcaoForaDaFaseError, match="não está em votação"):
+            temporada.verificar_em_votacao()

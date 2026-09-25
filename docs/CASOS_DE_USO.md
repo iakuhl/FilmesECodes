@@ -133,12 +133,16 @@ os ports (repositórios/serviços) de que depende.
 ### AvancarTemporadaOscar
 - **Intenção**: levar a edição à fase seguinte do ciclo, um passo por vez.
 - **Ports**: `TemporadaOscarRepository`, `CategoriaOscarRepository`,
-  `NomeacaoOscarRepository`, `TrofeuRepository`.
+  `NomeacaoOscarRepository`, `TrofeuRepository`, `MembroRepository`,
+  `VotacaoOscarRepository`, `TurnoDeVotacaoRepository`, `RelogioService`.
 - **Regras**: ir a `em_votacao` exige ao menos uma categoria e,
   em cada uma, exatamente o número de nomeações da edição; ir a `apurada`
   exige resultado (troféu) em toda categoria — senão,
   `TemporadaIncompletaError`, com o que falta. Uma edição encerrada não
-  avança.
+  avança. Entrar em `em_votacao` **inicia a votação**: os eleitores são os
+  membros ativos do clube naquele momento (sem nenhum,
+  `TemporadaIncompletaError`), e cada categoria abre o 1º turno, de
+  votação dupla, com as nomeações na ordem em que foram feitas.
 
 ### DefinirDataEventoOscar
 - **Intenção**: marcar (ou remarcar) o dia da cerimônia de uma edição.
@@ -170,6 +174,36 @@ os ports (repositórios/serviços) de que depende.
   `aberta_para_indicacoes` (`AcaoForaDaFaseError`) e enquanto a categoria
   não tiver todas as nomeações da edição (`CategoriaCompletaError`). O
   mesmo filme pode ser nomeado mais de uma vez na mesma categoria.
+
+### RegistrarVoto
+- **Intenção**: registrar (ou trocar) o voto de um eleitor numa categoria
+  do turno atual da votação.
+- **Ports**: `TemporadaOscarRepository`, `CategoriaOscarRepository`,
+  `VotacaoOscarRepository`, `TurnoDeVotacaoRepository`, `CedulaRepository`.
+- **Regras**: edição `em_votacao` (`AcaoForaDaFaseError`) com a votação em
+  andamento (`VotacaoEncerradaError`); o membro precisa ser um dos
+  eleitores definidos no início — mesmo que tenha sido desativado depois
+  (`MembroForaDaVotacaoError`); a categoria precisa estar em disputa no
+  turno atual (`CategoriaForaDoTurnoError`); a cédula do turno não pode
+  estar confirmada (`CedulaConfirmadaError`); o voto é conferido pelo
+  turno (`VotoInvalidoError`): na votação dupla, duas nomeações
+  diferentes entre as candidatas (podem ser do mesmo filme); na
+  classificação, a ordem completa.
+
+### ConfirmarCedula
+- **Intenção**: travar a cédula de um eleitor no turno atual e, se era a
+  última, encerrar o turno.
+- **Ports**: `TemporadaOscarRepository`, `CategoriaOscarRepository`,
+  `VotacaoOscarRepository`, `TurnoDeVotacaoRepository`, `CedulaRepository`,
+  `RelogioService`.
+- **Regras**: as mesmas conferências de `RegistrarVoto` sobre edição,
+  votação e eleitor; a cédula precisa ter voto em todas as categorias do
+  turno (`CedulaIncompletaError`, com as que faltam) e não pode ter sido
+  confirmada antes. Quando o último eleitor confirma, o turno se encerra:
+  cada categoria é apurada sem mostrar nada; as empatadas no topo ganham o
+  turno seguinte, e as demais estão decididas. Sem turno novo, a votação
+  termina. Devolve a votação atualizada, se o turno se encerrou e quem
+  ainda falta confirmar.
 
 ### ApurarCategoriaOscar
 - **Intenção**: calcular/registrar o vencedor de uma categoria e emitir o

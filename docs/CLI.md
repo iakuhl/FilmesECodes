@@ -112,7 +112,32 @@ O catálogo é compartilhado: um filme não pertence a um clube.
 | `oscar categoria definir NOME [--tipo fixa\|variavel] [--descricao X] [--temporada-id ID]` | Adiciona uma categoria. O padrão é `variavel`. |
 | `oscar categoria listar [--temporada-id ID]` | Lista as categorias, quantas nomeações cada uma já tem (ex.: `3/5`) e quem já levou cada troféu. |
 | `oscar nomear --categoria-id ID --filme-id ID` | Nomeia um filme para a categoria, com a edição aberta para indicações e até completar as N nomeações. O filme precisa ter sido assistido pelo clube **dentro do ano da temporada**; pode ocupar mais de uma nomeação na mesma categoria. |
+| `oscar votacao [--temporada-id ID] [--clube-id ID]` | Mostra o turno atual da votação: cada categoria em disputa com as candidatas numeradas (filme e quem indicou) e, de cada eleitor, em quantas categorias já votou e se confirmou a cédula. |
+| `oscar votar --membro-id ID --categoria-id ID ESCOLHA...` | Registra (ou troca) o voto do eleitor na categoria. Cada `ESCOLHA` é a posição da candidata em `oscar votacao` (`1`, `2`...) ou o id da nomeação, em ordem de preferência: a 1ª e a 2ª opção, ou, num turno de classificação, todas. |
+| `oscar confirmar --membro-id ID [--temporada-id ID] [--clube-id ID]` | Confirma a cédula do eleitor no turno atual; depois disso, os votos não mudam. Exige voto em todas as categorias do turno. |
 | `oscar apurar CATEGORIA_ID [--membro-vencedor-id ID]` | Apura a categoria e emite o troféu. |
+
+#### A votação
+
+Quando a edição entra em votação, os **eleitores** ficam definidos: são
+os membros ativos naquele momento. Desativar alguém depois não o tira da
+votação, e quem for cadastrado ou reativado depois não vota.
+
+Cada eleitor vota em todas as categorias do turno — a 1ª opção vale 2
+pontos, e a 2ª, 1 — e então confirma a cédula; até confirmar, pode trocar
+os votos à vontade. A última confirmação encerra o turno: o sistema apura
+sem mostrar nada e, se o topo de alguma categoria empatou, abre um novo
+turno só com as empatadas (votação dupla, ou por classificação se todas
+empataram). Sem empates, a votação termina.
+
+O voto é secreto: nenhum comando mostra em que alguém votou, nem o
+placar.
+
+```bash
+filmes-e-cubos oscar votacao
+filmes-e-cubos oscar votar --membro-id <IANO> --categoria-id <CATEGORIA> 3 1
+filmes-e-cubos oscar confirmar --membro-id <IANO>
+```
 
 #### Como a apuração decide o vencedor
 

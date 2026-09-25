@@ -32,6 +32,9 @@ from filmes_e_cubos.adapters.persistence.sqlite.avaliacao_repository_sqlite impo
 from filmes_e_cubos.adapters.persistence.sqlite.categoria_oscar_repository_sqlite import (
     CategoriaOscarRepositorioSqlite,
 )
+from filmes_e_cubos.adapters.persistence.sqlite.cedula_repository_sqlite import (
+    CedulaRepositorioSqlite,
+)
 from filmes_e_cubos.adapters.persistence.sqlite.clube_repository_sqlite import (
     ClubeRepositorioSqlite,
 )
@@ -62,10 +65,17 @@ from filmes_e_cubos.adapters.persistence.sqlite.temporada_oscar_repository_sqlit
 from filmes_e_cubos.adapters.persistence.sqlite.trofeu_repository_sqlite import (
     TrofeuRepositorioSqlite,
 )
+from filmes_e_cubos.adapters.persistence.sqlite.turno_de_votacao_repository_sqlite import (
+    TurnoDeVotacaoRepositorioSqlite,
+)
+from filmes_e_cubos.adapters.persistence.sqlite.votacao_oscar_repository_sqlite import (
+    VotacaoOscarRepositorioSqlite,
+)
 from filmes_e_cubos.adapters.servicos.relogio_sistema import RelogioSistema
 from filmes_e_cubos.adapters.servicos.sorteador_aleatorio import SorteadorAleatorio
 from filmes_e_cubos.application.ports.avaliacao_repository import AvaliacaoRepository
 from filmes_e_cubos.application.ports.categoria_oscar_repository import CategoriaOscarRepository
+from filmes_e_cubos.application.ports.cedula_repository import CedulaRepository
 from filmes_e_cubos.application.ports.clube_repository import ClubeRepository
 from filmes_e_cubos.application.ports.criterio_apuracao_oscar import CriterioApuracaoOscar
 from filmes_e_cubos.application.ports.filme_repository import FilmeRepository
@@ -79,6 +89,10 @@ from filmes_e_cubos.application.ports.sorteador_service import SorteadorService
 from filmes_e_cubos.application.ports.sorteio_repository import SorteioRepository
 from filmes_e_cubos.application.ports.temporada_oscar_repository import TemporadaOscarRepository
 from filmes_e_cubos.application.ports.trofeu_repository import TrofeuRepository
+from filmes_e_cubos.application.ports.turno_de_votacao_repository import (
+    TurnoDeVotacaoRepository,
+)
+from filmes_e_cubos.application.ports.votacao_oscar_repository import VotacaoOscarRepository
 from filmes_e_cubos.application.use_cases.abrir_nova_rodada import AbrirNovaRodada
 from filmes_e_cubos.application.use_cases.abrir_temporada_oscar import AbrirTemporadaOscar
 from filmes_e_cubos.application.use_cases.adicionar_filme_democracia import AdicionarFilmeDemocracia
@@ -89,6 +103,7 @@ from filmes_e_cubos.application.use_cases.avancar_temporada_oscar import (
 )
 from filmes_e_cubos.application.use_cases.cadastrar_filme import CadastrarFilme
 from filmes_e_cubos.application.use_cases.cadastrar_membro import CadastrarMembro
+from filmes_e_cubos.application.use_cases.confirmar_cedula import ConfirmarCedula
 from filmes_e_cubos.application.use_cases.criar_clube import CriarClube
 from filmes_e_cubos.application.use_cases.definir_categoria_oscar import DefinirCategoriaOscar
 from filmes_e_cubos.application.use_cases.definir_data_evento_oscar import DefinirDataEventoOscar
@@ -102,6 +117,7 @@ from filmes_e_cubos.application.use_cases.indicar_filme_para_categoria import (
 from filmes_e_cubos.application.use_cases.realizar_sorteio import RealizarSorteio
 from filmes_e_cubos.application.use_cases.reativar_membro import ReativarMembro
 from filmes_e_cubos.application.use_cases.registrar_sessao_exibicao import RegistrarSessaoExibicao
+from filmes_e_cubos.application.use_cases.registrar_voto import RegistrarVoto
 
 CAMINHO_BANCO_PADRAO = Path("filmes_e_cubos.db")
 """Onde os dados ficam quando nada diferente é configurado: no diretório atual."""
@@ -144,6 +160,9 @@ class Contexto:
         self.categorias: CategoriaOscarRepository = CategoriaOscarRepositorioSqlite(engine)
         self.nomeacoes: NomeacaoOscarRepository = NomeacaoOscarRepositorioSqlite(engine)
         self.trofeus: TrofeuRepository = TrofeuRepositorioSqlite(engine)
+        self.votacoes: VotacaoOscarRepository = VotacaoOscarRepositorioSqlite(engine)
+        self.turnos: TurnoDeVotacaoRepository = TurnoDeVotacaoRepositorioSqlite(engine)
+        self.cedulas: CedulaRepository = CedulaRepositorioSqlite(engine)
 
         self.criar_clube = CriarClube(clube_repository=self.clubes)
         self.cadastrar_membro = CadastrarMembro(
@@ -208,6 +227,10 @@ class Contexto:
             categoria_repository=self.categorias,
             nomeacao_repository=self.nomeacoes,
             trofeu_repository=self.trofeus,
+            membro_repository=self.membros,
+            votacao_repository=self.votacoes,
+            turno_repository=self.turnos,
+            relogio=self.relogio,
         )
         self.definir_data_evento_oscar = DefinirDataEventoOscar(
             temporada_repository=self.temporadas
@@ -223,6 +246,21 @@ class Contexto:
             indicacao_repository=self.indicacoes,
             sessao_repository=self.sessoes,
             rodada_repository=self.rodadas,
+        )
+        self.registrar_voto = RegistrarVoto(
+            temporada_repository=self.temporadas,
+            categoria_repository=self.categorias,
+            votacao_repository=self.votacoes,
+            turno_repository=self.turnos,
+            cedula_repository=self.cedulas,
+        )
+        self.confirmar_cedula = ConfirmarCedula(
+            temporada_repository=self.temporadas,
+            categoria_repository=self.categorias,
+            votacao_repository=self.votacoes,
+            turno_repository=self.turnos,
+            cedula_repository=self.cedulas,
+            relogio=self.relogio,
         )
 
     def apurar_categoria_oscar(self, criterio: CriterioApuracaoOscar) -> ApurarCategoriaOscar:

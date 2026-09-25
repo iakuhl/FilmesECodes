@@ -16,6 +16,9 @@ Clube 1 ── * TemporadaOscar
 TemporadaOscar 1 ── * CategoriaOscar
 CategoriaOscar 1 ── * NomeacaoOscar ── 1 Filme
 CategoriaOscar 1 ── 0..1 Trofeu ── 1 Membro (indicador do filme vencedor)
+TemporadaOscar 1 ── 0..1 VotacaoOscar ── * Membro (eleitores)
+CategoriaOscar 1 ── * TurnoDeVotacao ── * NomeacaoOscar (candidatas)
+VotacaoOscar 1 ── * Cedula (uma por eleitor e turno) ── 1 Membro
 ```
 
 Na implementação (Fase 1 do roadmap), as relações a partir de `Clube` são
@@ -224,6 +227,56 @@ assistido pelo clube dentro do ano daquela temporada.
 O mesmo filme pode ocupar várias nomeações da mesma categoria — uma
 categoria pode até ser inteira sobre um filme só.
 
+### VotacaoOscar
+
+A votação de uma edição: um evento com **eleitores definidos**. Começa
+quando a edição entra em `em_votacao`, com os membros ativos do clube
+naquele momento, e os eleitores não mudam mais — desativar alguém não o
+tira da votação, e quem entra ou volta ao clube depois não vota.
+
+- `id`
+- `temporada_id` (uma votação por edição)
+- `eleitores`: os membros habilitados, fixados no início (ao menos um).
+- `iniciada_em`
+- `turno_atual`: 1 no começo; cresce a cada turno de desempate.
+- `encerrada_em`: quando o último turno termina sem empate a desfazer.
+
+### TurnoDeVotacao
+
+A disputa de uma `CategoriaOscar` num turno da votação.
+
+- `id`
+- `categoria_id`
+- `numero`: o turno da votação em que acontece.
+- `modo`: `dupla` (cada eleitor dá uma 1ª opção, que vale 2 pontos, e uma
+  2ª, que vale 1) ou `classificacao` (cada eleitor ordena as X
+  candidatas, que recebem X, X−1, …, 1 pontos).
+- `candidatas`: as **nomeações** em disputa, em ordem — vota-se em
+  nomeações, não em filmes, então as duas opções de um voto podem ser do
+  mesmo filme.
+- `pontuacao` e `apurado_em`: preenchidos quando o turno é apurado. A
+  pontuação é o placar da categoria, que nenhuma tela mostra.
+
+Apurar o turno decide se a categoria precisa de outro: topo único decide
+a categoria; topo empatado entre parte das candidatas abre um turno
+`dupla` só com as empatadas; todas empatadas numa `dupla` abrem um turno
+`classificacao` com as mesmas; todas empatadas numa `classificacao` são
+um **empate absoluto** — nenhuma vence, e a categoria também está
+decidida.
+
+### Cedula
+
+As escolhas de um eleitor num turno da votação, categoria por categoria.
+
+- `id`
+- `votacao_id`, `turno`, `membro_id` (uma cédula por eleitor e turno)
+- `escolhas`: por categoria, as nomeações em ordem de preferência.
+- `confirmada_em`
+
+O eleitor troca os votos à vontade até confirmar a cédula, o que exige
+voto em todas as categorias do turno; confirmada, ela não muda mais. O
+conteúdo é secreto: fica guardado, mas nenhuma interface o mostra.
+
 ### Trofeu
 
 O resultado da apuração de uma `CategoriaOscar`: qual `NomeacaoOscar`
@@ -282,3 +335,10 @@ venceu.
    e ainda não foi assistido. Por isso cada filme é assistido no máximo
    uma vez por clube, e a nomeação ao Óscar sempre tem um indicador
    inequívoco.
+10. **A votação do Óscar tem eleitores definidos** no início (os membros
+    ativos quando a edição entra em votação). Cada eleitor preenche e
+    confirma uma cédula por turno; a última confirmação encerra o turno,
+    e os empates no topo abrem o turno seguinte, sem que ninguém veja o
+    placar.
+11. **O voto é secreto:** as telas mostram só quem já votou (e em quantas
+    categorias do turno); as cédulas e o placar nunca aparecem.

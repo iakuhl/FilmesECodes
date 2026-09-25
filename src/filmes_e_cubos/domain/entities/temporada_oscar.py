@@ -148,3 +148,8 @@ class TemporadaOscar:
             raise AcaoForaDaFaseError(
                 f"A edição {self._nome} só aceita nomeações quando está aberta para indicações."
             )
+
+    def verificar_em_votacao(self) -> None:
+        """Votos e confirmações de cédula só valem enquanto a edição está em votação."""
+        if self._status is not StatusTemporadaOscar.EM_VOTACAO:
+            raise AcaoForaDaFaseError(f"A edição {self._nome} não está em votação.")

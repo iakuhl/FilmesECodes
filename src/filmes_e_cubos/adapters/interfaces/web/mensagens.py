@@ -34,12 +34,16 @@ from filmes_e_cubos.domain.exceptions.indicacao import (
 from filmes_e_cubos.domain.exceptions.membro import MembroInativoError
 from filmes_e_cubos.domain.exceptions.oscar import (
     CategoriaCompletaError,
+    CategoriaForaDoTurnoError,
     CategoriaJaApuradaError,
+    CedulaConfirmadaError,
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,
+    MembroForaDaVotacaoError,
     NomeacaoInvalidaError,
     TemporadaOscarDuplicadaError,
     VencedorDemocraciaNaoInformadoError,
+    VotacaoEncerradaError,
 )
 from filmes_e_cubos.domain.exceptions.rodada import (
     RodadaJaAbertaError,
@@ -56,7 +60,9 @@ _CHAVE_NA_SESSAO: Final = "avisos"
 MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
     AvaliacaoDuplicadaError: "Esse membro já avaliou esta sessão.",
     CategoriaCompletaError: "Essa categoria já tem todas as nomeações desta edição.",
+    CategoriaForaDoTurnoError: "Essa categoria não está em disputa neste turno da votação.",
     CategoriaJaApuradaError: "Essa categoria já foi apurada.",
+    CedulaConfirmadaError: "Essa cédula já foi confirmada: os votos não mudam mais.",
     FilmeNaoAssistidoError: "Esse filme ainda não foi assistido pelo clube.",
     FilmeNaoAssistidoNoAnoDaTemporadaError: (
         "Só concorrem filmes assistidos pelo clube no ano desta edição."
@@ -66,6 +72,9 @@ MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
     ),
     IndicacaoDuplicadaError: "Esse membro já indicou um filme nesta rodada.",
     MembroAusenteNaSessaoError: "Só quem esteve na sessão pode avaliá-la.",
+    MembroForaDaVotacaoError: (
+        "Só votam os membros que estavam ativos no clube quando a votação começou."
+    ),
     MembroInativoError: "Esse membro está desativado.",
     NenhumaIndicacaoElegivelError: "Não há indicações pendentes para sortear.",
     NomeacaoInvalidaError: "Escolha uma das nomeações desta categoria.",
@@ -77,6 +86,7 @@ MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
     ),
     TemporadaOscarDuplicadaError: "O clube já tem a edição do Óscar desse ano.",
     TransicaoDeStatusInvalidaError: "Essa indicação já foi assistida.",
+    VotacaoEncerradaError: "A votação desta edição já terminou.",
     VencedorDemocraciaNaoInformadoError: (
         "O filme vencedor veio de uma sessão democracia: escolha quem leva o troféu."
     ),

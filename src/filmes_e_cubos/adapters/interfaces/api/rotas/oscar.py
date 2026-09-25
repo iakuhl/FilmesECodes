@@ -1,4 +1,8 @@
-"""Rotas do Óscar do Filmes e Cubos: temporadas, categorias, nomeações e apuração."""
+"""Rotas do Óscar do Filmes e Cubos: temporadas, categorias, nomeações, votação e apuração.
+
+O voto é secreto (decisão 26 de docs/PENDENCIAS.md): nenhuma rota mostra
+em que alguém votou, nem o placar.
+"""
 
 from __future__ import annotations
 
@@ -9,14 +13,18 @@ from fastapi import APIRouter, Body, status
 
 from filmes_e_cubos.adapters.interfaces.api.esquemas import (
     CategoriaSaida,
+    CedulaSaida,
+    ConfirmacaoSaida,
     NomeacaoSaida,
     NovaCategoria,
     NovaDataDoEvento,
     NovaNomeacao,
     NovaTemporada,
+    NovoVoto,
     PedidoDeApuracao,
     TemporadaSaida,
     TrofeuSaida,
+    VotacaoSaida,
 )
 from filmes_e_cubos.adapters.interfaces.consultas import (
     obter_categoria,
@@ -26,6 +34,7 @@ from filmes_e_cubos.adapters.interfaces.consultas import (
 )
 from filmes_e_cubos.adapters.interfaces.contexto_http import ContextoDep
 from filmes_e_cubos.adapters.interfaces.convencoes import nome_padrao_da_temporada
+from filmes_e_cubos.adapters.interfaces.situacao_da_votacao import situacao_da_votacao
 from filmes_e_cubos.adapters.servicos.criterio_apuracao_escolha_informada import (
     CriterioEscolhaInformada,
 )
@@ -170,6 +179,55 @@ def nomear(categoria_id: UUID, nova: NovaNomeacao, contexto: ContextoDep) -> Nom
 @roteador.get("/oscar/nomeacoes/{nomeacao_id}", summary="Consulta uma nomeação")
 def consultar_nomeacao(nomeacao_id: UUID, contexto: ContextoDep) -> NomeacaoSaida:
     return NomeacaoSaida.de_dominio(obter_nomeacao(contexto.nomeacoes, nomeacao_id))
+
+
+@roteador.get(
+    "/oscar/temporadas/{temporada_id}/votacao",
+    summary="Consulta a situação da votação",
+    description="O turno atual, as categorias em disputa (com as candidatas na ordem da "
+    "cédula) e, de cada eleitor, em quantas categorias já votou e se confirmou. `404` antes "
+    "de a edição chegar à votação.",
+)
+def consultar_votacao(temporada_id: UUID, contexto: ContextoDep) -> VotacaoSaida:
+    temporada = obter_temporada(contexto.temporadas, temporada_id)
+    return VotacaoSaida.de_situacao(situacao_da_votacao(contexto, temporada))
+
+
+@roteador.put(
+    "/oscar/categorias/{categoria_id}/votos/{membro_id}",
+    summary="Registra ou troca o voto de um eleitor na categoria",
+    description="O voto vai para a cédula do eleitor no turno atual e pode ser trocado até a "
+    "cédula ser confirmada. Só votam os membros que estavam ativos quando a votação começou.",
+)
+def votar(
+    categoria_id: UUID, membro_id: UUID, voto: NovoVoto, contexto: ContextoDep
+) -> CedulaSaida:
+    cedula = contexto.registrar_voto.executar(
+        categoria_id=CategoriaOscarId(categoria_id),
+        membro_id=MembroId(membro_id),
+        escolhas=[NomeacaoOscarId(escolha) for escolha in voto.escolhas],
+    )
+    return CedulaSaida.de_dominio(cedula)
+
+
+@roteador.post(
+    "/oscar/temporadas/{temporada_id}/votacao/cedulas/{membro_id}/confirmacao",
+    summary="Confirma a cédula do eleitor no turno atual",
+    description="Exige voto em todas as categorias do turno (`409` `cedula_incompleta`, com as "
+    "que faltam). Confirmada, a cédula não muda mais. A última confirmação encerra o turno: o "
+    "sistema apura sem mostrar nada e abre o turno seguinte nas categorias empatadas.",
+)
+def confirmar_cedula(
+    temporada_id: UUID, membro_id: UUID, contexto: ContextoDep
+) -> ConfirmacaoSaida:
+    temporada = obter_temporada(contexto.temporadas, temporada_id)
+    resultado = contexto.confirmar_cedula.executar(
+        temporada_id=temporada.id, membro_id=MembroId(membro_id)
+    )
+    return ConfirmacaoSaida(
+        turno_encerrado=resultado.turno_encerrado,
+        votacao=VotacaoSaida.de_situacao(situacao_da_votacao(contexto, temporada)),
+    )
 
 
 @roteador.post(
