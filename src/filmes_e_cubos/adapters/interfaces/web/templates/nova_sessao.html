@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titulo %}Nova sessão{% endblock %}
+{% block conteudo %}
+<h1>Sessão de {{ filme.titulo if filme else "filme" }}</h1>
+<section class="cartao cartao--estreito">
+  <form method="post" action="/clubes/{{ clube.id }}/indicacoes/{{ indicacao.id }}/sessao" class="formulario">
+    <fieldset>
+      <legend>Quem estava presente</legend>
+      {% if membros %}
+      <div class="opcoes">
+        {% for membro in membros %}
+        <label><input type="checkbox" name="presentes" value="{{ membro.id }}" checked> {{ membro.nome }}</label>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="vazio">Nenhum membro ativo.</p>
+      {% endif %}
+    </fieldset>
+    <p class="suave">Só quem esteve presente avalia o filme. A sessão fica com a data de hoje.</p>
+    <button class="botao">Registrar sessão</button>
+  </form>
+</section>
+{% endblock %}

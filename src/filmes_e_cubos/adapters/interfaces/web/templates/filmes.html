@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block titulo %}Filmes{% endblock %}
+{% block conteudo %}
+<h1>Filmes</h1>
+
+<section class="cartao">
+  {% if filmes %}
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th>Título</th><th>Ano</th><th>Direção</th><th>Duração</th><th></th></tr></thead>
+    <tbody>
+      {% for filme in filmes %}
+      <tr>
+        <td>{{ filme.titulo }}</td>
+        <td>{{ filme.ano_lancamento or "—" }}</td>
+        <td>{{ filme.diretor or "—" }}</td>
+        <td>{{ filme.duracao_minutos | duracao }}</td>
+        <td class="acoes">
+          <form method="post" action="/clubes/{{ clube.id }}/filmes/{{ filme.id }}/duracao" class="formulario--linha">
+            <label class="oculto-visualmente" for="duracao-{{ filme.id }}">Duração de {{ filme.titulo }}, em minutos</label>
+            <input id="duracao-{{ filme.id }}" name="duracao_minutos" inputmode="numeric" placeholder="min" size="4" value="{{ filme.duracao_minutos or '' }}">
+            <button class="botao botao--pequeno botao--secundario">Salvar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="vazio">O catálogo está vazio.</p>
+  {% endif %}
+</section>
+
+<section class="cartao cartao--estreito">
+  <h2>Novo filme</h2>
+  <form method="post" action="/clubes/{{ clube.id }}/filmes" class="formulario">
+    <label>Título <input name="titulo" required></label>
+    <label>Ano de lançamento <input name="ano_lancamento" inputmode="numeric"></label>
+    <label>Direção <input name="diretor"></label>
+    <label>Duração, em minutos <input name="duracao_minutos" inputmode="numeric"></label>
+    <button class="botao">Cadastrar</button>
+  </form>
+</section>
+{% endblock %}

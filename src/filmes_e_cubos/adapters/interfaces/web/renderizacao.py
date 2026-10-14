@@ -48,6 +48,9 @@ _ambiente.filters.update(
 _ambiente.globals["secoes_do_clube"] = (
     # (chave da seção, nome no menu, caminho depois de /clubes/{id})
     ("painel", "Painel", ""),
+    ("membros", "Membros", "/membros"),
+    ("filmes", "Filmes", "/filmes"),
+    ("rodadas", "Rodadas", "/rodadas"),
 )
 _modelos = Jinja2Templates(env=_ambiente)
 

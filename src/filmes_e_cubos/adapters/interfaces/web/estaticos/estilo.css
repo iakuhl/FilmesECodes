@@ -198,3 +198,16 @@ legend { padding: 0 0.35rem; font-weight: 600; }
   .tabela-rolavel { overflow-x: auto; }
   h1 { font-size: 1.45rem; }
 }
+
+/* Rótulo que só leitores de tela anunciam (o campo já diz o que é na tabela). */
+.oculto-visualmente {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+td.acoes .formulario--linha { justify-content: flex-end; flex-wrap: nowrap; }
+td.acoes input { width: 5rem; }
+h3 { margin-top: 1.5rem; }

@@ -400,10 +400,10 @@ produção, só a pedido do dono (decisão 37).
       entrada `app.py` da Vercel; CI pronta para ligar;
    2. ✅ senha única do clube (decisão 35), protegendo o site e a API; a
       base da web (app raiz, modelos, visual), o início e o painel;
-   3. **próximo:** páginas do dia a dia, conforme o plano da seção da Fase 4: início,
+   3. ✅ páginas do dia a dia, conforme o plano da seção da Fase 4: início,
       painel da rodada, membros, filmes, histórico de rodadas, sessões e
       avaliações;
-   4. Óscar até a votação: edições, categorias, nomeações, cédula e
+   4. **próximo:** Óscar até a votação: edições, categorias, nomeações, cédula e
       confirmação — e, com elas, a etapa (b) da votação, o placar por
       e-mail;
    5. etapa (c) da votação, os vencedores, com a tela de premiação.

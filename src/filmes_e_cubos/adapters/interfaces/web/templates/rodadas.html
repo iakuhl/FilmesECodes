@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titulo %}Rodadas{% endblock %}
+{% block conteudo %}
+<h1>Rodadas</h1>
+<section class="cartao">
+  {% if rodadas %}
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th>Rodada</th><th>Início</th><th>Encerramento</th><th>Situação</th><th>Indicações</th></tr></thead>
+    <tbody>
+      {% for rodada in rodadas %}
+      <tr>
+        <td><a href="/clubes/{{ clube.id }}/rodadas/{{ rodada.id }}">Rodada {{ rodada.numero }}</a></td>
+        <td>{{ rodada.data_inicio | data }}</td>
+        <td>{{ rodada.data_encerramento | data }}</td>
+        <td><span class="etiqueta">{{ rodada.status | rotulo }}</span></td>
+        <td>{{ quantas[rodada.id] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="vazio">Nenhuma rodada ainda. Abra a primeira no <a href="/clubes/{{ clube.id }}">painel</a>.</p>
+  {% endif %}
+</section>
+{% endblock %}

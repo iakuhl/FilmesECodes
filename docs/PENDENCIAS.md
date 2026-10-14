@@ -377,6 +377,18 @@ Novas, do redesenho de 25/09:
     escuro automático): nada de build nem de dependência de terceiros
     para o que a página precisa.
 44. **Os testes da web rodam também contra o Postgres**, como os da API.
+45. **Cada página confere que o que vem no endereço é do clube dela**
+    (`web/escopo.py`): membro, rodada, indicação ou sessão de outro clube
+    vira 404 (ou aviso, numa ação) — a web já respeita a separação entre
+    clubes que a dívida técnica 3 cobra das demais interfaces.
+46. **As ações da rodada aberta moram no painel** (indicar, democracia,
+    sortear, encerrar, abrir a próxima), e a sessão é registrada a partir
+    da indicação, com os membros ativos já marcados como presentes — a
+    presença padrão da CLI e da API.
+47. **Os formulários de indicação listam o catálogo inteiro:** filme que
+    já passou pelo clube é recusado com a mensagem da regra (decisão 5).
+    Esconder esses filmes da lista exigiria percorrer todas as rodadas a
+    cada abertura do painel; fica para quando o catálogo crescer.
 
 ## Dívidas técnicas conhecidas
 

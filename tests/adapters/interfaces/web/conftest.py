@@ -71,4 +71,16 @@ def web(engine_de_teste: Engine) -> Iterator[WebDeTeste]:
 def clube_id(web: WebDeTeste) -> str:
     resposta = web.enviar("/clubes", nome="Filmes e Cubos", tamanho_rodada="3")
     assert resposta.status_code == 303
+    web.abrir(resposta.headers["location"])  # como o navegador: consome o aviso de criação
     return str(resposta.headers["location"]).rsplit("/", 1)[-1]
+
+
+def cadastrar_membro(web: WebDeTeste, clube_id: str, nome: str) -> str:
+    """Cadastra pelo formulário e devolve o id (lido da API do mesmo app)."""
+    web.agir(f"/clubes/{clube_id}/membros", nome=nome)
+    return next(m["id"] for m in web.api("GET", f"/clubes/{clube_id}/membros") if m["nome"] == nome)
+
+
+def cadastrar_filme(web: WebDeTeste, clube_id: str, titulo: str, **campos: str) -> str:
+    web.agir(f"/clubes/{clube_id}/filmes", titulo=titulo, **campos)
+    return next(f["id"] for f in web.api("GET", "/filmes") if f["titulo"] == titulo)

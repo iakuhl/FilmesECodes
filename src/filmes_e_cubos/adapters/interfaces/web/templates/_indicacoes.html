@@ -1,21 +1,29 @@
-{% if painel.indicacoes %}
+{# Tabela de indicações. Espera `indicacoes` e `acoes` (rodada aberta: oferece registrar a sessão). #}
+{% if indicacoes %}
+<div class="tabela-rolavel">
 <table>
   <thead>
     <tr><th>Filme</th><th>Indicado por</th><th>Situação</th><th>Sessão</th></tr>
   </thead>
   <tbody>
-    {% for item in painel.indicacoes %}
+    {% for item in indicacoes %}
     <tr>
       <td>{{ item.filme.titulo if item.filme else "—" }}</td>
       <td>{{ item.membro.nome if item.membro else "Democracia" }}</td>
       <td><span class="etiqueta etiqueta--{{ item.indicacao.status.name | lower }}">{{ item.indicacao.status | rotulo }}</span></td>
       <td>
-        {% if item.sessao %}{{ item.sessao.data_sessao | data }} · <span class="estrelas">{{ item.sessao.media_das_notas | estrelas }}</span>{% else %}—{% endif %}
+        {% if item.sessao %}
+        <a href="/clubes/{{ clube.id }}/sessoes/{{ item.sessao.id }}">{{ item.sessao.data_sessao | data }}</a>
+        · <span class="estrelas">{{ item.sessao.media_das_notas | estrelas }}</span>
+        {% elif acoes %}
+        <a class="botao botao--pequeno botao--secundario" href="/clubes/{{ clube.id }}/indicacoes/{{ item.indicacao.id }}/sessao">Registrar sessão</a>
+        {% else %}—{% endif %}
       </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
 <p class="vazio">Nenhuma indicação ainda.</p>
 {% endif %}

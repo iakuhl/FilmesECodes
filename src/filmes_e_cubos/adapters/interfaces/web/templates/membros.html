@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block titulo %}Membros{% endblock %}
+{% block conteudo %}
+<h1>Membros</h1>
+
+<section class="cartao">
+  {% if membros %}
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th>Nome</th><th>Apelido</th><th>No clube desde</th><th>Situação</th><th></th></tr></thead>
+    <tbody>
+      {% for membro in membros %}
+      <tr>
+        <td>{{ membro.nome }}</td>
+        <td>{{ membro.apelido or "—" }}</td>
+        <td>{{ membro.data_ingresso | data }}</td>
+        <td><span class="etiqueta">{{ "Ativo" if membro.ativo else "Inativo" }}</span></td>
+        <td class="acoes">
+          {% if membro.ativo %}
+          <form method="post" action="/clubes/{{ clube.id }}/membros/{{ membro.id }}/desativar">
+            <button class="botao botao--pequeno botao--secundario">Desativar</button>
+          </form>
+          {% else %}
+          <form method="post" action="/clubes/{{ clube.id }}/membros/{{ membro.id }}/reativar">
+            <button class="botao botao--pequeno botao--secundario">Reativar</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="vazio">Ninguém cadastrado ainda.</p>
+  {% endif %}
+</section>
+
+<section class="cartao cartao--estreito">
+  <h2>Novo membro</h2>
+  <form method="post" action="/clubes/{{ clube.id }}/membros" class="formulario">
+    <label>Nome <input name="nome" required></label>
+    <label>Apelido <input name="apelido"><small class="suave">Opcional.</small></label>
+    <button class="botao">Cadastrar</button>
+  </form>
+</section>
+{% endblock %}

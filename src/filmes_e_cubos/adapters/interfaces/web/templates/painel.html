@@ -6,12 +6,54 @@
 <div class="grade">
   <section class="cartao cartao--largo">
     {% if painel.rodada %}
-    <h2>Rodada {{ painel.rodada.numero }}</h2>
-    <p class="suave">Aberta em {{ painel.rodada.data_inicio | data }}.</p>
-    {% include "_indicacoes.html" %}
+    <div class="cabecalho">
+      <h2>Rodada {{ painel.rodada.numero }}</h2>
+      <span class="suave">aberta em {{ painel.rodada.data_inicio | data }}</span>
+    </div>
+    {% with indicacoes=painel.indicacoes, acoes=True %}{% include "_indicacoes.html" %}{% endwith %}
+
+    {% if painel.membros_ativos and painel.filmes %}
+    <h3>Indicar</h3>
+    <form method="post" action="/clubes/{{ clube.id }}/rodadas/{{ painel.rodada.id }}/indicacoes" class="formulario formulario--linha">
+      <label>Quem indica
+        <select name="membro_id" required>
+          {% for membro in painel.membros_ativos %}<option value="{{ membro.id }}">{{ membro.nome }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Filme
+        <select name="filme_id" required>
+          {% for filme in painel.filmes %}<option value="{{ filme.id }}">{{ filme.titulo }}{% if filme.ano_lancamento %} ({{ filme.ano_lancamento }}){% endif %}</option>{% endfor %}
+        </select>
+      </label>
+      <button class="botao">Indicar</button>
+    </form>
+    <form method="post" action="/clubes/{{ clube.id }}/democracia" class="formulario formulario--linha">
+      <label>Sessão extra, escolhida pelo grupo (democracia)
+        <select name="filme_id" required>
+          {% for filme in painel.filmes %}<option value="{{ filme.id }}">{{ filme.titulo }}{% if filme.ano_lancamento %} ({{ filme.ano_lancamento }}){% endif %}</option>{% endfor %}
+        </select>
+      </label>
+      <button class="botao botao--secundario">Democracia</button>
+    </form>
+    {% else %}
+    <p class="suave">Para indicar, cadastre <a href="/clubes/{{ clube.id }}/membros">membros</a> e <a href="/clubes/{{ clube.id }}/filmes">filmes</a>.</p>
+    {% endif %}
+
+    <h3>Rodada</h3>
+    <div class="formulario--linha">
+      <form method="post" action="/clubes/{{ clube.id }}/rodadas/{{ painel.rodada.id }}/sorteio">
+        <button class="botao">Sortear o próximo filme</button>
+      </form>
+      <form method="post" action="/clubes/{{ clube.id }}/rodadas/{{ painel.rodada.id }}/encerrar">
+        <button class="botao botao--secundario">Encerrar rodada</button>
+      </form>
+    </div>
     {% else %}
     <h2>Rodada</h2>
     <p class="vazio">Nenhuma rodada aberta.</p>
+    <form method="post" action="/clubes/{{ clube.id }}/rodadas">
+      <button class="botao">Abrir rodada</button>
+    </form>
     {% endif %}
   </section>
 
@@ -24,6 +66,7 @@
     {% else %}
     <p class="vazio">Nenhum membro cadastrado.</p>
     {% endif %}
+    <p><a href="/clubes/{{ clube.id }}/membros">Gerenciar membros</a></p>
   </section>
 
   <section class="cartao">

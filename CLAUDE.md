@@ -19,8 +19,9 @@ para virar produto multi-clube.
   do dono em 24/09/2026. Em 25/09, também a pedido dele, foi mesclado em
   `main` (fast-forward, só local: a `main` não foi enviada ao `origin`).
 - Fases 1–3 concluídas; Fase 4 com a API pronta, migrações com Alembic e
-  a web em construção (base, senha do clube, início e painel prontos —
-  ver [docs/WEB.md](docs/WEB.md)).
+  a web em construção: base, senha do clube e as páginas do dia a dia
+  (painel com as ações da rodada, membros, filmes, rodadas, sessões e
+  avaliações) prontas; falta o Óscar — ver [docs/WEB.md](docs/WEB.md).
 - Revisão de regras de 24/09/2026 quase toda implementada (duração,
   reativação, data do evento, só presentes avaliam, média como fração em
   estrelas, filme não se repete, uma edição por ano, nomeações fixas por

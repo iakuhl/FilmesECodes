@@ -20,7 +20,14 @@ from starlette.responses import RedirectResponse
 
 from filmes_e_cubos.adapters.composicao import Contexto
 from filmes_e_cubos.adapters.interfaces.web.erros import registrar_paginas_de_erro
-from filmes_e_cubos.adapters.interfaces.web.rotas import acesso, inicio
+from filmes_e_cubos.adapters.interfaces.web.rotas import (
+    acesso,
+    filmes,
+    inicio,
+    membros,
+    rodadas,
+    sessoes,
+)
 
 DIRETORIO_DOS_ESTATICOS: Final = Path(__file__).parent / "estaticos"
 
@@ -40,7 +47,7 @@ def criar_web(contexto: Contexto, *, senha: str | None = None) -> FastAPI:
     def icone() -> RedirectResponse:
         return RedirectResponse("/estaticos/icone.svg")
 
-    for modulo in (acesso, inicio):
+    for modulo in (acesso, inicio, membros, filmes, rodadas, sessoes):
         web.include_router(modulo.roteador)
     registrar_paginas_de_erro(web)
     return web

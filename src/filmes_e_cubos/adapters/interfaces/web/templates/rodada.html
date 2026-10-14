@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Rodada {{ rodada.numero }}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <h1>Rodada {{ rodada.numero }}</h1>
+  <span class="etiqueta">{{ rodada.status | rotulo }}</span>
+</div>
+<p class="suave">
+  De {{ rodada.data_inicio | data }}{% if rodada.data_encerramento %} a {{ rodada.data_encerramento | data }}{% endif %}.
+</p>
+<section class="cartao">
+  {% with acoes=(rodada.status.name == "ABERTA") %}{% include "_indicacoes.html" %}{% endwith %}
+</section>
+<p><a href="/clubes/{{ clube.id }}/rodadas">Todas as rodadas</a></p>
+{% endblock %}

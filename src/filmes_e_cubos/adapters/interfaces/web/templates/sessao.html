@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block titulo %}{{ sessao.filme.titulo if sessao.filme else "Sessão" }}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <h1>{{ sessao.filme.titulo if sessao.filme else "Sessão" }}</h1>
+  <span class="estrelas">{{ sessao.sessao.media_das_notas | estrelas }}</span>
+</div>
+<p class="suave">
+  Sessão de {{ sessao.sessao.data_sessao | data }} ·
+  {% if sessao.indicado_por %}indicado por {{ sessao.indicado_por.nome }}{% else %}democracia{% endif %}
+  {% if sessao.presentes %} · presentes: {{ sessao.presentes | map(attribute="nome") | join(", ") }}{% endif %}
+</p>
+
+<section class="cartao">
+  <h2>Avaliações</h2>
+  {% if sessao.avaliacoes %}
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th>Membro</th><th>Nota</th><th>Comentário</th></tr></thead>
+    <tbody>
+      {% for item in sessao.avaliacoes %}
+      <tr>
+        <td>{{ item.membro.nome if item.membro else "—" }}</td>
+        <td>{% if item.avaliacao.nota %}{{ item.avaliacao.nota.valor | decimal }}{% else %}<span class="etiqueta">Dorminhoco</span>{% endif %}</td>
+        <td>{{ item.avaliacao.comentario or "" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="vazio">Ninguém avaliou ainda.</p>
+  {% endif %}
+</section>
+
+{% if sessao.faltam_avaliar %}
+<section class="cartao cartao--estreito">
+  <h2>Avaliar</h2>
+  <form method="post" action="/clubes/{{ clube.id }}/sessoes/{{ sessao.sessao.id }}/avaliacoes" class="formulario">
+    <label>Quem avalia
+      <select name="membro_id" required>
+        {% for membro in sessao.faltam_avaliar %}<option value="{{ membro.id }}">{{ membro.nome }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Nota
+      <select name="nota" required>
+        {% for nota in notas %}<option value="{{ nota }}">{{ nota | decimal }}</option>{% endfor %}
+        <option value="{{ dorminhoco }}">Cochilou (dorminhoco)</option>
+      </select>
+    </label>
+    <label>Comentário <textarea name="comentario" rows="2"></textarea></label>
+    <button class="botao">Avaliar</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

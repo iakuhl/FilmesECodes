@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 from typing import Final
+from uuid import UUID
 
 from filmes_e_cubos.adapters.interfaces.web.mensagens import FormularioInvalidoError
 from filmes_e_cubos.domain.value_objects.nota import Nota
@@ -46,6 +47,17 @@ def decimal_opcional(texto: str, *, campo: str) -> Decimal | None:
     if not valor.is_finite():
         raise FormularioInvalidoError(f"{campo}: {texto!r} não é um número.")
     return valor
+
+
+def id_escolhido(texto: str, *, campo: str) -> UUID:
+    """O id de uma opção de `<select>`; vazio ou adulterado é recusado.
+
+    `campo` completa a mensagem: `campo="o filme"` -> "Escolha o filme.".
+    """
+    try:
+        return UUID(texto.strip())
+    except ValueError as erro:
+        raise FormularioInvalidoError(f"Escolha {campo}.") from erro
 
 
 def nota_ou_dorminhoco(texto: str) -> Nota | None:
