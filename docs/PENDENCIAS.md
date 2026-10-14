@@ -400,6 +400,15 @@ Novas, do redesenho de 25/09:
 50. **O placar só pode ser reenviado até a edição ser encerrada**
     (decisão 27): `AcaoForaDaFaseError` depois disso, e também antes de a
     edição ir à votação.
+51. **A cédula da web não mostra os votos gravados, nem ao próprio
+    eleitor:** sem login individual, quem entra no site poderia abrir a
+    cédula de qualquer um (decisão 26). Mostra só em que categorias já há
+    voto; para mudar, vota-se de novo.
+52. **A cédula da web grava todas as categorias num formulário só:**
+    categoria deixada em branco fica como estava; incompleta vira aviso,
+    sem impedir as outras.
+53. **O formulário de nomeação lista só os filmes que o clube assistiu
+    no ano da edição** — os únicos que o domínio aceita.
 
 ## Dívidas técnicas conhecidas
 

@@ -21,7 +21,8 @@ para virar produto multi-clube.
 - Fases 1–3 concluídas; Fase 4 com a API pronta, migrações com Alembic e
   a web em construção: base, senha do clube e as páginas do dia a dia
   (painel com as ações da rodada, membros, filmes, rodadas, sessões e
-  avaliações) prontas; falta o Óscar — ver [docs/WEB.md](docs/WEB.md).
+  avaliações) e o Óscar até a votação e o envio do placar prontos;
+  falta o registro dos vencedores — ver [docs/WEB.md](docs/WEB.md).
 - Revisão de regras de 24/09/2026 quase toda implementada (duração,
   reativação, data do evento, só presentes avaliam, média como fração em
   estrelas, filme não se repete, uma edição por ano, nomeações fixas por
@@ -30,10 +31,10 @@ para virar produto multi-clube.
   fixados no início, cédula confirmada, desempates automáticos, placar
   **só por e-mail** (ninguém vê resultado no sistema) e vencedores
   registrados por quem administra depois do evento.
-- A etapa (a) da votação está pronta (eleitores, cédulas, confirmação e
-  desempates; revisão 0005). **Próximo passo:** a etapa (b), o placar
-  por e-mail, e depois a (c), os vencedores registrados por quem
-  administra (que remove o critério antigo de apuração). O desenho
+- As etapas (a) e (b) da votação estão prontas (eleitores, cédulas,
+  confirmação, desempates e o placar por e-mail). **Próximo passo:** a
+  etapa (c), os vencedores registrados por quem administra (que remove o
+  critério antigo de apuração), com a tela de premiação na web. O desenho
   completo e as notas técnicas estão em "Desenho da votação" e "Como
   continuar", no [ROADMAP](docs/ROADMAP.md); depois dela, as páginas da
   web.

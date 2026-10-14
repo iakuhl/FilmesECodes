@@ -25,6 +25,7 @@ from filmes_e_cubos.adapters.interfaces.web.rotas import (
     filmes,
     inicio,
     membros,
+    oscar,
     rodadas,
     sessoes,
 )
@@ -47,7 +48,7 @@ def criar_web(contexto: Contexto, *, senha: str | None = None) -> FastAPI:
     def icone() -> RedirectResponse:
         return RedirectResponse("/estaticos/icone.svg")
 
-    for modulo in (acesso, inicio, membros, filmes, rodadas, sessoes):
+    for modulo in (acesso, inicio, membros, filmes, rodadas, sessoes, oscar):
         web.include_router(modulo.roteador)
     registrar_paginas_de_erro(web)
     return web

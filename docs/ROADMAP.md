@@ -403,10 +403,11 @@ produção, só a pedido do dono (decisão 37).
    3. ✅ páginas do dia a dia, conforme o plano da seção da Fase 4: início,
       painel da rodada, membros, filmes, histórico de rodadas, sessões e
       avaliações;
-   4. **próximo:** Óscar até a votação: edições, categorias, nomeações, cédula e
+   4. ✅ Óscar até a votação: edições, categorias, nomeações, cédula e
       confirmação — e, com elas, a etapa (b) da votação, o placar por
       e-mail;
-   5. etapa (c) da votação, os vencedores, com a tela de premiação.
+   5. **próximo:** etapa (c) da votação, os vencedores, com a tela de
+      premiação.
 2. Notas técnicas das etapas (b) e (c) da votação:
    - (b) `EnderecoDeEmail` (value object) e os erros
      `EnderecoDeEmailInvalidoError` (422), `VotacaoEmAndamentoError` (409)

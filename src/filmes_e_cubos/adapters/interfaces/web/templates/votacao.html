@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}Votação · {{ temporada.nome }}{% endblock %}
+{% block conteudo %}
+<p class="suave"><a href="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}">{{ temporada.nome }}</a></p>
+<h1>Votação</h1>
+
+{% if situacao.votacao.encerrada %}
+<p class="nota">A votação terminou. O placar só sai por e-mail — envie-o na <a href="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}">página da edição</a>.</p>
+{% else %}
+<p>{{ situacao.votacao.turno_atual }}º turno — {{ situacao.disputas | length }} {{ "categoria" if situacao.disputas | length == 1 else "categorias" }} em disputa.
+  Cada eleitor vota em todas e confirma a cédula; com a última confirmação, o turno se encerra.</p>
+{% endif %}
+
+<section class="cartao">
+  <h2>Eleitores</h2>
+  <p class="suave">O voto é secreto: aqui aparece só quem já votou, nunca em quê.</p>
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th>Membro</th><th>Cédula</th><th></th></tr></thead>
+    <tbody>
+      {% for eleitor in situacao.eleitores %}
+      <tr>
+        <td>{{ eleitor.membro.nome }}</td>
+        <td>
+          {% if eleitor.confirmou %}<span class="etiqueta etiqueta--confirmada">Confirmada</span>
+          {% else %}votou em {{ eleitor.categorias_votadas }} de {{ situacao.disputas | length }}{% endif %}
+        </td>
+        <td class="acoes">
+          {% if not situacao.votacao.encerrada and not eleitor.confirmou %}
+          <a class="botao botao--pequeno" href="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/votacao/{{ eleitor.membro.id }}">Votar</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

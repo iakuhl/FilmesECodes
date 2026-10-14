@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}{{ categoria.categoria.nome }}{% endblock %}
+{% block conteudo %}
+<p class="suave"><a href="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}">{{ temporada.nome }}</a></p>
+<div class="cabecalho">
+  <h1>{{ categoria.categoria.nome }}</h1>
+  <span class="etiqueta">{{ categoria.categoria.tipo | rotulo }}</span>
+</div>
+{% if categoria.categoria.descricao %}<p class="suave">{{ categoria.categoria.descricao }}</p>{% endif %}
+
+<section class="cartao">
+  <h2>Nomeações ({{ categoria.nomeacoes | length }}/{{ temporada.nomeacoes_por_categoria }})</h2>
+  {% if categoria.nomeacoes %}
+  <ol>
+    {% for item in categoria.nomeacoes %}
+    <li>{{ item.filme.titulo if item.filme else "—" }} — {% if item.indicado_por %}indicado por {{ item.indicado_por.nome }}{% else %}sessão democracia{% endif %}</li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="vazio">Nenhuma nomeação ainda.</p>
+  {% endif %}
+
+  {% if aceita_nomeacoes %}
+  {% if filmes %}
+  <form method="post" action="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/categorias/{{ categoria.categoria.id }}/nomeacoes" class="formulario formulario--linha">
+    <label>Filme assistido em {{ temporada.ano }}
+      <select name="filme_id" required>
+        {% for filme in filmes %}<option value="{{ filme.id }}">{{ filme.titulo }}</option>{% endfor %}
+      </select>
+    </label>
+    <button class="botao">Nomear</button>
+  </form>
+  <p class="suave">O mesmo filme pode ocupar mais de uma nomeação; o troféu vai para quem o indicou.</p>
+  {% else %}
+  <p class="vazio">O clube ainda não assistiu a nenhum filme em {{ temporada.ano }}.</p>
+  {% endif %}
+  {% elif temporada.status.name == "EM_PREPARACAO" %}
+  <p class="suave">As nomeações abrem quando a edição avança para “Aberta para indicações”.</p>
+  {% endif %}
+</section>
+{% endblock %}

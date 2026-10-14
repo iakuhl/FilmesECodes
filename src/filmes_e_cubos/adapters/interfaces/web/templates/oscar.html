@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Óscar{% endblock %}
+{% block conteudo %}
+<h1>Óscar</h1>
+
+<section class="cartao">
+  {% if edicoes %}
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th>Edição</th><th>Ano</th><th>Fase</th><th>Evento</th></tr></thead>
+    <tbody>
+      {% for edicao in edicoes %}
+      <tr>
+        <td><a href="/clubes/{{ clube.id }}/oscar/{{ edicao.id }}">{{ edicao.nome }}</a></td>
+        <td>{{ edicao.ano }}</td>
+        <td><span class="etiqueta">{{ edicao.status | rotulo }}</span></td>
+        <td>{{ edicao.data_evento | data }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="vazio">Nenhuma edição ainda.</p>
+  {% endif %}
+</section>
+
+<section class="cartao cartao--estreito">
+  <h2>Abrir edição</h2>
+  <form method="post" action="/clubes/{{ clube.id }}/oscar" class="formulario">
+    <label>Ano <input name="ano" inputmode="numeric" value="{{ ano_corrente }}"></label>
+    <label>Nome <input name="nome" placeholder="Óscar do {{ clube.nome }} {{ ano_corrente }}"></label>
+    <label>Nomeações por categoria
+      <input name="nomeacoes_por_categoria" inputmode="numeric" value="{{ nomeacoes_padrao }}">
+      <small class="suave">Todas as categorias da edição terão esse número (mínimo 2).</small>
+    </label>
+    <button class="botao">Abrir edição</button>
+  </form>
+  <p class="suave">Uma edição por ano.</p>
+</section>
+{% endblock %}

@@ -9,6 +9,7 @@ rodada positivo) continuam sendo validadas pelo domínio.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Final
 from uuid import UUID
@@ -47,6 +48,14 @@ def decimal_opcional(texto: str, *, campo: str) -> Decimal | None:
     if not valor.is_finite():
         raise FormularioInvalidoError(f"{campo}: {texto!r} não é um número.")
     return valor
+
+
+def data_obrigatoria(texto: str, *, campo: str) -> date:
+    """Uma data de `<input type="date">` (`AAAA-MM-DD`); vazia ou malformada é recusada."""
+    try:
+        return date.fromisoformat(texto.strip())
+    except ValueError as erro:
+        raise FormularioInvalidoError(f"{campo}: informe uma data válida.") from erro
 
 
 def id_escolhido(texto: str, *, campo: str) -> UUID:

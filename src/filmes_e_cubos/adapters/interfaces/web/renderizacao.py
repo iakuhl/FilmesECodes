@@ -51,6 +51,7 @@ _ambiente.globals["secoes_do_clube"] = (
     ("membros", "Membros", "/membros"),
     ("filmes", "Filmes", "/filmes"),
     ("rodadas", "Rodadas", "/rodadas"),
+    ("oscar", "Óscar", "/oscar"),
 )
 _modelos = Jinja2Templates(env=_ambiente)
 

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titulo %}Cédula de {{ eleitor.membro.nome }}{% endblock %}
+{% block conteudo %}
+<p class="suave"><a href="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/votacao">Votação · {{ temporada.nome }}</a></p>
+<h1>Cédula de {{ eleitor.membro.nome }}</h1>
+
+{% if eleitor.confirmou %}
+<p class="nota">Cédula confirmada: os votos não mudam mais.</p>
+{% elif situacao.votacao.encerrada or not situacao.disputas %}
+<p class="vazio">Não há categoria em disputa agora.</p>
+{% else %}
+<p>{{ situacao.votacao.turno_atual }}º turno. Os votos ficam guardados em segredo — esta página não os mostra
+  depois de gravados. Votar de novo numa categoria troca o voto, até a cédula ser confirmada.</p>
+
+<form method="post" action="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/votacao/{{ eleitor.membro.id }}/votos" class="formulario">
+  {% for disputa in situacao.disputas %}
+  {% set lugares = 2 if disputa.turno.modo == dupla else disputa.candidatas | length %}
+  <fieldset>
+    <legend>{{ disputa.categoria.nome }}</legend>
+    <p class="suave">
+      {% if disputa.turno.modo == dupla %}A 1ª opção vale 2 pontos; a 2ª, 1. Escolha duas nomeações diferentes.
+      {% else %}Desempate por classificação: ordene todas as candidatas.{% endif %}
+      {% if disputa.categoria.id in votadas %}<strong>Você já votou aqui.</strong>{% endif %}
+    </p>
+    <div class="formulario--linha">
+      {% for lugar in range(1, lugares + 1) %}
+      <label>{% if disputa.turno.modo == dupla %}{{ lugar }}ª opção{% else %}{{ lugar }}º lugar{% endif %}
+        <select name="escolhas">
+          <option value="">—</option>
+          {% for nomeacao in disputa.candidatas %}
+          <option value="{{ disputa.categoria.id }}|{{ lugar }}|{{ nomeacao.id }}">{{ loop.index }}. {{ rotulos[nomeacao.id] }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% endfor %}
+  <button class="botao">Gravar votos</button>
+</form>
+
+<section class="cartao cartao--estreito">
+  <h2>Confirmar a cédula</h2>
+  <p class="suave">Depois de votar em todas as categorias. Confirmada, a cédula não muda mais.</p>
+  <form method="post" action="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/votacao/{{ eleitor.membro.id }}/confirmacao">
+    <button class="botao">Confirmar cédula</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

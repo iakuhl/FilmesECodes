@@ -211,3 +211,10 @@ legend { padding: 0 0.35rem; font-weight: 600; }
 td.acoes .formulario--linha { justify-content: flex-end; flex-wrap: nowrap; }
 td.acoes input { width: 5rem; }
 h3 { margin-top: 1.5rem; }
+.nota {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border-left: 4px solid var(--ouro);
+  background: var(--superficie);
+  border-radius: 0 8px 8px 0;
+}

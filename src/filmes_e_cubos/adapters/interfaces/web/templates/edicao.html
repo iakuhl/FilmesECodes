@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% set temporada = edicao.temporada %}
+{% block titulo %}{{ temporada.nome }}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <h1>{{ temporada.nome }}</h1>
+  <span class="etiqueta">{{ temporada.status | rotulo }}</span>
+</div>
+
+<div class="grade">
+  <section class="cartao">
+    <h2>Fase</h2>
+    <p>{{ temporada.status | rotulo }} · {{ temporada.nomeacoes_por_categoria }} nomeações por categoria.</p>
+    {% if temporada.proximo_status %}
+    <form method="post" action="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/avancar">
+      <button class="botao botao--secundario">Avançar para “{{ temporada.proximo_status | rotulo }}”</button>
+    </form>
+    {% endif %}
+  </section>
+
+  <section class="cartao">
+    <h2>Evento</h2>
+    <p>{{ temporada.data_evento | data }}</p>
+    {% if temporada.status.name != "ENCERRADA" %}
+    <form method="post" action="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/data-evento" class="formulario formulario--linha">
+      <label>Data <input type="date" name="data_evento" value="{{ temporada.data_evento.isoformat() if temporada.data_evento else '' }}" required></label>
+      <button class="botao botao--secundario">Marcar</button>
+    </form>
+    {% endif %}
+  </section>
+
+  {% if situacao %}
+  <section class="cartao">
+    <h2>Votação</h2>
+    {% if situacao.votacao.encerrada %}
+    <p>Terminada. O placar só sai por e-mail, para quem monta a cerimônia.</p>
+    {% if temporada.status.name != "ENCERRADA" %}
+    <form method="post" action="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/placar" class="formulario">
+      <label>E-mail de quem monta a cerimônia <input type="email" name="destinatario" required></label>
+      <button class="botao">Enviar o placar</button>
+    </form>
+    {% endif %}
+    {% else %}
+    {% set confirmadas = situacao.eleitores | selectattr("confirmou") | list %}
+    <p>{{ situacao.votacao.turno_atual }}º turno · {{ confirmadas | length }} de {{ situacao.eleitores | length }} cédulas confirmadas.</p>
+    <p><a class="botao" href="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/votacao">Ir à votação</a></p>
+    {% endif %}
+  </section>
+  {% endif %}
+</div>
+
+<h2>Categorias</h2>
+<section class="cartao">
+  {% if edicao.categorias %}
+  <div class="tabela-rolavel">
+  <table>
+    <thead><tr><th>Categoria</th><th>Tipo</th><th>Nomeações</th></tr></thead>
+    <tbody>
+      {% for item in edicao.categorias %}
+      <tr>
+        <td><a href="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/categorias/{{ item.categoria.id }}">{{ item.categoria.nome }}</a>
+          {% if item.categoria.descricao %}<br><small class="suave">{{ item.categoria.descricao }}</small>{% endif %}</td>
+        <td>{{ item.categoria.tipo | rotulo }}</td>
+        <td>{{ item.nomeacoes | length }}/{{ temporada.nomeacoes_por_categoria }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="vazio">Nenhuma categoria ainda.</p>
+  {% endif %}
+
+  {% if temporada.status.name in ("EM_PREPARACAO", "ABERTA_PARA_INDICACOES") %}
+  <h3>Nova categoria</h3>
+  <form method="post" action="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/categorias" class="formulario formulario--linha">
+    <label>Nome <input name="nome" required placeholder="Melhor veículo"></label>
+    <label>Tipo
+      <select name="tipo">
+        <option value="VARIAVEL">Variável (só desta edição)</option>
+        <option value="FIXA">Fixa (todo ano)</option>
+      </select>
+    </label>
+    <label>Descrição <input name="descricao"></label>
+    <button class="botao">Criar</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

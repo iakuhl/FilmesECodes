@@ -33,5 +33,11 @@ de uso da CLI e da API.
 | `/clubes/{id}/indicacoes/{indicacao_id}/sessao` | Registrar a sessão de uma indicação: quem estava presente (os membros ativos vêm marcados). Se a sessão já existe, leva a ela. |
 | `/clubes/{id}/sessoes/{sessao_id}` | A sessão: presentes, avaliações e a média em estrelas; o formulário de avaliação oferece só os presentes que ainda não avaliaram (decisão 4), com as notas da escala do clube e a opção "cochilou". |
 
+| `/clubes/{id}/oscar` | As edições do Óscar do clube e o formulário para abrir a do ano (uma por ano), com o número de nomeações por categoria. |
+| `/clubes/{id}/oscar/{edicao_id}` | A edição: a fase (com o botão de avançar para a seguinte), a data do evento, as categorias (e a criação de novas, na preparação e nas indicações) e a votação — andamento enquanto corre; depois, o formulário que envia o placar por e-mail. |
+| `/clubes/{id}/oscar/{edicao_id}/categorias/{categoria_id}` | As nomeações da categoria e, com a edição aberta para indicações, o formulário para nomear um dos filmes que o clube assistiu no ano da edição. |
+| `/clubes/{id}/oscar/{edicao_id}/votacao` | Os eleitores, com quem já confirmou e em quantas categorias cada um votou — nunca em quê — e o link para a cédula de cada um. |
+| `/clubes/{id}/oscar/{edicao_id}/votacao/{membro_id}` | A cédula: em cada categoria do turno, a 1ª e a 2ª opção (ou, num desempate por classificação, a ordem de todas), e o botão de confirmar. Os votos gravados não voltam à tela — nem para o próprio eleitor —, só a marca "você já votou aqui"; votar de novo troca o voto até a confirmação. |
+
 Ids que pertencem a outro clube não abrem pelas páginas deste: viram a
 página "Ops" (404) ou, numa ação, um aviso de "não encontrado".
