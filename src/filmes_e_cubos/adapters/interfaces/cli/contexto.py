@@ -23,6 +23,7 @@ from filmes_e_cubos.adapters.persistence.sqlite.fabrica_engine import (
     criar_engine_da_url,
 )
 from filmes_e_cubos.application.ports.criterio_apuracao_oscar import CriterioApuracaoOscar
+from filmes_e_cubos.application.ports.enviador_de_email import EnviadorDeEmail
 from filmes_e_cubos.application.ports.relogio_service import RelogioService
 from filmes_e_cubos.application.ports.sorteador_service import SorteadorService
 
@@ -51,12 +52,14 @@ class FabricaDeContexto:
         relogio: RelogioService | None = None,
         sorteador: SorteadorService | None = None,
         criterio_apuracao: CriterioApuracaoOscar | None = None,
+        enviador: EnviadorDeEmail | None = None,
     ) -> None:
         self.caminho_banco = caminho_banco
         self.url_banco = url_banco
         self._relogio = relogio
         self._sorteador = sorteador
         self._criterio_apuracao = criterio_apuracao
+        self._enviador = enviador
 
     @cached_property
     def contexto(self) -> Contexto:
@@ -69,6 +72,7 @@ class FabricaDeContexto:
             engine,
             relogio=self._relogio,
             sorteador=self._sorteador,
+            enviador=self._enviador,
         )
 
     @cached_property

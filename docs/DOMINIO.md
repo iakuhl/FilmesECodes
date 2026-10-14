@@ -264,6 +264,12 @@ a categoria; topo empatado entre parte das candidatas abre um turno
 um **empate absoluto** — nenhuma vence, e a categoria também está
 decidida.
 
+### EnderecoDeEmail (value object)
+
+O destinatário do placar do Óscar: conferido só na forma
+(`alguem@dominio.tld`, sem espaços); se a caixa existe, só o servidor de
+e-mail sabe.
+
 ### Cedula
 
 As escolhas de um eleitor num turno da votação, categoria por categoria.

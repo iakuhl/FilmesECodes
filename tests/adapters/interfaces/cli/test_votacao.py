@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from filmes_e_cubos.adapters.interfaces.cli.contexto import FabricaDeContexto
+from filmes_e_cubos.adapters.interfaces.cli.main import app
 from tests.adapters.interfaces.cli.conftest import CliDeTeste
+from tests.application.fakes.enviador_de_email_fake import EnviadorDeEmailFake
 
 
 @pytest.fixture
@@ -153,3 +156,37 @@ def test_votacao_antes_da_fase_de_votacao(cli: CliDeTeste, clube_id: str) -> Non
 
 def _linha_do_eleitor(saida: str, nome: str) -> str:
     return next(linha for linha in saida.splitlines() if linha.startswith(nome))
+
+
+def test_enviar_placar_da_votacao_terminada(
+    cli: CliDeTeste, categoria_em_votacao: str, membro_id: str, outro_membro_id: str
+) -> None:
+    for eleitor in (membro_id, outro_membro_id):
+        _votar(cli, eleitor, categoria_em_votacao, "1", "2")
+        cli.executar_ok("oscar", "confirmar", "--membro-id", eleitor)
+    correio = EnviadorDeEmailFake()
+
+    resultado = cli.runner.invoke(
+        app,
+        ["--db-path", str(cli.caminho_banco), "oscar", "enviar-placar", "cerimonia@clube.com"],
+        obj=FabricaDeContexto(cli.caminho_banco, enviador=correio),
+    )
+
+    assert resultado.exit_code == 0, resultado.output
+    assert "enviado para cerimonia@clube.com" in resultado.stdout
+    assert "Parasita" not in resultado.stdout  # o placar não aparece na tela
+    [mensagem] = correio.enviadas
+    assert "Parasita — indicado por Iano" in mensagem.corpo
+
+
+def test_enviar_placar_sem_servidor_de_email(
+    cli: CliDeTeste, categoria_em_votacao: str, membro_id: str, outro_membro_id: str
+) -> None:
+    for eleitor in (membro_id, outro_membro_id):
+        _votar(cli, eleitor, categoria_em_votacao, "1", "2")
+        cli.executar_ok("oscar", "confirmar", "--membro-id", eleitor)
+
+    resultado = cli.executar("oscar", "enviar-placar", "cerimonia@clube.com")
+
+    assert resultado.exit_code == 1
+    assert "FILMES_E_CUBOS_SMTP_SERVIDOR" in resultado.stderr

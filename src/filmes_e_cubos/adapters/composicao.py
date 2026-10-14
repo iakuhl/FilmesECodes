@@ -71,6 +71,7 @@ from filmes_e_cubos.adapters.persistence.sqlite.turno_de_votacao_repository_sqli
 from filmes_e_cubos.adapters.persistence.sqlite.votacao_oscar_repository_sqlite import (
     VotacaoOscarRepositorioSqlite,
 )
+from filmes_e_cubos.adapters.servicos.enviador_smtp import enviador_do_ambiente
 from filmes_e_cubos.adapters.servicos.relogio_sistema import RelogioSistema
 from filmes_e_cubos.adapters.servicos.sorteador_aleatorio import SorteadorAleatorio
 from filmes_e_cubos.application.ports.avaliacao_repository import AvaliacaoRepository
@@ -78,6 +79,7 @@ from filmes_e_cubos.application.ports.categoria_oscar_repository import Categori
 from filmes_e_cubos.application.ports.cedula_repository import CedulaRepository
 from filmes_e_cubos.application.ports.clube_repository import ClubeRepository
 from filmes_e_cubos.application.ports.criterio_apuracao_oscar import CriterioApuracaoOscar
+from filmes_e_cubos.application.ports.enviador_de_email import EnviadorDeEmail
 from filmes_e_cubos.application.ports.filme_repository import FilmeRepository
 from filmes_e_cubos.application.ports.indicacao_repository import IndicacaoRepository
 from filmes_e_cubos.application.ports.membro_repository import MembroRepository
@@ -110,6 +112,7 @@ from filmes_e_cubos.application.use_cases.definir_data_evento_oscar import Defin
 from filmes_e_cubos.application.use_cases.definir_duracao_filme import DefinirDuracaoFilme
 from filmes_e_cubos.application.use_cases.desativar_membro import DesativarMembro
 from filmes_e_cubos.application.use_cases.encerrar_rodada import EncerrarRodada
+from filmes_e_cubos.application.use_cases.enviar_placar_oscar import EnviarPlacarOscar
 from filmes_e_cubos.application.use_cases.indicar_filme import IndicarFilme
 from filmes_e_cubos.application.use_cases.indicar_filme_para_categoria import (
     IndicarFilmeParaCategoria,
@@ -140,9 +143,11 @@ class Contexto:
     listagens de leitura, que não têm caso de uso próprio — ver a ADR 7 em
     docs/ARQUITETURA.md).
 
-    `relogio` e `sorteador` são opcionais para que testes e embarcadores
-    possam trocar as implementações reais por outras (um relógio fixo, um
-    sorteio determinístico) sem mexer em nenhuma interface.
+    `relogio`, `sorteador` e `enviador` são opcionais para que testes e
+    embarcadores possam trocar as implementações reais por outras (um
+    relógio fixo, um sorteio determinístico, um e-mail que não sai da
+    máquina) sem mexer em nenhuma interface. O enviador padrão é o SMTP
+    configurado pelo ambiente — desligado, se não houver servidor.
     """
 
     def __init__(
@@ -151,8 +156,10 @@ class Contexto:
         *,
         relogio: RelogioService | None = None,
         sorteador: SorteadorService | None = None,
+        enviador: EnviadorDeEmail | None = None,
     ) -> None:
         self.relogio: RelogioService = relogio or RelogioSistema()
+        self.enviador: EnviadorDeEmail = enviador or enviador_do_ambiente()
         sorteador = sorteador or SorteadorAleatorio()
 
         self.clubes: ClubeRepository = ClubeRepositorioSqlite(engine)
@@ -260,6 +267,16 @@ class Contexto:
             votacao_repository=self.votacoes,
             turno_repository=self.turnos,
             cedula_repository=self.cedulas,
+        )
+        self.enviar_placar_oscar = EnviarPlacarOscar(
+            temporada_repository=self.temporadas,
+            categoria_repository=self.categorias,
+            nomeacao_repository=self.nomeacoes,
+            filme_repository=self.filmes,
+            membro_repository=self.membros,
+            votacao_repository=self.votacoes,
+            turno_repository=self.turnos,
+            enviador=self.enviador,
         )
         self.confirmar_cedula = ConfirmarCedula(
             temporada_repository=self.temporadas,

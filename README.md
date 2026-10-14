@@ -117,6 +117,8 @@ dependências a partir do `pyproject.toml` e do `uv.lock`.
 |---|---|---|
 | `DATABASE_URL` | sim | URL do Postgres (a integração da Neon define). |
 | `FILMES_E_CUBOS_SENHA` | sim | A senha do clube, pedida para entrar no site e para usar a API (`Authorization: Bearer <senha>`). Sem ela, o site não abre na Vercel. |
+| `FILMES_E_CUBOS_SMTP_SERVIDOR` | para o placar | Servidor de e-mail (SMTP) que envia o placar do Óscar. Sem ele, o resto funciona, mas o placar não sai. |
+| `FILMES_E_CUBOS_SMTP_PORTA`, `_SEGURANCA`, `_USUARIO`, `_SENHA`, `_REMETENTE` | conforme o servidor | Porta (587), segurança (`starttls`, `ssl` ou `nenhuma`), login e remetente — ver `adapters/servicos/enviador_smtp.py`. |
 | `FILMES_E_CUBOS_CHAVE_SECRETA` | não | Chave que assina o cookie da sessão. Sem ela, uma é derivada da senha — trocar a senha desconecta todo mundo. |
 
 Sem `DATABASE_URL`, o app usa um arquivo SQLite — o que só serve

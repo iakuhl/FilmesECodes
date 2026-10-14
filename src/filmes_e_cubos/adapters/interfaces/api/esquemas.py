@@ -633,6 +633,14 @@ class ConfirmacaoSaida(BaseModel):
     votacao: VotacaoSaida
 
 
+class NovoEnvioDoPlacar(_Entrada):
+    destinatario: str = Field(description="E-mail de quem monta a cerimônia.")
+
+
+class EnvioDoPlacarSaida(BaseModel):
+    destinatario: str
+
+
 class TrofeuSaida(BaseModel):
     id: UUID
     categoria_id: UUID

@@ -44,6 +44,7 @@ FilmesECodes/
 │           │       ├── migracao.py    # Fase 4: leva o banco à revisão mais recente
 │           │       └── migracoes/     # Fase 4: env.py do Alembic e versions/
 │           ├── servicos/              # ✅ Fase 2: RelogioSistema, SorteadorAleatorio;
+│           │                          # Fase 4: EnviadorSmtp (e-mail do placar);
 │           │                          # Fase 4: CriterioEscolhaInformada
 │           └── interfaces/
 │               ├── convencoes.py      # padrões deduzidos, iguais em todas as interfaces

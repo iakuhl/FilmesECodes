@@ -81,3 +81,7 @@ class CategoriaForaDoTurnoError(DomainError):
 
 class VotacaoEncerradaError(DomainError):
     """Levantada ao votar, confirmar ou apurar depois de a votação (ou o turno) terminar."""
+
+
+class VotacaoEmAndamentoError(DomainError):
+    """Levantada quando uma ação precisa da votação terminada (ex.: enviar o placar)."""

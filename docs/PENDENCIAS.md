@@ -389,6 +389,17 @@ Novas, do redesenho de 25/09:
     já passou pelo clube é recusado com a mensagem da regra (decisão 5).
     Esconder esses filmes da lista exigiria percorrer todas as rodadas a
     cada abertura do painel; fica para quando o catálogo crescer.
+48. **O texto do placar é montado na aplicação** (`_placar_oscar.py`), e
+    não num adapter: é o documento que o produto envia, e o port de
+    e-mail fica genérico (ADR 14).
+49. **O servidor de e-mail é configurado por `FILMES_E_CUBOS_SMTP_*`**
+    (servidor, porta, segurança, usuário, senha, remetente). Sem servidor,
+    o envio é recusado com instrução (503); recusa ou silêncio do servidor
+    viram 502. Os testes do adapter conversam com um servidor SMTP mínimo
+    que sobe dentro do próprio teste, sem dependência nova.
+50. **O placar só pode ser reenviado até a edição ser encerrada**
+    (decisão 27): `AcaoForaDaFaseError` depois disso, e também antes de a
+    edição ir à votação.
 
 ## Dívidas técnicas conhecidas
 

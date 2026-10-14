@@ -355,7 +355,7 @@ as cédulas nem o placar (decisão 26).
 
 Ordem de implementação, um commit por etapa: **(a)** ✅ votação —
 eleitores, turnos, cédulas, confirmação e desempates (revisão 0005);
-**(b)** placar por e-mail; **(c)** vencedores registrados e remoção do
+**(b)** ✅ placar por e-mail; **(c)** vencedores registrados e remoção do
 critério antigo (revisão 0007; a 0006 foi a da ordem de criação, que o
 Postgres pediu).
 

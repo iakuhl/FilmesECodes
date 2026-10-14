@@ -25,6 +25,11 @@ from filmes_e_cubos.domain.exceptions.clube import (
     NomeClubeObrigatorioError,
     TamanhoRodadaInvalidoError,
 )
+from filmes_e_cubos.domain.exceptions.email import (
+    EnderecoDeEmailInvalidoError,
+    EnvioDeEmailIndisponivelError,
+    FalhaNoEnvioDeEmailError,
+)
 from filmes_e_cubos.domain.exceptions.filme import (
     DuracaoFilmeInvalidaError,
     TituloFilmeObrigatorioError,
@@ -52,6 +57,7 @@ from filmes_e_cubos.domain.exceptions.oscar import (
     TemporadaOscarDuplicadaError,
     TemporadaOscarInvalidaError,
     VencedorDemocraciaNaoInformadoError,
+    VotacaoEmAndamentoError,
     VotacaoEncerradaError,
     VotoInvalidoError,
 )
@@ -92,12 +98,14 @@ _CONFLITO: Final[tuple[type[DomainError], ...]] = (
     TemporadaOscarDuplicadaError,
     TemporadaOscarInvalidaError,
     TransicaoDeStatusInvalidaError,
+    VotacaoEmAndamentoError,
     VotacaoEncerradaError,
 )
 
 # Os dados enviados violam uma regra de negócio, independentemente do estado.
 _ENTRADA_INVALIDA: Final[tuple[type[DomainError], ...]] = (
     DuracaoFilmeInvalidaError,
+    EnderecoDeEmailInvalidoError,
     EscalaAvaliacaoInvalidaError,
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,
@@ -118,11 +126,17 @@ _ENTRADA_INVALIDA: Final[tuple[type[DomainError], ...]] = (
 # O cliente não fez nada de errado.
 _FALHA_INTERNA: Final[tuple[type[DomainError], ...]] = (IndicacaoNaoElegivelParaSorteioError,)
 
+# Um serviço de fora (o servidor de e-mail) falhou ou nem está configurado.
+_FALHA_DE_SERVICO_EXTERNO: Final[tuple[type[DomainError], ...]] = (FalhaNoEnvioDeEmailError,)
+_SERVICO_INDISPONIVEL: Final[tuple[type[DomainError], ...]] = (EnvioDeEmailIndisponivelError,)
+
 STATUS_HTTP_POR_ERRO: Final[dict[type[DomainError], int]] = {
     **dict.fromkeys(_NAO_ENCONTRADO, HTTPStatus.NOT_FOUND),
     **dict.fromkeys(_CONFLITO, HTTPStatus.CONFLICT),
     **dict.fromkeys(_ENTRADA_INVALIDA, HTTPStatus.UNPROCESSABLE_ENTITY),
     **dict.fromkeys(_FALHA_INTERNA, HTTPStatus.INTERNAL_SERVER_ERROR),
+    **dict.fromkeys(_FALHA_DE_SERVICO_EXTERNO, HTTPStatus.BAD_GATEWAY),
+    **dict.fromkeys(_SERVICO_INDISPONIVEL, HTTPStatus.SERVICE_UNAVAILABLE),
 }
 """Status HTTP de cada erro de domínio. Um erro não listado cai em 422."""
 

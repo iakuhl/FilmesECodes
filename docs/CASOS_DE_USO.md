@@ -190,6 +190,20 @@ os ports (repositórios/serviços) de que depende.
   diferentes entre as candidatas (podem ser do mesmo filme); na
   classificação, a ordem completa.
 
+### EnviarPlacarOscar
+- **Intenção**: mandar o placar da votação a quem monta a cerimônia, sem
+  mostrá-lo a ninguém no sistema (decisão 27).
+- **Ports**: `TemporadaOscarRepository`, `CategoriaOscarRepository`,
+  `NomeacaoOscarRepository`, `FilmeRepository`, `MembroRepository`,
+  `VotacaoOscarRepository`, `TurnoDeVotacaoRepository`, `EnviadorDeEmail`.
+- **Regras**: a edição não pode estar encerrada nem antes da votação
+  (`AcaoForaDaFaseError`); a votação precisa ter terminado, sem empate a
+  desfazer (`VotacaoEmAndamentoError`); o destinatário precisa ter a forma
+  de um e-mail (`EnderecoDeEmailInvalidoError`). O corpo traz, por
+  categoria, os pontos de cada nomeação em cada turno, em ordem, e
+  assinala o empate absoluto e a vitória de um filme democracia
+  (interpretação 15). Pode ser repetido, ao mesmo ou a outro endereço.
+
 ### ConfirmarCedula
 - **Intenção**: travar a cédula de um eleitor no turno atual e, se era a
   última, encerrar o turno.

@@ -26,6 +26,7 @@ from filmes_e_cubos.domain.exceptions.avaliacao import (
     MembroAusenteNaSessaoError,
 )
 from filmes_e_cubos.domain.exceptions.base import DomainError
+from filmes_e_cubos.domain.exceptions.email import EnderecoDeEmailInvalidoError
 from filmes_e_cubos.domain.exceptions.indicacao import (
     FilmeRepetidoNoClubeError,
     IndicacaoDuplicadaError,
@@ -43,6 +44,7 @@ from filmes_e_cubos.domain.exceptions.oscar import (
     NomeacaoInvalidaError,
     TemporadaOscarDuplicadaError,
     VencedorDemocraciaNaoInformadoError,
+    VotacaoEmAndamentoError,
     VotacaoEncerradaError,
 )
 from filmes_e_cubos.domain.exceptions.rodada import (
@@ -63,6 +65,7 @@ MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
     CategoriaForaDoTurnoError: "Essa categoria não está em disputa neste turno da votação.",
     CategoriaJaApuradaError: "Essa categoria já foi apurada.",
     CedulaConfirmadaError: "Essa cédula já foi confirmada: os votos não mudam mais.",
+    EnderecoDeEmailInvalidoError: "Esse endereço de e-mail não parece válido.",
     FilmeNaoAssistidoError: "Esse filme ainda não foi assistido pelo clube.",
     FilmeNaoAssistidoNoAnoDaTemporadaError: (
         "Só concorrem filmes assistidos pelo clube no ano desta edição."
@@ -87,6 +90,10 @@ MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
     TemporadaOscarDuplicadaError: "O clube já tem a edição do Óscar desse ano.",
     TransicaoDeStatusInvalidaError: "Essa indicação já foi assistida.",
     VotacaoEncerradaError: "A votação desta edição já terminou.",
+    VotacaoEmAndamentoError: (
+        "A votação ainda não terminou: o placar só sai quando todos tiverem confirmado "
+        "e não restar empate."
+    ),
     VencedorDemocraciaNaoInformadoError: (
         "O filme vencedor veio de uma sessão democracia: escolha quem leva o troféu."
     ),

@@ -15,11 +15,13 @@ from filmes_e_cubos.adapters.interfaces.api.esquemas import (
     CategoriaSaida,
     CedulaSaida,
     ConfirmacaoSaida,
+    EnvioDoPlacarSaida,
     NomeacaoSaida,
     NovaCategoria,
     NovaDataDoEvento,
     NovaNomeacao,
     NovaTemporada,
+    NovoEnvioDoPlacar,
     NovoVoto,
     PedidoDeApuracao,
     TemporadaSaida,
@@ -228,6 +230,23 @@ def confirmar_cedula(
         turno_encerrado=resultado.turno_encerrado,
         votacao=VotacaoSaida.de_situacao(situacao_da_votacao(contexto, temporada)),
     )
+
+
+@roteador.post(
+    "/oscar/temporadas/{temporada_id}/placar/envios",
+    summary="Envia o placar da votação por e-mail",
+    description="O placar não aparece em nenhuma resposta (decisão 27): vai direto para o "
+    "e-mail de quem monta a cerimônia. Só com a votação terminada (`409` `votacao_em_andamento`) "
+    "e até a edição ser encerrada; pode ser reenviado. `503` `envio_de_email_indisponivel` sem "
+    "servidor de e-mail configurado; `502` `falha_no_envio_de_email` se ele recusar.",
+)
+def enviar_placar(
+    temporada_id: UUID, envio: NovoEnvioDoPlacar, contexto: ContextoDep
+) -> EnvioDoPlacarSaida:
+    endereco = contexto.enviar_placar_oscar.executar(
+        temporada_id=TemporadaOscarId(temporada_id), destinatario=envio.destinatario
+    )
+    return EnvioDoPlacarSaida(destinatario=str(endereco))
 
 
 @roteador.post(

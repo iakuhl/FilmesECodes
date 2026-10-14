@@ -39,6 +39,7 @@ _TITULOS: Final[dict[int, str]] = {
     HTTPStatus.CONFLICT: "Conflito com o estado atual",
     HTTPStatus.UNPROCESSABLE_ENTITY: "Requisição inválida",
     HTTPStatus.INTERNAL_SERVER_ERROR: "Erro interno",
+    HTTPStatus.BAD_GATEWAY: "Falha em serviço externo",
     HTTPStatus.SERVICE_UNAVAILABLE: "Serviço indisponível",
 }
 

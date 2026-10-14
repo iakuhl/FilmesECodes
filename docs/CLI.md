@@ -123,6 +123,7 @@ O catálogo é compartilhado: um filme não pertence a um clube.
 | `oscar votacao [--temporada-id ID] [--clube-id ID]` | Mostra o turno atual da votação: cada categoria em disputa com as candidatas numeradas (filme e quem indicou) e, de cada eleitor, em quantas categorias já votou e se confirmou a cédula. |
 | `oscar votar --membro-id ID --categoria-id ID ESCOLHA...` | Registra (ou troca) o voto do eleitor na categoria. Cada `ESCOLHA` é a posição da candidata em `oscar votacao` (`1`, `2`...) ou o id da nomeação, em ordem de preferência: a 1ª e a 2ª opção, ou, num turno de classificação, todas. |
 | `oscar confirmar --membro-id ID [--temporada-id ID] [--clube-id ID]` | Confirma a cédula do eleitor no turno atual; depois disso, os votos não mudam. Exige voto em todas as categorias do turno. |
+| `oscar enviar-placar EMAIL [--temporada-id ID] [--clube-id ID]` | Envia o placar da votação terminada ao e-mail de quem monta a cerimônia — sem mostrá-lo na tela. Pode ser reenviado, ao mesmo ou a outro endereço, até a edição ser encerrada. Precisa do servidor de e-mail configurado (ver o README). |
 | `oscar apurar CATEGORIA_ID [--membro-vencedor-id ID]` | Apura a categoria e emite o troféu. |
 
 #### A votação

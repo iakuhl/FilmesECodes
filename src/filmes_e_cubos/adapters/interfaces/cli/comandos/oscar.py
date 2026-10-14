@@ -347,6 +347,31 @@ def confirmar(
         )
 
 
+@app.command("enviar-placar")
+def enviar_placar(
+    ctx: typer.Context,
+    destinatario: Annotated[
+        str, typer.Argument(help="E-mail de quem monta a cerimônia.", show_default=False)
+    ],
+    temporada_id: Annotated[
+        UUID | None,
+        typer.Option("--temporada-id", help="Temporada da votação (padrão: a do ano corrente)."),
+    ] = None,
+    clube_id: Annotated[UUID | None, typer.Option("--clube-id", help="Clube da temporada.")] = None,
+) -> None:
+    """Envia o placar da votação terminada por e-mail — sem mostrá-lo aqui.
+
+    O placar não aparece em nenhuma tela (decisão 27): vai direto para o
+    endereço informado. Pode ser reenviado até a edição ser encerrada.
+    """
+    contexto = obter_contexto(ctx)
+    temporada = resolver_temporada(contexto, temporada_id, clube_id)
+    endereco = contexto.enviar_placar_oscar.executar(
+        temporada_id=temporada.id, destinatario=destinatario
+    )
+    echo_resultado(f"Placar de {temporada.nome} enviado para {endereco}.")
+
+
 @app.command("apurar")
 def apurar(
     ctx: typer.Context,
