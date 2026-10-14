@@ -197,9 +197,10 @@ Decisões 34 a 37 de [PENDENCIAS.md](PENDENCIAS.md): a web vai ao ar na
 Vercel, a partir do repositório do GitHub, com o banco num Postgres da
 Neon e protegida por uma senha única do clube até o login da Fase 5.
 
-Para publicar, o dono mescla `roadmap/fases-4-e-5` em `main`, envia ao
-GitHub e configura o projeto na Vercel (banco Neon, senha do clube e, para
-o placar, o servidor de e-mail) — os passos estão no README.
+O branch foi mesclado em `main` e enviado ao GitHub em 14/10/2026, a
+pedido do dono. Para o site ir ao ar, falta configurar o projeto na Vercel
+(banco Neon, senha do clube e, para o placar, o servidor de e-mail) — os
+passos estão no README.
 
 Feito: a persistência ficou portável entre SQLite e Postgres (ADR 12;
 revisão 0006, a ordem de criação), o `app.py` da raiz é a entrada da
@@ -398,9 +399,10 @@ A Fase 4 terminou em 13/10/2026: a web (decisões 34 a 37 de
 prontas, no branch `roadmap/fases-4-e-5`, enviado ao GitHub a cada etapa.
 O que falta, em ordem:
 
-1. **Publicar** (ação do dono): mesclar o branch em `main`, enviar ao
-   GitHub e configurar a Vercel — banco Neon, `FILMES_E_CUBOS_SENHA` e as
-   variáveis do SMTP para o placar; ver "Publicando na Vercel" no README.
+1. **Publicar** (ação do dono): o merge em `main` e o push já foram
+   feitos (14/10); falta configurar a Vercel — banco Neon,
+   `FILMES_E_CUBOS_SENHA` e as variáveis do SMTP para o placar; ver
+   "Publicando na Vercel" no README.
 2. **Ligar a CI** (pendência 4): dar ao token do git o escopo `workflow`
    e mover `docs/ci/testes.yml` para `.github/workflows/`.
 3. **Confirmar as interpretações** que seguem abertas em PENDENCIAS (1 a

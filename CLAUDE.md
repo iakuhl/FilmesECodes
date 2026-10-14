@@ -17,9 +17,10 @@ para virar produto multi-clube.
 
 - Branch de trabalho: `roadmap/fases-4-e-5`, publicado em `origin` a pedido
   do dono em 24/09/2026. Em 25/09, também a pedido dele, foi mesclado em
-  `main` (fast-forward, só local: a `main` não foi enviada ao `origin`).
-  Desde 13/10 o branch vai ao GitHub a cada etapa; a `main` parou em
-  25/09 e precisa do merge (a pedido do dono) para publicar.
+  `main` (fast-forward, só local). Desde 13/10 o branch vai ao GitHub a
+  cada etapa. Em 14/10, a pedido do dono, foi mesclado de novo em `main`
+  (fast-forward) e a `main` foi enviada ao `origin`: ela é a produção da
+  Vercel, então novos merges e pushes dela continuam só a pedido dele.
 - Fases 1–4 concluídas: CLI, API e web (ver [docs/WEB.md](docs/WEB.md)),
   com migrações do Alembic, Postgres (Neon) na produção e a web pronta
   para a Vercel, protegida pela senha única do clube.
@@ -28,9 +29,10 @@ para virar produto multi-clube.
   redesenhada: placar **só por e-mail**, ninguém vê resultado no sistema.
 - A votação do Óscar está completa (etapas (a), (b) e (c)): eleitores,
   cédulas, desempates, placar por e-mail e vencedores registrados depois
-  do evento. **Próximo passo:** o dono publicar (merge em `main`, push e a
-  configuração da Vercel, no README); depois, a Fase 5 — ver "Como
-  continuar" no [ROADMAP](docs/ROADMAP.md).
+  do evento. **Próximo passo:** o dono configurar o projeto na Vercel
+  (banco Neon, senha do clube e SMTP, no README) — o código já está na
+  `main`; depois, a Fase 5 — ver "Como continuar" no
+  [ROADMAP](docs/ROADMAP.md).
   As decisões, numeradas, estão em [docs/PENDENCIAS.md](docs/PENDENCIAS.md)
   — inclusive as interpretações que ainda pedem confirmação.
 - Em 13/10 o dono decidiu publicar a web na **Vercel** (decisões 34 a
