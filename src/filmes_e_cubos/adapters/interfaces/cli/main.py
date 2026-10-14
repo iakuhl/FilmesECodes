@@ -17,7 +17,11 @@ from typing import Annotated
 
 import typer
 
-from filmes_e_cubos.adapters.composicao import CAMINHO_BANCO_PADRAO, VARIAVEL_DE_AMBIENTE_BANCO
+from filmes_e_cubos.adapters.composicao import (
+    CAMINHO_BANCO_PADRAO,
+    VARIAVEL_DE_AMBIENTE_BANCO,
+    VARIAVEL_DE_AMBIENTE_URL_DO_BANCO,
+)
 from filmes_e_cubos.adapters.interfaces.cli.comandos import (
     avaliacao,
     clube,
@@ -58,6 +62,16 @@ def principal(
             help="Arquivo SQLite onde os dados do clube são guardados.",
         ),
     ] = CAMINHO_BANCO_PADRAO,
+    db_url: Annotated[
+        str | None,
+        typer.Option(
+            "--db-url",
+            envvar=VARIAVEL_DE_AMBIENTE_URL_DO_BANCO,
+            help="URL de um banco de dados (ex.: o Postgres da produção); vale no lugar "
+            "de --db-path.",
+            show_default=False,
+        ),
+    ] = None,
 ) -> None:
     """Guarda em `ctx.obj` a fábrica que os comandos usam para obter o contexto.
 
@@ -67,4 +81,4 @@ def principal(
     apuração sem mexer na CLI.
     """
     if ctx.obj is None:
-        ctx.obj = FabricaDeContexto(db_path)
+        ctx.obj = FabricaDeContexto(db_path, url_banco=db_url)

@@ -20,7 +20,7 @@ from typing import Final
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import Engine, inspect
+from sqlalchemy import Engine, inspect, text
 
 DIRETORIO_DE_MIGRACOES: Final = Path(__file__).parent / "migracoes"
 
@@ -28,6 +28,9 @@ REVISAO_INICIAL: Final = "0001"
 """Revisão que reproduz o esquema criado pelas Fases 2 e 3, antes das migrações."""
 
 _TABELA_DE_CONTROLE: Final = "alembic_version"
+
+_TRAVA_DA_MIGRACAO: Final = 20_260_913
+"""Chave da trava consultiva do Postgres que serializa as migrações."""
 
 
 def configuracao_alembic(url_do_banco: str | None = None) -> Config:
@@ -49,6 +52,13 @@ def migrar(engine: Engine) -> None:
     """Leva o banco do `engine` até a revisão mais recente do esquema."""
     configuracao = configuracao_alembic()
     with engine.begin() as conexao:
+        if conexao.dialect.name == "postgresql":
+            # Na Vercel, várias instâncias podem subir ao mesmo tempo, e cada
+            # uma migra ao abrir o banco: a trava (liberada no fim da
+            # transação) faz as outras esperarem a primeira terminar.
+            conexao.execute(
+                text("SELECT pg_advisory_xact_lock(:chave)"), {"chave": _TRAVA_DA_MIGRACAO}
+            )
         configuracao.attributes["connection"] = conexao
         tabelas = set(inspect(conexao).get_table_names())
         if tabelas and _TABELA_DE_CONTROLE not in tabelas:

@@ -36,7 +36,7 @@ class ClubeRepositorioSqlite:
 
     def listar_todos(self) -> list[Clube]:
         with self._engine.connect() as conexao:
-            linhas = conexao.execute(clubes.select()).mappings().all()
+            linhas = conexao.execute(clubes.select().order_by(clubes.c.nome)).mappings().all()
         return [_para_entidade(linha) for linha in linhas]
 
 

@@ -1,0 +1,12 @@
+# Fora do pacote publicado na Vercel: só o código e o que ele lê em produção.
+.venv/
+.claude/
+.github/
+tests/
+docs/
+*.db
+*.db-journal
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/

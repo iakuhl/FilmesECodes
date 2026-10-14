@@ -25,7 +25,9 @@ class MembroRepositorioSqlite:
     def buscar_por_id(self, membro_id: MembroId) -> Membro | None:
         with self._engine.connect() as conexao:
             linha = (
-                conexao.execute(membros.select().where(membros.c.id == str(membro_id)))
+                conexao.execute(
+                    membros.select().order_by(membros.c.nome).where(membros.c.id == str(membro_id))
+                )
                 .mappings()
                 .first()
             )
@@ -35,9 +37,9 @@ class MembroRepositorioSqlite:
         with self._engine.connect() as conexao:
             linhas = (
                 conexao.execute(
-                    membros.select().where(
-                        membros.c.clube_id == str(clube_id), membros.c.ativo.is_(True)
-                    )
+                    membros.select()
+                    .order_by(membros.c.nome)
+                    .where(membros.c.clube_id == str(clube_id), membros.c.ativo.is_(True))
                 )
                 .mappings()
                 .all()
@@ -47,7 +49,11 @@ class MembroRepositorioSqlite:
     def listar_por_clube(self, clube_id: ClubeId) -> list[Membro]:
         with self._engine.connect() as conexao:
             linhas = (
-                conexao.execute(membros.select().where(membros.c.clube_id == str(clube_id)))
+                conexao.execute(
+                    membros.select()
+                    .order_by(membros.c.nome)
+                    .where(membros.c.clube_id == str(clube_id))
+                )
                 .mappings()
                 .all()
             )

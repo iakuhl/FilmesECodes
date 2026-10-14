@@ -125,6 +125,13 @@ CAMINHO_BANCO_PADRAO = Path("filmes_e_cubos.db")
 VARIAVEL_DE_AMBIENTE_BANCO = "FILMES_E_CUBOS_DB"
 """Variável de ambiente que aponta o arquivo SQLite, respeitada por todas as interfaces."""
 
+VARIAVEL_DE_AMBIENTE_URL_DO_BANCO = "DATABASE_URL"
+"""URL de um banco de dados — em produção, o Postgres que a Neon injeta na Vercel.
+
+Quando definida, vale no lugar do arquivo SQLite (o nome é o que a
+integração da Neon com a Vercel usa).
+"""
+
 
 class Contexto:
     """Grafo de dependências já montado que uma interface consome.

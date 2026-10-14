@@ -15,16 +15,15 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 from httpx2 import Response
+from sqlalchemy import Engine
 
 from filmes_e_cubos.adapters.composicao import Contexto
 from filmes_e_cubos.adapters.interfaces.servidor import PREFIXO_DA_API, criar_aplicacao
-from filmes_e_cubos.adapters.persistence.sqlite.fabrica_engine import criar_engine
 
 Json = dict[str, Any]
 
@@ -86,8 +85,10 @@ def assert_problema(resposta: Response, status: int, codigo: str) -> Json:
 
 
 @pytest.fixture
-def api(tmp_path: Path) -> Iterator[ApiDeTeste]:
-    contexto = Contexto(criar_engine(tmp_path / "filmes_e_cubos_api.db"))
+def api(engine_de_teste: Engine) -> Iterator[ApiDeTeste]:
+    """A API sobre um banco real e vazio (SQLite, ou Postgres com a variável
+    FILMES_E_CUBOS_TESTE_POSTGRES — ver tests/conftest.py)."""
+    contexto = Contexto(engine_de_teste)
     with TestClient(criar_aplicacao(contexto)) as cliente:
         yield ApiDeTeste(cliente)
 

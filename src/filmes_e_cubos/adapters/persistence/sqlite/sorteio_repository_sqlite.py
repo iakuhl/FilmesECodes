@@ -25,7 +25,11 @@ class SorteioRepositorioSqlite:
     def listar_por_rodada(self, rodada_id: RodadaId) -> list[Sorteio]:
         with self._engine.connect() as conexao:
             linhas = (
-                conexao.execute(sorteios.select().where(sorteios.c.rodada_id == str(rodada_id)))
+                conexao.execute(
+                    sorteios.select()
+                    .order_by(sorteios.c.data_sorteio)
+                    .where(sorteios.c.rodada_id == str(rodada_id))
+                )
                 .mappings()
                 .all()
             )

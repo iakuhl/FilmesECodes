@@ -7,7 +7,7 @@ from uuid import UUID
 
 from sqlalchemy import Engine, RowMapping
 
-from filmes_e_cubos.adapters.persistence.sqlite._upsert import upsert
+from filmes_e_cubos.adapters.persistence.sqlite._upsert import upsert_mantendo_a_ordem
 from filmes_e_cubos.adapters.persistence.sqlite.esquema import indicacoes
 from filmes_e_cubos.domain.entities.indicacao import Indicacao
 from filmes_e_cubos.domain.value_objects.identificadores import (
@@ -27,12 +27,16 @@ class IndicacaoRepositorioSqlite:
         self._engine = engine
 
     def salvar(self, indicacao: Indicacao) -> None:
-        upsert(self._engine, indicacoes, _para_linha(indicacao))
+        upsert_mantendo_a_ordem(self._engine, indicacoes, _para_linha(indicacao))
 
     def buscar_por_id(self, indicacao_id: IndicacaoId) -> Indicacao | None:
         with self._engine.connect() as conexao:
             linha = (
-                conexao.execute(indicacoes.select().where(indicacoes.c.id == str(indicacao_id)))
+                conexao.execute(
+                    indicacoes.select()
+                    .order_by(indicacoes.c.ordem)
+                    .where(indicacoes.c.id == str(indicacao_id))
+                )
                 .mappings()
                 .first()
             )
@@ -41,7 +45,11 @@ class IndicacaoRepositorioSqlite:
     def listar_por_rodada(self, rodada_id: RodadaId) -> list[Indicacao]:
         with self._engine.connect() as conexao:
             linhas = (
-                conexao.execute(indicacoes.select().where(indicacoes.c.rodada_id == str(rodada_id)))
+                conexao.execute(
+                    indicacoes.select()
+                    .order_by(indicacoes.c.ordem)
+                    .where(indicacoes.c.rodada_id == str(rodada_id))
+                )
                 .mappings()
                 .all()
             )
@@ -50,7 +58,11 @@ class IndicacaoRepositorioSqlite:
     def listar_por_filme(self, filme_id: FilmeId) -> list[Indicacao]:
         with self._engine.connect() as conexao:
             linhas = (
-                conexao.execute(indicacoes.select().where(indicacoes.c.filme_id == str(filme_id)))
+                conexao.execute(
+                    indicacoes.select()
+                    .order_by(indicacoes.c.ordem)
+                    .where(indicacoes.c.filme_id == str(filme_id))
+                )
                 .mappings()
                 .all()
             )
@@ -60,7 +72,9 @@ class IndicacaoRepositorioSqlite:
         with self._engine.connect() as conexao:
             linhas = (
                 conexao.execute(
-                    indicacoes.select().where(
+                    indicacoes.select()
+                    .order_by(indicacoes.c.ordem)
+                    .where(
                         indicacoes.c.filme_id == str(filme_id),
                         indicacoes.c.status == StatusIndicacao.ASSISTIDA.name,
                     )

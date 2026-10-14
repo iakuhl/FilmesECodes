@@ -7,7 +7,7 @@ from uuid import UUID
 
 from sqlalchemy import Engine, RowMapping
 
-from filmes_e_cubos.adapters.persistence.sqlite._upsert import upsert
+from filmes_e_cubos.adapters.persistence.sqlite._upsert import upsert_mantendo_a_ordem
 from filmes_e_cubos.adapters.persistence.sqlite.esquema import categorias_oscar
 from filmes_e_cubos.domain.entities.categoria_oscar import CategoriaOscar
 from filmes_e_cubos.domain.value_objects.identificadores import CategoriaOscarId, TemporadaOscarId
@@ -21,13 +21,15 @@ class CategoriaOscarRepositorioSqlite:
         self._engine = engine
 
     def salvar(self, categoria: CategoriaOscar) -> None:
-        upsert(self._engine, categorias_oscar, _para_linha(categoria))
+        upsert_mantendo_a_ordem(self._engine, categorias_oscar, _para_linha(categoria))
 
     def buscar_por_id(self, categoria_id: CategoriaOscarId) -> CategoriaOscar | None:
         with self._engine.connect() as conexao:
             linha = (
                 conexao.execute(
-                    categorias_oscar.select().where(categorias_oscar.c.id == str(categoria_id))
+                    categorias_oscar.select()
+                    .order_by(categorias_oscar.c.ordem)
+                    .where(categorias_oscar.c.id == str(categoria_id))
                 )
                 .mappings()
                 .first()
@@ -38,9 +40,9 @@ class CategoriaOscarRepositorioSqlite:
         with self._engine.connect() as conexao:
             linhas = (
                 conexao.execute(
-                    categorias_oscar.select().where(
-                        categorias_oscar.c.temporada_id == str(temporada_id)
-                    )
+                    categorias_oscar.select()
+                    .order_by(categorias_oscar.c.ordem)
+                    .where(categorias_oscar.c.temporada_id == str(temporada_id))
                 )
                 .mappings()
                 .all()

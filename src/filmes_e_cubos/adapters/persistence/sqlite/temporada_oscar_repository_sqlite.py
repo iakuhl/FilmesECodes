@@ -27,7 +27,9 @@ class TemporadaOscarRepositorioSqlite:
         with self._engine.connect() as conexao:
             linha = (
                 conexao.execute(
-                    temporadas_oscar.select().where(temporadas_oscar.c.id == str(temporada_id))
+                    temporadas_oscar.select()
+                    .order_by(temporadas_oscar.c.ano)
+                    .where(temporadas_oscar.c.id == str(temporada_id))
                 )
                 .mappings()
                 .first()
@@ -38,7 +40,9 @@ class TemporadaOscarRepositorioSqlite:
         with self._engine.connect() as conexao:
             linha = (
                 conexao.execute(
-                    temporadas_oscar.select().where(
+                    temporadas_oscar.select()
+                    .order_by(temporadas_oscar.c.ano)
+                    .where(
                         temporadas_oscar.c.clube_id == str(clube_id),
                         temporadas_oscar.c.ano == ano,
                     )
@@ -52,7 +56,9 @@ class TemporadaOscarRepositorioSqlite:
         with self._engine.connect() as conexao:
             linhas = (
                 conexao.execute(
-                    temporadas_oscar.select().where(temporadas_oscar.c.clube_id == str(clube_id))
+                    temporadas_oscar.select()
+                    .order_by(temporadas_oscar.c.ano)
+                    .where(temporadas_oscar.c.clube_id == str(clube_id))
                 )
                 .mappings()
                 .all()

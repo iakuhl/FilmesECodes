@@ -1,0 +1,43 @@
+# Confere cada push: estilo, tipos e a suíte de testes — no SQLite, como
+# localmente, e os testes da API também contra um Postgres, o banco da
+# produção na Vercel (ver tests/conftest.py).
+#
+# Para ligar, este arquivo vai para .github/workflows/ — o que exige que o
+# token do git tenha o escopo `workflow` (gh auth refresh -h github.com -s
+# workflow). Ver a pendência em docs/PENDENCIAS.md.
+name: Testes
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verificacoes:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - name: Dependências
+        run: uv sync --frozen
+      - name: Estilo
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Tipos
+        run: uv run mypy src
+      - name: Testes (SQLite)
+        run: uv run pytest
+      - name: Testes da API e do esquema (Postgres)
+        run: uv run pytest tests/adapters/interfaces/api tests/adapters/persistence/sqlite/test_postgres.py
+        env:
+          FILMES_E_CUBOS_TESTE_POSTGRES: postgresql://postgres:postgres@localhost:5432/postgres

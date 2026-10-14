@@ -195,6 +195,19 @@ Plano para o restante (ver "Como continuar"):
 - Testes com o `TestClient` contra o app completo e `beautifulsoup4`
   para ler o HTML; `docs/WEB.md` com a referência das páginas.
 
+### Publicação na Vercel 🚧 em andamento
+
+Decisões 34 a 37 de [PENDENCIAS.md](PENDENCIAS.md): a web vai ao ar na
+Vercel, a partir do repositório do GitHub, com o banco num Postgres da
+Neon e protegida por uma senha única do clube até o login da Fase 5.
+
+Feito: a persistência ficou portável entre SQLite e Postgres (ADR 12;
+revisão 0006, a ordem de criação), o `app.py` da raiz é a entrada da
+Vercel, `DATABASE_URL` configura o banco do servidor e da CLI, e os
+testes da API rodam também contra um Postgres; a definição de CI que faz
+isso a cada push está pronta em `docs/ci/testes.yml`, esperando ser
+ligada (pendência 4). Os passos para publicar estão no README.
+
 ## Revisão de regras de 24 e 25/09/2026 — 🚧 falta a votação
 
 O dono do produto respondeu às questões levantadas na Fase 4. As
@@ -321,7 +334,7 @@ temporada), `votacao_eleitores`, `turnos_votacao` (único por categoria e
 número), `turno_candidatas` (`posicao`, `nomeacao_id`, `pontos` anulável
 até a apuração), `cedulas` (única por votação, turno e membro) e
 `cedula_escolhas`; as edições que já estiverem *em votação* ganham a sua
-votação na migração. Revisão 0006 (vencedores):
+votação na migração. Revisão 0007 (vencedores):
 `trofeus.nomeacao_vencedora_id` anulável, para o empate absoluto.
 
 **Interfaces** — mostram só quem já votou e em quantas categorias; nunca
@@ -349,7 +362,8 @@ as cédulas nem o placar (decisão 26).
 Ordem de implementação, um commit por etapa: **(a)** ✅ votação —
 eleitores, turnos, cédulas, confirmação e desempates (revisão 0005);
 **(b)** placar por e-mail; **(c)** vencedores registrados e remoção do
-critério antigo (revisão 0006).
+critério antigo (revisão 0007; a 0006 foi a da ordem de criação, que o
+Postgres pediu).
 
 ## Fase 5 — Evolução comercial
 
@@ -379,60 +393,58 @@ quanto) a guardar só o resultado final.
 
 ## Como continuar
 
-Ordem recomendada para a próxima sessão de trabalho, a partir do branch
-`roadmap/fases-4-e-5`:
+Ordem decidida pelo dono em 13/10/2026 (decisão 36 de
+[PENDENCIAS.md](PENDENCIAS.md)): primeiro a web publicada na Vercel,
+depois o resto da votação. O trabalho segue no branch
+`roadmap/fases-4-e-5`, um commit por etapa, com **push do branch** ao fim
+de cada uma (a Vercel gera uma prévia); merge e push da `main`, que é a
+produção, só a pedido do dono (decisão 37).
 
-1. **Revisão de regras de 24 e 25/09** (decisões 3 a 11 e 16 a 33 de
-   [PENDENCIAS.md](PENDENCIAS.md)), em commits pequenos, cada um com CLI,
-   API, testes e documentação atualizados. Cada mudança de esquema ganha
-   a sua própria revisão do Alembic, no commit da regra que a pede:
-   1. ✅ duração do filme (revisão 0002: `filmes.duracao_minutos`);
-      reativar membro; data do evento do Óscar;
-   2. ✅ só presentes avaliam (`AvaliarFilme` passa a deduzir o clube da
-      própria sessão, e o `--clube-id` da avaliação sai da CLI); média
-      guardada como fração — soma e quantidade das notas na sessão
-      (revisão 0003, que calcula as das sessões já avaliadas) —,
-      recalculada a cada avaliação e exibida em estrelas;
-   3. ✅ filme nunca se repete no clube (`IndicarFilme` e
-      `AdicionarFilmeDemocracia`; novo `IndicacaoRepository.listar_por_filme`)
-      e `IndicarFilmeParaCategoria` restrito às sessões do próprio clube;
-   4. ✅ uma edição por ano; número de nomeações por categoria (revisão
-      0004); ciclo da temporada com `EM_VOTACAO` e o caso de uso de
-      avanço, restringindo cada ação à sua fase;
-   5. **próximo passo:** votação, conforme o "Desenho da votação"
-      acima (redesenhado com as decisões de 25/09), em três commits:
-      (a) ✅ eleitores, turnos, cédulas, confirmação e desempates
-      (revisão 0005); (b) **próximo:** placar por e-mail; (c) vencedores
-      registrados por quem administra e remoção de `CriterioApuracaoOscar`
-      (revisão 0006). Notas técnicas para as duas:
-      - (b) `EnderecoDeEmail` (value object) e os erros
-        `EnderecoDeEmailInvalidoError` (422), `VotacaoEmAndamentoError`
-        (409) e, para o envio, um erro de "e-mail não configurado" (503) e
-        um de falha do servidor SMTP (502) — os dois pedem título em
-        português em `api/erros.py` (`_TITULOS`). O `Contexto` recebe o
-        enviador como recebe o relógio (parâmetro opcional, padrão lido do
-        ambiente: `FILMES_E_CUBOS_SMTP_HOST`, `_PORTA`, `_USUARIO`,
-        `_SENHA`, `_REMETENTE`...), e a `FabricaDeContexto` da CLI também,
-        para os testes injetarem um enviador fake. O placar sai de
-        `TurnoDeVotacao.pontuacao`, `lideres` e `empate_absoluto`, com o
-        título do filme e o nome de quem indicou (interpretação 15).
-        Testar o adapter SMTP contra um servidor SMTP de verdade, local
-        (ex.: `aiosmtpd` como dependência de desenvolvimento). Vale uma
-        ADR (port de e-mail genérico, reaproveitável nos convites da
-        Fase 5);
-      - (c) `Trofeu.nomeacao_vencedora_id` opcional, `RegistrarVencedorOscar`
-        no lugar de `ApurarCategoriaOscar`, CLI `oscar premiar` e
-        `oscar categoria nomeacoes`, API `POST
-        /oscar/categorias/{id}/trofeu`; remover o port, as duas
-        implementações, o fake, `obter_criterio_apuracao` da CLI e os
-        testes deles; reescrever os dois fluxos de ponta a ponta (CLI e
-        API) votando, enviando o placar e premiando, e o "Um ciclo
-        completo" de CLI.md e API.md;
-   6. ✅ contrato do módulo de histórico (só ports e estruturas de dados).
-2. **Páginas da interface web** sobre o domínio já revisado (plano na
-   seção da Fase 4), fechando a Fase 4.
+1. **Web na Vercel** (decisões 34 a 37):
+   1. ✅ persistência portável — Postgres (Neon) na produção, SQLite local
+      e nos testes; ordem de criação em coluna própria (revisão 0006);
+      entrada `app.py` da Vercel; CI pronta para ligar;
+   2. **próximo:** senha única do clube (decisão 35), protegendo o site e a
+      API;
+   3. páginas do dia a dia, conforme o plano da seção da Fase 4: início,
+      painel da rodada, membros, filmes, histórico de rodadas, sessões e
+      avaliações;
+   4. Óscar até a votação: edições, categorias, nomeações, cédula e
+      confirmação — e, com elas, a etapa (b) da votação, o placar por
+      e-mail;
+   5. etapa (c) da votação, os vencedores, com a tela de premiação.
+2. Notas técnicas das etapas (b) e (c) da votação:
+   - (b) `EnderecoDeEmail` (value object) e os erros
+     `EnderecoDeEmailInvalidoError` (422), `VotacaoEmAndamentoError` (409)
+     e, para o envio, um erro de "e-mail não configurado" (503) e um de
+     falha do servidor SMTP (502) — os dois pedem título em português em
+     `api/erros.py` (`_TITULOS`). O `Contexto` recebe o enviador como
+     recebe o relógio (parâmetro opcional, padrão lido do ambiente:
+     `FILMES_E_CUBOS_SMTP_HOST`, `_PORTA`, `_USUARIO`, `_SENHA`,
+     `_REMETENTE`...), e a `FabricaDeContexto` da CLI também, para os
+     testes injetarem um enviador fake. O placar sai de
+     `TurnoDeVotacao.pontuacao`, `lideres` e `empate_absoluto`, com o
+     título do filme e o nome de quem indicou (interpretação 15). Testar
+     o adapter SMTP contra um servidor SMTP de verdade, local (ex.:
+     `aiosmtpd` como dependência de desenvolvimento). Vale uma ADR (port
+     de e-mail genérico, reaproveitável nos convites da Fase 5);
+   - (c) `Trofeu.nomeacao_vencedora_id` opcional (revisão 0007),
+     `RegistrarVencedorOscar` no lugar de `ApurarCategoriaOscar`, CLI
+     `oscar premiar` e `oscar categoria nomeacoes`, API
+     `POST /oscar/categorias/{id}/trofeu`; remover o port, as duas
+     implementações, o fake, `obter_criterio_apuracao` da CLI e os
+     testes deles; reescrever os dois fluxos de ponta a ponta (CLI e API)
+     votando, enviando o placar e premiando, e o "Um ciclo completo" de
+     CLI.md e API.md.
 3. **Fase 5**: verificações entre clubes, login com convites e
-   permissões, TMDB e configuração por ambiente.
+   permissões (no lugar da senha única), TMDB.
+
+Já feito da revisão de regras de 24 e 25/09 (decisões 3 a 11 e 16 a 33):
+duração do filme (revisão 0002), reativar membro e data do evento; só
+presentes avaliam e a média como fração (revisão 0003); filme que não se
+repete; uma edição por ano, nomeações por categoria (revisão 0004) e o
+ciclo com *em votação*; o contrato do histórico; e a etapa (a) da
+votação — eleitores, cédulas, confirmação e desempates (revisão 0005).
 
 ## Pontos explicitamente em aberto
 

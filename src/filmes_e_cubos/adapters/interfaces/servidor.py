@@ -24,11 +24,15 @@ from fastapi.responses import RedirectResponse
 from filmes_e_cubos.adapters.composicao import (
     CAMINHO_BANCO_PADRAO,
     VARIAVEL_DE_AMBIENTE_BANCO,
+    VARIAVEL_DE_AMBIENTE_URL_DO_BANCO,
     Contexto,
 )
 from filmes_e_cubos.adapters.interfaces.api.app import criar_api
 from filmes_e_cubos.adapters.interfaces.escritas_em_fila import EscritasEmFila
-from filmes_e_cubos.adapters.persistence.sqlite.fabrica_engine import criar_engine
+from filmes_e_cubos.adapters.persistence.sqlite.fabrica_engine import (
+    criar_engine,
+    criar_engine_da_url,
+)
 
 PREFIXO_DA_API: Final = "/api/v1"
 
@@ -52,12 +56,18 @@ def criar_aplicacao(contexto: Contexto) -> FastAPI:
 
 
 def criar_aplicacao_do_ambiente() -> FastAPI:
-    """Fábrica chamada pelo uvicorn: lê o caminho do banco do ambiente.
+    """O app inteiro configurado pelo ambiente — o que o uvicorn e a Vercel servem.
 
     O uvicorn recebe a fábrica como texto (`modulo:funcao`) — é o que
-    permite recarregar o código em desenvolvimento —, então a
-    configuração chega por variável de ambiente, e não por argumento.
+    permite recarregar o código em desenvolvimento —, e a Vercel importa o
+    `app` de `app.py`, na raiz do repositório. Nos dois casos, a
+    configuração chega por variável de ambiente: `DATABASE_URL` (o
+    Postgres da produção) ou, sem ela, `FILMES_E_CUBOS_DB` (o arquivo
+    SQLite local).
     """
+    url = os.environ.get(VARIAVEL_DE_AMBIENTE_URL_DO_BANCO)
+    if url:
+        return criar_aplicacao(Contexto(criar_engine_da_url(url)))
     caminho = Path(os.environ.get(VARIAVEL_DE_AMBIENTE_BANCO, str(CAMINHO_BANCO_PADRAO)))
     return criar_aplicacao(Contexto(criar_engine(caminho)))
 

@@ -8,7 +8,7 @@ from uuid import UUID
 
 from sqlalchemy import Engine, RowMapping
 
-from filmes_e_cubos.adapters.persistence.sqlite._upsert import upsert
+from filmes_e_cubos.adapters.persistence.sqlite._upsert import upsert_mantendo_a_ordem
 from filmes_e_cubos.adapters.persistence.sqlite.esquema import avaliacoes
 from filmes_e_cubos.domain.entities.avaliacao import Avaliacao
 from filmes_e_cubos.domain.value_objects.identificadores import (
@@ -27,12 +27,16 @@ class AvaliacaoRepositorioSqlite:
         self._engine = engine
 
     def salvar(self, avaliacao: Avaliacao) -> None:
-        upsert(self._engine, avaliacoes, _para_linha(avaliacao))
+        upsert_mantendo_a_ordem(self._engine, avaliacoes, _para_linha(avaliacao))
 
     def listar_por_sessao(self, sessao_id: SessaoExibicaoId) -> list[Avaliacao]:
         with self._engine.connect() as conexao:
             linhas = (
-                conexao.execute(avaliacoes.select().where(avaliacoes.c.sessao_id == str(sessao_id)))
+                conexao.execute(
+                    avaliacoes.select()
+                    .order_by(avaliacoes.c.ordem)
+                    .where(avaliacoes.c.sessao_id == str(sessao_id))
+                )
                 .mappings()
                 .all()
             )
@@ -44,7 +48,9 @@ class AvaliacaoRepositorioSqlite:
         with self._engine.connect() as conexao:
             linha = (
                 conexao.execute(
-                    avaliacoes.select().where(
+                    avaliacoes.select()
+                    .order_by(avaliacoes.c.ordem)
+                    .where(
                         avaliacoes.c.sessao_id == str(sessao_id),
                         avaliacoes.c.membro_id == str(membro_id),
                     )

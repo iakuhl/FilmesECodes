@@ -182,12 +182,18 @@ def _iniciar_as_votacoes_em_andamento(conexao: sa.Connection) -> None:
 
 
 def _disputas_da_edicao(conexao: sa.Connection, temporada_id: str) -> list[tuple[str, list[str]]]:
-    """As categorias ainda sem troféu, cada uma com as nomeações na ordem em que foram feitas."""
+    """As categorias ainda sem troféu, cada uma com as nomeações na ordem em que foram feitas.
+
+    No SQLite, a ordem de criação é a do `rowid`. Outros bancos só chegam a
+    esta revisão vazios (o Postgres de produção nasceu depois dela), mas a
+    consulta precisa ser válida neles também.
+    """
+    ordem = "rowid" if conexao.dialect.name == "sqlite" else "id"
     categorias = (
         conexao.execute(
             sa.text(
                 "SELECT id FROM categorias_oscar WHERE temporada_id = :temporada AND id NOT IN "
-                "(SELECT categoria_id FROM trofeus) ORDER BY rowid"
+                f"(SELECT categoria_id FROM trofeus) ORDER BY {ordem}"
             ),
             {"temporada": temporada_id},
         )
@@ -199,7 +205,8 @@ def _disputas_da_edicao(conexao: sa.Connection, temporada_id: str) -> list[tuple
         nomeacoes = list(
             conexao.execute(
                 sa.text(
-                    "SELECT id FROM nomeacoes_oscar WHERE categoria_id = :categoria ORDER BY rowid"
+                    "SELECT id FROM nomeacoes_oscar WHERE categoria_id = :categoria "
+                    f"ORDER BY {ordem}"
                 ),
                 {"categoria": categoria_id},
             )

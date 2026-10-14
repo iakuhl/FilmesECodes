@@ -33,7 +33,7 @@ class FilmeRepositorioSqlite:
 
     def listar_todos(self) -> list[Filme]:
         with self._engine.connect() as conexao:
-            linhas = conexao.execute(filmes.select()).mappings().all()
+            linhas = conexao.execute(filmes.select().order_by(filmes.c.titulo)).mappings().all()
         return [_para_entidade(linha) for linha in linhas]
 
 

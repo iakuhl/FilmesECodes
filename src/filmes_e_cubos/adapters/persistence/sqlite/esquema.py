@@ -74,6 +74,8 @@ indicacoes = Table(
     Column("tipo", String, nullable=False),
     Column("status", String, nullable=False),
     Column("data_indicacao", Date, nullable=False),
+    # Ordem de criação (ver revisão 0006): o Postgres não garante ordem sem ORDER BY.
+    Column("ordem", Integer, nullable=False, server_default="0"),
 )
 
 sorteios = Table(
@@ -113,6 +115,8 @@ avaliacoes = Table(
     Column("status", String, nullable=False),
     Column("nota", String, nullable=True),
     Column("comentario", String, nullable=True),
+    # Ordem de criação (ver revisão 0006): o Postgres não garante ordem sem ORDER BY.
+    Column("ordem", Integer, nullable=False, server_default="0"),
 )
 
 temporadas_oscar = Table(
@@ -135,6 +139,8 @@ categorias_oscar = Table(
     Column("nome", String, nullable=False),
     Column("tipo", String, nullable=False),
     Column("descricao", String, nullable=True),
+    # Ordem de criação (ver revisão 0006): o Postgres não garante ordem sem ORDER BY.
+    Column("ordem", Integer, nullable=False, server_default="0"),
 )
 
 nomeacoes_oscar = Table(
@@ -144,6 +150,8 @@ nomeacoes_oscar = Table(
     Column("categoria_id", String, ForeignKey("categorias_oscar.id"), nullable=False),
     Column("filme_id", String, ForeignKey("filmes.id"), nullable=False),
     Column("indicado_por_membro_id", String, ForeignKey("membros.id"), nullable=True),
+    # Ordem de criação (ver revisão 0006): o Postgres não garante ordem sem ORDER BY.
+    Column("ordem", Integer, nullable=False, server_default="0"),
 )
 
 trofeus = Table(

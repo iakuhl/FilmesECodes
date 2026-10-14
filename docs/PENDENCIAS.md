@@ -71,6 +71,7 @@ implementado ainda, exceto onde indicado.
     chave configurada.
 15. **Deploy:** só local por enquanto, mas o sistema deve continuar fácil
     de levar para um servidor ou para a nuvem — a decisão vai mudar.
+    *Mudou em 13/10: decisão 34.*
 
 ## Decisões complementares de 24/09/2026
 
@@ -150,6 +151,25 @@ cerimônia.
     opção nas telas, mas, se acontecer (latência, clique duplo), também
     não é erro. *Já implementado* (a regra das telas vale para a web).
 
+## Decisões do dono do produto em 13/10/2026
+
+Pedido: terminar o trabalho e publicar a web na Vercel, a partir do
+repositório do GitHub.
+
+34. **Produção na Vercel com Postgres da Neon:** a Vercel não guarda
+    arquivos entre execuções, então o banco da produção é um Postgres da
+    Neon (integração oficial da Vercel, plano gratuito). O SQLite continua
+    para o uso local e para os testes.
+35. **Senha única do clube** protege o site e a API publicados,
+    provisoriamente, até o login individual da Fase 5. Enquanto isso, quem
+    entra pode agir por qualquer membro.
+36. **Ordem do trabalho:** primeiro a web na Vercel (a base do deploy e as
+    páginas do dia a dia do clube); depois o placar por e-mail, os
+    vencedores e as telas do Óscar.
+37. **Git:** push do branch de trabalho ao fim de cada etapa (a Vercel gera
+    uma prévia de cada push); merge e push da `main`, que é a produção,
+    só quando o dono pedir.
+
 ### Interpretações para confirmar
 
 As interpretações 4 a 11 de 24/09 foram respondidas pelas decisões 21 a
@@ -189,6 +209,11 @@ Novas, do redesenho de 25/09:
    confirmar a cédula (por exemplo, saiu do clube durante a votação), o
    turno não se encerra. Por ora a votação espera todos (decisão do
    dono); uma saída será decidida se o caso acontecer.
+4. **Ligar a CI do GitHub** (pede uma ação do dono): a definição está
+   pronta em `docs/ci/testes.yml`, mas o GitHub só aceita arquivos em
+   `.github/workflows/` de um token com o escopo `workflow`, que o desta
+   máquina não tem. Basta rodar `gh auth refresh -h github.com -s
+   workflow` (abre o navegador) e mover o arquivo.
 
 ## Decisões técnicas tomadas sem consulta
 
@@ -301,13 +326,43 @@ Novas, do redesenho de 25/09:
 31. **Sem login, qualquer um opera o voto de qualquer eleitor** pela CLI
     ou pela API, como já acontece com as avaliações; "votar só em nome
     próprio" chega com o login da Fase 5 (decisão 13).
+32. **Persistência portável entre SQLite e Postgres** (decisão 34): o
+    upsert usa o `INSERT ... ON CONFLICT` do dialeto da conexão, e toda
+    listagem tem ordem explícita — nome, título, ano, data ou, onde a
+    ordem é a de criação (indicações, avaliações, categorias e nomeações,
+    cuja ordem é a da cédula), uma coluna `ordem` gravada pelo repositório
+    (revisão 0006; nos bancos antigos, vem do `rowid`). O SQLite devolvia
+    as linhas na ordem de inserção; o Postgres não garante ordem sem
+    `ORDER BY`.
+33. **O pacote continua `adapters/persistence/sqlite/`**, embora sirva
+    também ao Postgres: renomeá-lo mexeria em dezenas de arquivos sem
+    mudar comportamento.
+34. **Migrações no Postgres com trava consultiva**
+    (`pg_advisory_xact_lock`): na Vercel, várias instâncias podem subir
+    juntas, e cada uma migra ao abrir o banco.
+35. **Pool de conexões com `pool_pre_ping` e `pool_recycle`** no Postgres:
+    a instância da função pode ficar congelada, e o servidor fecha as
+    conexões paradas.
+36. **Os testes da API rodam também contra o Postgres** quando
+    `FILMES_E_CUBOS_TESTE_POSTGRES` aponta um servidor (um banco novo por
+    teste); a definição de CI em `docs/ci/testes.yml` sobe um Postgres
+    para isso (ligá-la é a pendência 4 abaixo). Os testes de
+    repositório ficam no SQLite: gravam entidades sem as "mães", e o
+    Postgres confere as chaves estrangeiras (ver a dívida técnica 1).
+37. **Entrada da Vercel em `app.py`, na raiz**, com o caminho de `src/`
+    acrescentado ali, para não depender de como a Vercel instala o
+    pacote; `.vercelignore` deixa testes e documentação fora da função.
+38. **`DATABASE_URL` vale para o servidor e para a CLI** (`--db-url`), no
+    lugar do arquivo SQLite: o nome é o que a integração da Neon define,
+    e assim a CLI local também consegue administrar a produção.
 
 ## Dívidas técnicas conhecidas
 
 1. **Chaves estrangeiras não são verificadas pelo SQLite.** O esquema as
    declara, mas o SQLite só as aplica com `PRAGMA foreign_keys=ON`, que o
    projeto não liga. Ligar exige revisar testes de repositório que gravam
-   entidades sem as "mães".
+   entidades sem as "mães". No Postgres da produção elas valem — os testes
+   da API, que rodam lá também, confirmam que o programa as respeita.
 2. **Sem transação por caso de uso.** Cada repositório abre a sua. O
    middleware de escritas cobre o servidor HTTP; a CLI não precisa (um
    comando por processo). Vários processos servidores exigiriam uma Unit

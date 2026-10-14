@@ -18,7 +18,10 @@ from filmes_e_cubos.adapters.interfaces.cli.criterio_apuracao_interativo import 
     CriterioApuracaoInterativo,
 )
 from filmes_e_cubos.adapters.interfaces.cli.erros import CliError
-from filmes_e_cubos.adapters.persistence.sqlite.fabrica_engine import criar_engine
+from filmes_e_cubos.adapters.persistence.sqlite.fabrica_engine import (
+    criar_engine,
+    criar_engine_da_url,
+)
 from filmes_e_cubos.application.ports.criterio_apuracao_oscar import CriterioApuracaoOscar
 from filmes_e_cubos.application.ports.relogio_service import RelogioService
 from filmes_e_cubos.application.ports.sorteador_service import SorteadorService
@@ -44,19 +47,26 @@ class FabricaDeContexto:
         self,
         caminho_banco: Path,
         *,
+        url_banco: str | None = None,
         relogio: RelogioService | None = None,
         sorteador: SorteadorService | None = None,
         criterio_apuracao: CriterioApuracaoOscar | None = None,
     ) -> None:
         self.caminho_banco = caminho_banco
+        self.url_banco = url_banco
         self._relogio = relogio
         self._sorteador = sorteador
         self._criterio_apuracao = criterio_apuracao
 
     @cached_property
     def contexto(self) -> Contexto:
+        engine = (
+            criar_engine_da_url(self.url_banco)
+            if self.url_banco
+            else criar_engine(self.caminho_banco)
+        )
         return Contexto(
-            criar_engine(self.caminho_banco),
+            engine,
             relogio=self._relogio,
             sorteador=self._sorteador,
         )

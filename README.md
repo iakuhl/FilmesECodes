@@ -94,6 +94,30 @@ convenções (incluindo o formato de erro, RFC 9457) está em
 [docs/API.md](docs/API.md). Ainda não há autenticação: por isso o padrão
 é ouvir só na própria máquina.
 
+## Publicando na Vercel
+
+O repositório já está pronto para a [Vercel](https://vercel.com): o
+`app.py` da raiz entrega o app completo, e a Vercel instala as
+dependências a partir do `pyproject.toml` e do `uv.lock`.
+
+1. Na Vercel, **Add New → Project** e importe este repositório do GitHub.
+   Nenhuma configuração de build é necessária.
+2. Em **Storage**, crie um banco **Neon (Postgres)** e conecte-o ao
+   projeto. A integração define `DATABASE_URL`, e as tabelas são criadas
+   sozinhas no primeiro acesso (migrações do Alembic). Vale ativar, na
+   integração, um banco separado para cada prévia, para que as prévias
+   não mexam nos dados da produção.
+3. Faça o deploy. A `main` vira a produção; cada push em outro branch
+   gera uma prévia.
+
+| Variável | Obrigatória | O que é |
+|---|---|---|
+| `DATABASE_URL` | sim | URL do Postgres (a integração da Neon define). |
+
+Sem `DATABASE_URL`, o app usa um arquivo SQLite — o que só serve
+localmente: na Vercel, o arquivo sumiria a cada reinício. A mesma
+variável (ou `--db-url`) aponta a CLI para o banco da produção.
+
 ## Desenvolvimento
 
 O projeto é gerenciado com [uv](https://docs.astral.sh/uv/).
@@ -103,6 +127,17 @@ uv sync --dev        # instala dependências (runtime + dev)
 uv run pytest        # roda a suíte de testes
 uv run mypy src      # checagem estática de tipos
 uv run ruff check .  # lint
+```
+
+Os testes da API também rodam contra um Postgres (o banco da produção)
+quando `FILMES_E_CUBOS_TESTE_POSTGRES` aponta um servidor em que a suíte
+possa criar e apagar bancos. A definição de CI em `docs/ci/testes.yml`
+faz isso a cada push, quando for ligada (ver a pendência em
+[docs/PENDENCIAS.md](docs/PENDENCIAS.md)):
+
+```bash
+FILMES_E_CUBOS_TESTE_POSTGRES=postgresql://postgres@localhost:5432/postgres \
+  uv run pytest tests/adapters/interfaces/api tests/adapters/persistence/sqlite/test_postgres.py
 ```
 
 ## Documentação

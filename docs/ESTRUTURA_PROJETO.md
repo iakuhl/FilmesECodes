@@ -19,7 +19,11 @@ FilmesECodes/
 │   ├── CLI.md
 │   ├── API.md
 │   ├── ROADMAP.md
-│   └── GLOSSARIO.md
+│   ├── PENDENCIAS.md
+│   ├── GLOSSARIO.md
+│   └── ci/testes.yml                  # CI pronta para ligar (vai para .github/workflows/)
+├── app.py                             # entrada da Vercel: o app completo
+├── .vercelignore                      # o que não vai para a função da Vercel
 ├── pyproject.toml                     # gerenciado via uv
 ├── src/
 │   └── filmes_e_cubos/

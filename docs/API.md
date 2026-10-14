@@ -22,6 +22,7 @@ código, fica em **`/api/v1/docs`**; o documento OpenAPI bruto, em
 | `--host` | `127.0.0.1` | Endereço em que o servidor escuta. O padrão só aceita conexões da própria máquina. |
 | `--porta` | `8000` | Porta TCP. |
 | `--db-path` | `filmes_e_cubos.db` | Arquivo SQLite — o mesmo da CLI. Também lido de `FILMES_E_CUBOS_DB`. |
+| `DATABASE_URL` (variável) | — | URL de um banco (ex.: o Postgres da produção); vale no lugar do arquivo SQLite. É o que a Vercel usa — ver o README. |
 | `--recarregar` | desligado | Reinicia ao detectar mudança no código (desenvolvimento). |
 
 > **Ainda não há autenticação.** Qualquer pessoa que alcance o servidor

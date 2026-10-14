@@ -21,6 +21,9 @@ from filmes_e_cubos.adapters.persistence.sqlite.migracao import (
     REVISAO_INICIAL,
     configuracao_alembic,
 )
+from filmes_e_cubos.adapters.persistence.sqlite.nomeacao_oscar_repository_sqlite import (
+    NomeacaoOscarRepositorioSqlite,
+)
 from filmes_e_cubos.adapters.persistence.sqlite.sessao_repository_sqlite import (
     SessaoRepositorioSqlite,
 )
@@ -213,3 +216,33 @@ def test_migracao_inicia_a_votacao_das_edicoes_que_ja_estavam_em_votacao(tmp_pat
     assert turnos.listar_por_categoria(CategoriaOscarId(UUID(premiada))) == []
     assert turnos.listar_por_categoria(CategoriaOscarId(UUID(esvaziada))) == []
     assert votacoes.buscar_por_temporada(TemporadaOscarId(UUID(aberta))) is None
+
+
+_ANTES_DA_ORDEM = "0005"
+"""Última revisão em que a ordem de criação dependia do `rowid` do SQLite."""
+
+
+def test_migracao_guarda_a_ordem_de_criacao_dos_bancos_antigos(tmp_path: Path) -> None:
+    """A revisão 0006 preenche `ordem` pelo `rowid`: as nomeações continuam na
+    ordem em que foram feitas, mesmo quando os ids sugerem outra.
+    """
+    caminho = tmp_path / "ordem.db"
+    antigo = create_engine(f"sqlite:///{caminho}")
+    configuracao = configuracao_alembic()
+    categoria, depois, antes, filme = _id(40), _id(41), _id(42), _id(43)
+    with antigo.begin() as conexao:
+        configuracao.attributes["connection"] = conexao
+        command.upgrade(configuracao, _ANTES_DA_ORDEM)
+        for sql in (
+            f"INSERT INTO categorias_oscar VALUES ('{categoria}', 't', 'Sono', 'VARIAVEL', NULL)",
+            f"INSERT INTO nomeacoes_oscar VALUES ('{antes}', '{categoria}', '{filme}', NULL)",
+            f"INSERT INTO nomeacoes_oscar VALUES ('{depois}', '{categoria}', '{filme}', NULL)",
+        ):
+            conexao.execute(text(sql))
+
+    nomeacoes = NomeacaoOscarRepositorioSqlite(criar_engine(caminho))
+
+    assert [n.id for n in nomeacoes.listar_por_categoria(CategoriaOscarId(UUID(categoria)))] == [
+        NomeacaoOscarId(UUID(antes)),
+        NomeacaoOscarId(UUID(depois)),
+    ]

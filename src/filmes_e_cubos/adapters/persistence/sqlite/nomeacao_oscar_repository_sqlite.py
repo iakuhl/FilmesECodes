@@ -7,7 +7,7 @@ from uuid import UUID
 
 from sqlalchemy import Engine, RowMapping
 
-from filmes_e_cubos.adapters.persistence.sqlite._upsert import upsert
+from filmes_e_cubos.adapters.persistence.sqlite._upsert import upsert_mantendo_a_ordem
 from filmes_e_cubos.adapters.persistence.sqlite.esquema import nomeacoes_oscar
 from filmes_e_cubos.domain.entities.nomeacao_oscar import NomeacaoOscar
 from filmes_e_cubos.domain.value_objects.identificadores import (
@@ -25,13 +25,15 @@ class NomeacaoOscarRepositorioSqlite:
         self._engine = engine
 
     def salvar(self, nomeacao: NomeacaoOscar) -> None:
-        upsert(self._engine, nomeacoes_oscar, _para_linha(nomeacao))
+        upsert_mantendo_a_ordem(self._engine, nomeacoes_oscar, _para_linha(nomeacao))
 
     def buscar_por_id(self, nomeacao_id: NomeacaoOscarId) -> NomeacaoOscar | None:
         with self._engine.connect() as conexao:
             linha = (
                 conexao.execute(
-                    nomeacoes_oscar.select().where(nomeacoes_oscar.c.id == str(nomeacao_id))
+                    nomeacoes_oscar.select()
+                    .order_by(nomeacoes_oscar.c.ordem)
+                    .where(nomeacoes_oscar.c.id == str(nomeacao_id))
                 )
                 .mappings()
                 .first()
@@ -42,9 +44,9 @@ class NomeacaoOscarRepositorioSqlite:
         with self._engine.connect() as conexao:
             linhas = (
                 conexao.execute(
-                    nomeacoes_oscar.select().where(
-                        nomeacoes_oscar.c.categoria_id == str(categoria_id)
-                    )
+                    nomeacoes_oscar.select()
+                    .order_by(nomeacoes_oscar.c.ordem)
+                    .where(nomeacoes_oscar.c.categoria_id == str(categoria_id))
                 )
                 .mappings()
                 .all()

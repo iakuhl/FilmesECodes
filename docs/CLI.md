@@ -44,6 +44,14 @@ export FILMES_E_CUBOS_DB=/caminho/do/clube.db   # equivalente, persistente
 O banco é criado na primeira vez que um comando precisa dele. Consultar a
 ajuda não cria nada.
 
+Para administrar outro banco — por exemplo, o Postgres da produção na
+Vercel —, use `--db-url` (ou a variável `DATABASE_URL`), que vale no
+lugar de `--db-path`:
+
+```bash
+filmes-e-cubos --db-url "postgresql://usuario:senha@servidor/banco" clube listar
+```
+
 ## Comandos
 
 ### `clube`

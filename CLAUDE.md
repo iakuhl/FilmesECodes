@@ -37,6 +37,10 @@ para virar produto multi-clube.
   web.
   As decisões, numeradas, estão em [docs/PENDENCIAS.md](docs/PENDENCIAS.md)
   — inclusive as interpretações que ainda pedem confirmação.
+- Em 13/10 o dono decidiu publicar a web na **Vercel** (decisões 34 a
+  37): Postgres da Neon na produção, senha única do clube até a Fase 5,
+  web primeiro e votação depois, e **push do branch a cada etapa**. A
+  ordem das etapas está em "Como continuar", no ROADMAP.
 - Sessões longas: perto de 50% da janela de contexto, termine a etapa em
   curso, documente como continuar (aqui, no ROADMAP e no PENDENCIAS) e
   pare com um resumo — preferência do dono.
@@ -51,6 +55,9 @@ uv run ruff check . && uv run ruff format --check .
 uv run filmes-e-cubos --help         # CLI
 uv run filmes-e-cubos-servidor       # API em http://127.0.0.1:8000/api/v1/docs
 uv run alembic revision --autogenerate -m "descrição"   # nova revisão do esquema
+# testes da API e do esquema também no Postgres (a CI, quando ligada, faz isso):
+FILMES_E_CUBOS_TESTE_POSTGRES=postgresql://postgres@localhost:5432/postgres \
+  uv run pytest tests/adapters/interfaces/api tests/adapters/persistence/sqlite/test_postgres.py
 ```
 
 Um passo só está pronto com os quatro verdes: pytest, mypy, ruff check e
@@ -130,5 +137,14 @@ ruff format.
   a requisição primeiro.
 - O venv usa Python 3.14, mas o projeto declara `>=3.11`: não use
   sintaxe exclusiva de versões mais novas (ex.: `type X = ...`).
-- O Docker não fica rodando nesta máquina; o deploy, por ora, é só local
-  (mas mantenha tudo configurável por variável de ambiente).
+- O Docker não fica rodando nesta máquina. Há um PostgreSQL 18 em
+  `E:\Program Files\PostgreSQL\18\bin`: para testar, suba um cluster
+  temporário (`initdb -D <dir> -U postgres -A trust` e `pg_ctl -D <dir>
+  -o "-p 54329" start`) em vez de mexer no do dono — e, no shell,
+  `pg_ctl start` prende a saída: rode-o em segundo plano.
+- **Postgres confere chaves estrangeiras; o SQLite local, não.** Uma
+  gravação fora de ordem (filho antes da mãe) passa nos testes de
+  repositório e quebra na produção: os testes da API, rodando contra o
+  Postgres, são a garantia.
+- Produção na Vercel: tudo configurável por variável de ambiente
+  (`DATABASE_URL` e as que vierem); o `app.py` da raiz é a entrada.
