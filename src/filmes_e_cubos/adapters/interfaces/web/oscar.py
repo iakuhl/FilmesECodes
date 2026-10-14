@@ -53,6 +53,10 @@ class CategoriaNaPagina:
     categoria: CategoriaOscar
     nomeacoes: list[NomeacaoNaPagina]
     trofeu: Trofeu | None
+    vencedor: Membro | None
+    """Quem levou o troféu, se a categoria já tem vencedor."""
+    vencedora: NomeacaoNaPagina | None
+    """A nomeação vencedora; `None` sem vencedor ou num empate absoluto."""
 
 
 @dataclass(frozen=True)
@@ -72,13 +76,24 @@ def nomeacao_na_pagina(contexto: Contexto, nomeacao: NomeacaoOscar) -> NomeacaoN
 
 
 def categoria_na_pagina(contexto: Contexto, categoria: CategoriaOscar) -> CategoriaNaPagina:
+    trofeu = contexto.trofeus.buscar_por_categoria(categoria.id)
+    nomeacoes = [
+        nomeacao_na_pagina(contexto, nomeacao)
+        for nomeacao in contexto.nomeacoes.listar_por_categoria(categoria.id)
+    ]
     return CategoriaNaPagina(
         categoria=categoria,
-        nomeacoes=[
-            nomeacao_na_pagina(contexto, nomeacao)
-            for nomeacao in contexto.nomeacoes.listar_por_categoria(categoria.id)
-        ],
-        trofeu=contexto.trofeus.buscar_por_categoria(categoria.id),
+        nomeacoes=nomeacoes,
+        trofeu=trofeu,
+        vencedor=contexto.membros.buscar_por_id(trofeu.membro_vencedor_id) if trofeu else None,
+        vencedora=next(
+            (
+                item
+                for item in nomeacoes
+                if trofeu is not None and item.nomeacao.id == trofeu.nomeacao_vencedora_id
+            ),
+            None,
+        ),
     )
 
 

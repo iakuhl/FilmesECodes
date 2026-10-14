@@ -19,9 +19,10 @@ A aposta se confirmou: as duas decisões foram tomadas depois (SQLite na
 Fase 2, CLI na Fase 3) e nenhuma delas exigiu uma única alteração em
 `domain/` ou `application/`. Na Fase 4, uma segunda interface (a API
 HTTP) entrou ao lado da primeira reaproveitando todos os casos de uso —
-de novo sem mudar uma regra do núcleo. Uma decisão continua em aberto —
-o critério de apuração do Óscar — e segue viável exatamente pelo mesmo
-mecanismo.
+de novo sem mudar uma regra do núcleo. O critério de apuração do Óscar
+ficou meses em aberto atrás de um port plugável, até o clube decidir a
+votação (setembro de 2026); trocar o critério provisório pela votação não
+mexeu em nenhuma interface além das telas da própria votação.
 
 ## Camadas
 
@@ -93,13 +94,8 @@ fora:
   testes).
 - `RelogioService` (clock): contrato para obter a data/hora atual, para
   que casos de uso sejam testáveis sem depender do relógio do sistema.
-- `CriterioApuracaoOscar`: contrato para o critério que decide o vencedor
-  de uma categoria do Óscar — existe porque esse mecanismo (votação,
-  média de notas, etc.) ainda não foi decidido para o produto; o caso de
-  uso `ApurarCategoriaOscar` não fica acoplado a essa decisão em aberto.
-  (A votação decidida em 24 e 25/09/2026 já conta os votos no domínio;
-  o port sai quando o vencedor passar a ser registrado por quem
-  administra — ver o ROADMAP.)
+- `EnviadorDeEmail`: contrato genérico de envio de e-mail, que leva o
+  placar do Óscar a quem monta a cerimônia (ADR 14).
 - `LeitorDeHistorico`: contrato do módulo de histórico de sessões
   passadas — um adapter por formato de arquivo, que entrega os registros
   com os nomes como vieram (`SessaoHistorica`, `NotaHistorica`) e relata
@@ -128,24 +124,18 @@ Implementações concretas dos ports. Três categorias existem:
   nova quebra a suíte.
 - **Serviços de infraestrutura** (`adapters/servicos/`):
   implementações reais de `RelogioService` e `SorteadorService`, e o
-  `CriterioEscolhaInformada` — uma implementação de
-  `CriterioApuracaoOscar` que recebe pronta a nomeação vencedora
-  escolhida pelo grupo (usada pelas interfaces HTTP).
+  `EnviadorSmtp` de `EnviadorDeEmail` (ADR 14).
 - **Interfaces** (`adapters/interfaces/`):
   - a **CLI** em Typer (Fase 3 — ver [CLI.md](CLI.md)). Traduz argumentos
-    de terminal em chamadas aos casos de uso e formata o resultado. Inclui
-    também uma implementação de `CriterioApuracaoOscar`
-    (`CriterioApuracaoInterativo`), que pergunta ao usuário quem venceu a
-    categoria: como o mecanismo de apuração continua em aberto no
-    produto, a resposta mais honesta é delegá-la a quem opera, e o port
-    existe exatamente para permitir isso sem contaminar o domínio;
+    de terminal em chamadas aos casos de uso e formata o resultado;
   - a **API HTTP** em FastAPI (Fase 4 — ver [API.md](API.md)), um sub-app
     montado em `/api/v1` por `servidor.py`, que também é o entry point
     `filmes-e-cubos-servidor`. Traduz requisições em chamadas aos casos de
     uso e erros de domínio em respostas `application/problem+json`
-    (RFC 9457). A escolha de quem venceu uma categoria do Óscar chega no
-    corpo da requisição e é repassada ao caso de uso pelo
-    `CriterioEscolhaInformada`.
+    (RFC 9457);
+  - a **web** (Fase 4 — ver [WEB.md](WEB.md)), páginas renderizadas no
+    servidor com Jinja2; é o app raiz, com a API montada dentro dele, e a
+    senha do clube (ADR 13) protege os dois.
 
 #### Composition root
 
@@ -159,21 +149,13 @@ Nasceu dentro da CLI (`adapters/interfaces/cli/contexto.py`, Fase 3) e
 foi promovido a módulo próprio no início da Fase 4, quando uma segunda
 interface passou a precisar exatamente do mesmo grafo de dependências.
 Cada interface continua dona apenas do que é dela: a CLI, por exemplo,
-decide *quando* montar o grafo (só quando um comando toca dados) e qual
-critério de apuração do Óscar usar.
+decide *quando* montar o grafo (só quando um comando toca dados).
 
 Uma consequência prática e deliberada: os repositórios são anotados ali
 com o tipo do *port*, não com o da classe concreta. Assim o `mypy` checa,
 naquele ponto de montagem, que cada adapter realmente satisfaz o
 `Protocol` que diz implementar — a verificação estrutural que justifica a
 decisão nº 4 da tabela abaixo.
-
-O critério de apuração do Óscar é a única dependência que o composition
-root **não** escolhe: como o mecanismo continua em aberto no produto,
-cada interface o delega a quem opera do seu jeito (a CLI pergunta no
-terminal; interfaces HTTP recebem a escolha na requisição). Por isso
-`ApurarCategoriaOscar` é montado sob demanda, por
-`Contexto.apurar_categoria_oscar(criterio)`.
 
 Conveniências que várias interfaces compartilham — o nome padrão de uma
 edição do Óscar, a presença padrão de uma sessão, o clube a que uma

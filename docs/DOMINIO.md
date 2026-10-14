@@ -221,8 +221,8 @@ assistido pelo clube dentro do ano daquela temporada.
   esse filme em sua `Indicacao` semanal** — é ele quem receberá o troféu
   se o filme vencer a categoria. **Ausente** (`None`) quando o filme veio
   de uma indicação `democracia`, que não tem indicador individual — nesse
-  caso, quem recebe o troféu é decidido pelo grupo no momento da
-  apuração (ver `Trofeu` e regra 7 abaixo).
+  caso, quem recebe o troféu é decidido pelo grupo (ver `Trofeu` e a
+  regra 7 abaixo).
 
 O mesmo filme pode ocupar várias nomeações da mesma categoria — uma
 categoria pode até ser inteira sobre um filme só.
@@ -285,18 +285,21 @@ conteúdo é secreto: fica guardado, mas nenhuma interface o mostra.
 
 ### Trofeu
 
-O resultado da apuração de uma `CategoriaOscar`: qual `NomeacaoOscar`
-venceu.
+O resultado de uma `CategoriaOscar`, registrado por quem administra
+depois da cerimônia — a apuração acontece fora do sistema, com o placar
+que foi por e-mail.
 
 - `id`
 - `categoria_id`
-- `nomeacao_vencedora_id`
+- `nomeacao_vencedora_id`: ausente num **empate absoluto**, quando
+  nenhuma nomeação vence.
 - `membro_vencedor_id`: normalmente derivado de
   `NomeacaoOscar.indicado_por_membro_id` — reforça a regra central de que
   **o troféu é entregue a quem indicou o filme**, não a quem "atua"
   tematicamente na categoria. Quando a nomeação vencedora não tem
   indicador (veio de uma indicação `democracia`), este campo vem de uma
-  escolha manual do grupo, feita no momento da apuração/premiação.
+  escolha do grupo — como também no empate absoluto. O membro escolhido
+  precisa ser do clube.
 - `data_apuracao`
 
 ## Regras de negócio centrais (resumo)
@@ -321,9 +324,9 @@ venceu.
    a média da sessão fica guardada como fração exata (soma ÷ quantidade).
 5. O troféu de uma categoria do Óscar aponta para o membro que
    originalmente indicou o filme vencedor no clube — é essa rastreabilidade
-   entre `Indicacao` e `NomeacaoOscar` que torna a apuração possível. Para
+   entre `Indicacao` e `NomeacaoOscar` que torna a premiação possível. Para
    filmes indicados via `democracia` (sem indicador individual), o
-   membro do troféu é escolhido pelo grupo no momento da apuração.
+   membro do troféu é escolhido pelo grupo, como no empate absoluto.
 6. Categorias do Óscar podem ser fixas (recorrentes) ou variáveis
    (definidas a cada edição); ambas convivem na mesma `TemporadaOscar`.
 7. Uma indicação `democracia` é uma sessão **extra**, não uma

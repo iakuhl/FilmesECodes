@@ -190,8 +190,8 @@ porque ali a omissão é um gesto explícito de quem digita o comando.)
 | `PUT /oscar/categorias/{categoria_id}/votos/{membro_id}` | Registra ou troca o voto do eleitor na categoria. Corpo: `{"escolhas": [nomeacao_id, ...]}`, em ordem de preferência — a 1ª e a 2ª opção (nomeações diferentes, que podem ser do mesmo filme) ou, num turno de classificação, todas as candidatas. Devolve a cédula **sem as escolhas**. `409` `membro_fora_da_votacao`, `categoria_fora_do_turno` ou `cedula_confirmada`; `422` `voto_invalido`. |
 | `POST /oscar/temporadas/{temporada_id}/votacao/cedulas/{membro_id}/confirmacao` | Confirma a cédula do eleitor; depois disso, os votos não mudam. `409` `cedula_incompleta` (com as categorias que faltam). Devolve `{"turno_encerrado", "votacao"}`: a última confirmação encerra o turno e, se houve empate, abre o seguinte. |
 | `POST /oscar/temporadas/{temporada_id}/placar/envios` | Envia o placar da votação terminada por e-mail. Corpo: `{"destinatario"}`; devolve só o destinatário — o placar nunca aparece numa resposta. `409` `votacao_em_andamento` antes do fim da votação ou `acao_fora_da_fase` com a edição encerrada; `422` `endereco_de_email_invalido`; `503` `envio_de_email_indisponivel` sem servidor de e-mail configurado; `502` `falha_no_envio_de_email` se ele recusar. |
-| `POST /oscar/categorias/{categoria_id}/apuracao` | Apura a categoria e emite o troféu. Corpo: `{"nomeacao_vencedora_id", "membro_vencedor_id"?}`. |
-| `GET /oscar/categorias/{categoria_id}/trofeu` | O troféu da categoria; `404` enquanto ela não tiver sido apurada. |
+| `POST /oscar/categorias/{categoria_id}/trofeu` | Registra, depois da cerimônia, o vencedor da categoria. Corpo: `{"nomeacao_id"?, "membro_escolhido_id"?}`. O troféu vai para quem indicou a nomeação vencedora; num filme democracia, ou num empate absoluto (sem `nomeacao_id`), para `membro_escolhido_id`, obrigatório nesses casos (`422` `escolha_do_grupo_necessaria`; `membro_de_outro_clube` se não for do clube). Só com a votação terminada (`409` `votacao_em_andamento`); `409` `categoria_ja_apurada` se já houver vencedor. |
+| `GET /oscar/categorias/{categoria_id}/trofeu` | O troféu da categoria (`nomeacao_vencedora_id` é `null` num empate absoluto); `404` enquanto não houver vencedor registrado. |
 
 #### A votação
 
@@ -203,19 +203,13 @@ turno, e o sistema apura sem mostrar nada — os empates no topo abrem o
 turno seguinte só com as empatadas. O voto é secreto: nenhuma rota
 devolve as escolhas de alguém, nem o placar.
 
-#### Como a apuração decide o vencedor
+#### Placar e vencedores
 
-O mecanismo de apuração continua em aberto no produto, então a API não
-inventa um: **quem chama informa qual nomeação o grupo escolheu**
-(`nomeacao_vencedora_id`), e a API confere que ela concorre na categoria.
-É o mesmo papel do `CriterioApuracaoInterativo` da CLI — o port
-`CriterioApuracaoOscar` recebe aqui a implementação
-`CriterioEscolhaInformada`, e trocá-la por um critério automático, quando
-o clube decidir um, não exige mexer em domínio nem em aplicação.
-
-O troféu vai para **quem indicou o filme vencedor**. Quando o filme veio
-de uma sessão democracia (sem membro indicador), `membro_vencedor_id` é
-obrigatório, com a escolha do grupo.
+Ninguém vê o resultado pela API: terminada a votação, o placar vai por
+e-mail a quem monta a cerimônia (`/placar/envios`), e a apuração
+acontece fora do sistema. Depois do evento, `POST .../trofeu` registra
+cada vencedor; com todas as categorias premiadas, a edição avança a
+`apurada`.
 
 ### Infraestrutura
 
@@ -238,4 +232,21 @@ curl -s -X POST $API/indicacoes/<INDICACAO>/sessao
 curl -s -X POST $API/sessoes/<SESSAO>/avaliacoes -H 'content-type: application/json' \
      -d '{"membro_id": "<IANO>", "nota": 4.5}'
 curl -s -X POST $API/rodadas/<RODADA>/encerrar
+
+# Óscar: edição, categoria, nomeações, votação, placar e vencedor
+curl -s -X POST $API/clubes/<CLUBE>/oscar/temporadas -H 'content-type: application/json' \
+     -d '{"nomeacoes_por_categoria": 2}'
+curl -s -X POST $API/oscar/temporadas/<EDICAO>/categorias -H 'content-type: application/json' \
+     -d '{"nome": "Melhor veículo"}'
+curl -s -X POST $API/oscar/temporadas/<EDICAO>/avancar          # aberta para indicações
+curl -s -X POST $API/oscar/categorias/<CATEGORIA>/nomeacoes -H 'content-type: application/json' \
+     -d '{"filme_id": "<PARASITA>"}'                                # (e a segunda nomeação)
+curl -s -X POST $API/oscar/temporadas/<EDICAO>/avancar          # em votação
+curl -s -X PUT $API/oscar/categorias/<CATEGORIA>/votos/<IANO> -H 'content-type: application/json' \
+     -d '{"escolhas": ["<NOMEACAO_1>", "<NOMEACAO_2>"]}'
+curl -s -X POST $API/oscar/temporadas/<EDICAO>/votacao/cedulas/<IANO>/confirmacao
+curl -s -X POST $API/oscar/temporadas/<EDICAO>/placar/envios -H 'content-type: application/json' \
+     -d '{"destinatario": "cerimonia@clube.com"}'
+curl -s -X POST $API/oscar/categorias/<CATEGORIA>/trofeu -H 'content-type: application/json' \
+     -d '{"nomeacao_id": "<NOMEACAO_VENCEDORA>"}'
 ```

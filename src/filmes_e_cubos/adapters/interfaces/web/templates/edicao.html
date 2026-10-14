@@ -54,7 +54,7 @@
   {% if edicao.categorias %}
   <div class="tabela-rolavel">
   <table>
-    <thead><tr><th>Categoria</th><th>Tipo</th><th>Nomeações</th></tr></thead>
+    <thead><tr><th>Categoria</th><th>Tipo</th><th>Nomeações</th><th>Troféu</th></tr></thead>
     <tbody>
       {% for item in edicao.categorias %}
       <tr>
@@ -62,6 +62,7 @@
           {% if item.categoria.descricao %}<br><small class="suave">{{ item.categoria.descricao }}</small>{% endif %}</td>
         <td>{{ item.categoria.tipo | rotulo }}</td>
         <td>{{ item.nomeacoes | length }}/{{ temporada.nomeacoes_por_categoria }}</td>
+        <td>{{ item.vencedor.nome if item.vencedor else "—" }}</td>
       </tr>
       {% endfor %}
     </tbody>

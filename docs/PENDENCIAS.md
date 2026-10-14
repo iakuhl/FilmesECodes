@@ -287,7 +287,8 @@ Novas, do redesenho de 25/09:
     que esbarra em pendências (sem categorias, nomeações faltando,
     categorias sem resultado); a mensagem lista o que falta, ex.:
     "Pior criança (1/5)".
-22. **A apuração ainda usa o critério antigo** (escolha informada por
+22. *(Superada pela etapa (c) da votação, em 13/10.)* **A apuração ainda
+    usa o critério antigo** (escolha informada por
     quem opera) e ainda não é restrita à fase *em votação*: a etapa da
     votação a substitui por inteiro, com as suas restrições. Até lá, a
     passagem para *apurada* conta os troféus emitidos por ela.
@@ -301,7 +302,7 @@ Novas, do redesenho de 25/09:
     como regra do domínio (decisão 28) e o vencedor informado por quem
     administra (decisão 29), o port `CriterioApuracaoOscar` e suas
     implementações (a interativa da CLI e a `CriterioEscolhaInformada` da
-    API) deixam de existir. *A implementar na etapa dos vencedores.*
+    API) deixam de existir. *Feito na etapa (c), em 13/10.*
 25. **Ir à votação exige ao menos um membro ativo**
     (`TemporadaIncompletaError`): sem eleitores, a votação nunca
     terminaria.
@@ -409,6 +410,15 @@ Novas, do redesenho de 25/09:
     sem impedir as outras.
 53. **O formulário de nomeação lista só os filmes que o clube assistiu
     no ano da edição** — os únicos que o domínio aceita.
+54. **Troféu sem nomeação no empate absoluto** (revisão 0007:
+    `trofeus.nomeacao_vencedora_id` anulável).
+55. **Registrar o vencedor ignora a escolha do grupo quando há quem
+    indicou**, como a apuração antiga fazia: o troféu é sempre de quem
+    indicou o filme vencedor.
+56. **Na web, o vencedor se registra na página da categoria**, com o
+    empate absoluto como uma opção do mesmo seletor ("nenhuma venceu"); o
+    formulário só aparece com a votação terminada e a categoria sem
+    vencedor.
 
 ## Dívidas técnicas conhecidas
 

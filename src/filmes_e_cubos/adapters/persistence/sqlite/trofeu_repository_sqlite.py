@@ -41,7 +41,9 @@ def _para_linha(trofeu: Trofeu) -> dict[str, Any]:
     return {
         "id": str(trofeu.id),
         "categoria_id": str(trofeu.categoria_id),
-        "nomeacao_vencedora_id": str(trofeu.nomeacao_vencedora_id),
+        "nomeacao_vencedora_id": (
+            str(trofeu.nomeacao_vencedora_id) if trofeu.nomeacao_vencedora_id else None
+        ),
         "membro_vencedor_id": str(trofeu.membro_vencedor_id),
         "data_apuracao": trofeu.data_apuracao,
     }
@@ -51,7 +53,11 @@ def _para_entidade(linha: RowMapping) -> Trofeu:
     return Trofeu(
         id=TrofeuId(UUID(linha["id"])),
         categoria_id=CategoriaOscarId(UUID(linha["categoria_id"])),
-        nomeacao_vencedora_id=NomeacaoOscarId(UUID(linha["nomeacao_vencedora_id"])),
+        nomeacao_vencedora_id=(
+            NomeacaoOscarId(UUID(linha["nomeacao_vencedora_id"]))
+            if linha["nomeacao_vencedora_id"] is not None
+            else None
+        ),
         membro_vencedor_id=MembroId(UUID(linha["membro_vencedor_id"])),
         data_apuracao=linha["data_apuracao"],
     )

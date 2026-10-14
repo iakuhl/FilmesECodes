@@ -88,7 +88,8 @@ acrescenta, e por quê:
   negócio.
 - `conversores.py`: fronteira entre o texto do terminal e os tipos do
   domínio (`Decimal`, `Nota`, enumerações).
-- `criterio_apuracao_interativo.py`: implementação de
+- `criterio_apuracao_interativo.py` *(removido em 13/10/2026, quando a
+  votação substituiu o critério provisório)*: implementação de
   `CriterioApuracaoOscar` que lista as nomeações e pergunta ao usuário
   quem venceu (ver a seção de pontos em aberto abaixo).
 - `apresentacao.py`: tabelas e mensagens. A tabela é montada à mão, sem
@@ -104,7 +105,7 @@ ponta a ponta que percorre uma temporada inteira do clube. Todos rodam a
 CLI de verdade, com `typer.testing.CliRunner`, contra um banco SQLite
 real em `tmp_path`.
 
-## Fase 4 — API / Web 🚧 em andamento
+## Fase 4 — API / Web ✅ concluída
 
 Objetivo original: "caso haja interesse em uma interface mais rica (web)
 ou em uso remoto pelos membros do clube, adicionar um adapter de API
@@ -136,7 +137,8 @@ O que a fase acrescentou, e por quê:
   (RFC 9457) com um `codigo` estável. A classificação de cada erro de
   domínio em 404/409/422 é explícita, e um teste impede que um erro novo
   fique sem classificação.
-- **`CriterioEscolhaInformada`** (`adapters/servicos/`): a API recebe no
+- **`CriterioEscolhaInformada`** *(removido em 13/10/2026, com a
+  votação)* (`adapters/servicos/`): a API recebe no
   corpo da requisição qual nomeação o grupo escolheu — o mesmo papel do
   critério interativo da CLI, sem decidir o mecanismo de apuração, que
   continua em aberto.
@@ -158,7 +160,7 @@ injeção do `Contexto` viraram módulos compartilhados
 do banco passou a evoluir por **migrações com Alembic** (ADR 11) —
 pré-requisito das mudanças de esquema da revisão de regras abaixo.
 
-### Interface web 🚧 em andamento
+### Interface web ✅ concluída
 
 Decisão confirmada pelo dono do produto: **páginas renderizadas no
 servidor com Jinja2**, sem SPA nem build de JavaScript — a web é só mais
@@ -189,11 +191,15 @@ Plano para o restante (ver "Como continuar"):
 - Testes com o `TestClient` contra o app completo e `beautifulsoup4`
   para ler o HTML; `docs/WEB.md` com a referência das páginas.
 
-### Publicação na Vercel 🚧 em andamento
+### Publicação na Vercel ✅ pronta para publicar
 
 Decisões 34 a 37 de [PENDENCIAS.md](PENDENCIAS.md): a web vai ao ar na
 Vercel, a partir do repositório do GitHub, com o banco num Postgres da
 Neon e protegida por uma senha única do clube até o login da Fase 5.
+
+Para publicar, o dono mescla `roadmap/fases-4-e-5` em `main`, envia ao
+GitHub e configura o projeto na Vercel (banco Neon, senha do clube e, para
+o placar, o servidor de e-mail) — os passos estão no README.
 
 Feito: a persistência ficou portável entre SQLite e Postgres (ADR 12;
 revisão 0006, a ordem de criação), o `app.py` da raiz é a entrada da
@@ -202,7 +208,7 @@ testes da API rodam também contra um Postgres; a definição de CI que faz
 isso a cada push está pronta em `docs/ci/testes.yml`, esperando ser
 ligada (pendência 4). Os passos para publicar estão no README.
 
-## Revisão de regras de 24 e 25/09/2026 — 🚧 falta a votação
+## Revisão de regras de 24 e 25/09/2026 ✅ concluída
 
 O dono do produto respondeu às questões levantadas na Fase 4. As
 decisões estão detalhadas, numeradas, em [PENDENCIAS.md](PENDENCIAS.md)
@@ -216,10 +222,10 @@ membro; data do evento; média das notas armazenada; duração do filme; e o
 contrato de um módulo de histórico de sessões passadas.
 
 Deve vir **antes** das páginas da web, que dependem dessas regras (a
-votação, por exemplo, ganha telas próprias). Tudo já está implementado,
-menos parte da votação — o desenho dela está logo abaixo.
+votação, por exemplo, ganha telas próprias). Está tudo implementado; o
+desenho da votação, como foi feito, está logo abaixo.
 
-### Desenho da votação (em implementação: etapa (a) pronta)
+### Desenho da votação ✅ implementado
 
 Decisões 8, 16, 20 e 21 a 29 de [PENDENCIAS.md](PENDENCIAS.md) e as
 interpretações 1 a 3 e 12 a 15. O sistema recolhe os votos e desfaz os
@@ -355,7 +361,7 @@ as cédulas nem o placar (decisão 26).
 
 Ordem de implementação, um commit por etapa: **(a)** ✅ votação —
 eleitores, turnos, cédulas, confirmação e desempates (revisão 0005);
-**(b)** ✅ placar por e-mail; **(c)** vencedores registrados e remoção do
+**(b)** ✅ placar por e-mail; **(c)** ✅ vencedores registrados e remoção do
 critério antigo (revisão 0007; a 0006 foi a da ordem de criação, que o
 Postgres pediu).
 
@@ -387,59 +393,29 @@ quanto) a guardar só o resultado final.
 
 ## Como continuar
 
-Ordem decidida pelo dono em 13/10/2026 (decisão 36 de
-[PENDENCIAS.md](PENDENCIAS.md)): primeiro a web publicada na Vercel,
-depois o resto da votação. O trabalho segue no branch
-`roadmap/fases-4-e-5`, um commit por etapa, com **push do branch** ao fim
-de cada uma (a Vercel gera uma prévia); merge e push da `main`, que é a
-produção, só a pedido do dono (decisão 37).
+A Fase 4 terminou em 13/10/2026: a web (decisões 34 a 37 de
+[PENDENCIAS.md](PENDENCIAS.md)) e a votação do Óscar inteira estão
+prontas, no branch `roadmap/fases-4-e-5`, enviado ao GitHub a cada etapa.
+O que falta, em ordem:
 
-1. **Web na Vercel** (decisões 34 a 37):
-   1. ✅ persistência portável — Postgres (Neon) na produção, SQLite local
-      e nos testes; ordem de criação em coluna própria (revisão 0006);
-      entrada `app.py` da Vercel; CI pronta para ligar;
-   2. ✅ senha única do clube (decisão 35), protegendo o site e a API; a
-      base da web (app raiz, modelos, visual), o início e o painel;
-   3. ✅ páginas do dia a dia, conforme o plano da seção da Fase 4: início,
-      painel da rodada, membros, filmes, histórico de rodadas, sessões e
-      avaliações;
-   4. ✅ Óscar até a votação: edições, categorias, nomeações, cédula e
-      confirmação — e, com elas, a etapa (b) da votação, o placar por
-      e-mail;
-   5. **próximo:** etapa (c) da votação, os vencedores, com a tela de
-      premiação.
-2. Notas técnicas das etapas (b) e (c) da votação:
-   - (b) `EnderecoDeEmail` (value object) e os erros
-     `EnderecoDeEmailInvalidoError` (422), `VotacaoEmAndamentoError` (409)
-     e, para o envio, um erro de "e-mail não configurado" (503) e um de
-     falha do servidor SMTP (502) — os dois pedem título em português em
-     `api/erros.py` (`_TITULOS`). O `Contexto` recebe o enviador como
-     recebe o relógio (parâmetro opcional, padrão lido do ambiente:
-     `FILMES_E_CUBOS_SMTP_HOST`, `_PORTA`, `_USUARIO`, `_SENHA`,
-     `_REMETENTE`...), e a `FabricaDeContexto` da CLI também, para os
-     testes injetarem um enviador fake. O placar sai de
-     `TurnoDeVotacao.pontuacao`, `lideres` e `empate_absoluto`, com o
-     título do filme e o nome de quem indicou (interpretação 15). Testar
-     o adapter SMTP contra um servidor SMTP de verdade, local (ex.:
-     `aiosmtpd` como dependência de desenvolvimento). Vale uma ADR (port
-     de e-mail genérico, reaproveitável nos convites da Fase 5);
-   - (c) `Trofeu.nomeacao_vencedora_id` opcional (revisão 0007),
-     `RegistrarVencedorOscar` no lugar de `ApurarCategoriaOscar`, CLI
-     `oscar premiar` e `oscar categoria nomeacoes`, API
-     `POST /oscar/categorias/{id}/trofeu`; remover o port, as duas
-     implementações, o fake, `obter_criterio_apuracao` da CLI e os
-     testes deles; reescrever os dois fluxos de ponta a ponta (CLI e API)
-     votando, enviando o placar e premiando, e o "Um ciclo completo" de
-     CLI.md e API.md.
-3. **Fase 5**: verificações entre clubes, login com convites e
-   permissões (no lugar da senha única), TMDB.
+1. **Publicar** (ação do dono): mesclar o branch em `main`, enviar ao
+   GitHub e configurar a Vercel — banco Neon, `FILMES_E_CUBOS_SENHA` e as
+   variáveis do SMTP para o placar; ver "Publicando na Vercel" no README.
+2. **Ligar a CI** (pendência 4): dar ao token do git o escopo `workflow`
+   e mover `docs/ci/testes.yml` para `.github/workflows/`.
+3. **Confirmar as interpretações** que seguem abertas em PENDENCIAS (1 a
+   3 e 12 a 15) e decidir a questão do eleitor que nunca confirma
+   (questão em aberto 3).
+4. **Fase 5**: login individual por convite, que substitui a senha única
+   (o port de e-mail já existe para os convites); permissões de
+   administrador e de membro (votar só por si); verificações entre clubes
+   nas demais interfaces (a web já as faz); TMDB.
 
-Já feito da revisão de regras de 24 e 25/09 (decisões 3 a 11 e 16 a 33):
-duração do filme (revisão 0002), reativar membro e data do evento; só
-presentes avaliam e a média como fração (revisão 0003); filme que não se
-repete; uma edição por ano, nomeações por categoria (revisão 0004) e o
-ciclo com *em votação*; o contrato do histórico; e a etapa (a) da
-votação — eleitores, cédulas, confirmação e desempates (revisão 0005).
+Feito nas etapas de 13/10, cada uma com push do branch: persistência
+portável e entrada da Vercel (revisão 0006); senha do clube e a base da
+web; as páginas do dia a dia; o placar por e-mail com as telas do Óscar
+até a votação; e o registro dos vencedores (revisão 0007), que removeu o
+critério antigo de apuração.
 
 ## Pontos explicitamente em aberto
 
@@ -450,5 +426,5 @@ votação — eleitores, cédulas, confirmação e desempates (revisão 0005).
 | Tecnologia da API | ✅ Resolvida: FastAPI, erros RFC 9457 | Fase 4 |
 | Tecnologia da interface web | ✅ Resolvida: páginas renderizadas no servidor (Jinja2) | Fase 4 |
 | Evolução do esquema do banco | ✅ Resolvida: migrações com Alembic | Fase 4 |
-| Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | ✅ Decidida em 24 e 25/09/2026: votação ponderada (2/1) com eleitores definidos, cédula confirmada e desempates no sistema; placar enviado por e-mail e apuração fora do sistema; vencedores registrados depois do evento — a implementar | Hoje a CLI e a API ainda delegam a escolha a quem opera (port `CriterioApuracaoOscar`), que sai na etapa dos vencedores. Ver [PENDENCIAS.md](PENDENCIAS.md), decisões 8 e 21 a 29. |
+| Mecanismo de apuração de categorias do Óscar (votação vs. critério fixo) | ✅ Implementado em 13/10/2026: votação ponderada (2/1) com eleitores definidos, cédula confirmada e desempates no sistema; placar por e-mail e apuração fora do sistema; vencedores registrados depois do evento | Ver [PENDENCIAS.md](PENDENCIAS.md), decisões 8 e 21 a 29. |
 | Módulo de histórico de sessões passadas | Contrato criado (`LeitorDeHistorico`); implementação em aberto | Ver [PENDENCIAS.md](PENDENCIAS.md), decisão 3 e questão em aberto 1. |

@@ -20,7 +20,7 @@ class NomeacaoOscar:
     rastreabilidade que permite entregar o troféu a quem indicou o filme.
     Fica `None` quando o filme veio de uma indicação DEMOCRACIA (sem
     indicador individual); nesse caso, quem recebe o troféu é decidido
-    pelo grupo no momento da apuração (ver `ApurarCategoriaOscar`).
+    pelo grupo (ver `RegistrarVencedorOscar`).
     """
 
     def __init__(

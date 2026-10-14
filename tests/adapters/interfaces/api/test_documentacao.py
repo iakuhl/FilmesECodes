@@ -20,7 +20,8 @@ def test_openapi_descreve_os_recursos_e_os_erros(api: ApiDeTeste) -> None:
         "/rodadas/{rodada_id}/indicacoes",
         "/indicacoes/{indicacao_id}/sessao",
         "/sessoes/{sessao_id}/avaliacoes",
-        "/oscar/categorias/{categoria_id}/apuracao",
+        "/oscar/temporadas/{temporada_id}/votacao",
+        "/oscar/categorias/{categoria_id}/trofeu",
     ):
         assert caminho in caminhos
     assert "Problema" in documento["components"]["schemas"]

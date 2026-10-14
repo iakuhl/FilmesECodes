@@ -33,7 +33,7 @@ class IndicarFilmeParaCategoria:
     A nomeação herda `indicado_por_membro_id` da `Indicacao` semanal
     original assistida (pode ser `None`, se a indicação for DEMOCRACIA) —
     é essa rastreabilidade que permite ao caso de uso
-    `ApurarCategoriaOscar` entregar o troféu a quem indicou o filme.
+    `RegistrarVencedorOscar` entregar o troféu a quem indicou o filme.
     """
 
     def __init__(

@@ -3,7 +3,7 @@
 O grafo de dependências em si (repositórios, serviços e casos de uso) é
 montado em `filmes_e_cubos.adapters.composicao`, compartilhado por todas
 as interfaces. Este módulo cuida apenas do que é específico da CLI:
-quando montar esse grafo e qual critério de apuração do Óscar usar.
+quando montar esse grafo.
 """
 
 from __future__ import annotations
@@ -14,15 +14,11 @@ from pathlib import Path
 import typer
 
 from filmes_e_cubos.adapters.composicao import Contexto
-from filmes_e_cubos.adapters.interfaces.cli.criterio_apuracao_interativo import (
-    CriterioApuracaoInterativo,
-)
 from filmes_e_cubos.adapters.interfaces.cli.erros import CliError
 from filmes_e_cubos.adapters.persistence.sqlite.fabrica_engine import (
     criar_engine,
     criar_engine_da_url,
 )
-from filmes_e_cubos.application.ports.criterio_apuracao_oscar import CriterioApuracaoOscar
 from filmes_e_cubos.application.ports.enviador_de_email import EnviadorDeEmail
 from filmes_e_cubos.application.ports.relogio_service import RelogioService
 from filmes_e_cubos.application.ports.sorteador_service import SorteadorService
@@ -40,8 +36,7 @@ class FabricaDeContexto:
 
     Os parâmetros opcionais são o ponto de injeção de implementações
     alternativas dos ports que não vêm do banco (relógio, sorteador,
-    critério de apuração), usado por testes e por eventuais embarcadores
-    da CLI.
+    e-mail), usado por testes e por eventuais embarcadores da CLI.
     """
 
     def __init__(
@@ -51,14 +46,12 @@ class FabricaDeContexto:
         url_banco: str | None = None,
         relogio: RelogioService | None = None,
         sorteador: SorteadorService | None = None,
-        criterio_apuracao: CriterioApuracaoOscar | None = None,
         enviador: EnviadorDeEmail | None = None,
     ) -> None:
         self.caminho_banco = caminho_banco
         self.url_banco = url_banco
         self._relogio = relogio
         self._sorteador = sorteador
-        self._criterio_apuracao = criterio_apuracao
         self._enviador = enviador
 
     @cached_property
@@ -75,20 +68,10 @@ class FabricaDeContexto:
             enviador=self._enviador,
         )
 
-    @cached_property
-    def criterio_apuracao(self) -> CriterioApuracaoOscar:
-        """O critério injetado ou, por padrão, o que pergunta no terminal."""
-        return self._criterio_apuracao or CriterioApuracaoInterativo(self.contexto.filmes)
-
 
 def obter_contexto(ctx: typer.Context) -> Contexto:
     """Recupera o `Contexto` da fábrica que o callback raiz guardou em `ctx.obj`."""
     return _obter_fabrica(ctx).contexto
-
-
-def obter_criterio_apuracao(ctx: typer.Context) -> CriterioApuracaoOscar:
-    """Recupera o critério de apuração do Óscar que a CLI deve usar."""
-    return _obter_fabrica(ctx).criterio_apuracao
 
 
 def _obter_fabrica(ctx: typer.Context) -> FabricaDeContexto:

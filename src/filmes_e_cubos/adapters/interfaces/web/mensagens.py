@@ -38,12 +38,13 @@ from filmes_e_cubos.domain.exceptions.oscar import (
     CategoriaForaDoTurnoError,
     CategoriaJaApuradaError,
     CedulaConfirmadaError,
+    EscolhaDoGrupoNecessariaError,
     FilmeNaoAssistidoError,
     FilmeNaoAssistidoNoAnoDaTemporadaError,
+    MembroDeOutroClubeError,
     MembroForaDaVotacaoError,
     NomeacaoInvalidaError,
     TemporadaOscarDuplicadaError,
-    VencedorDemocraciaNaoInformadoError,
     VotacaoEmAndamentoError,
     VotacaoEncerradaError,
 )
@@ -63,7 +64,7 @@ MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
     AvaliacaoDuplicadaError: "Esse membro já avaliou esta sessão.",
     CategoriaCompletaError: "Essa categoria já tem todas as nomeações desta edição.",
     CategoriaForaDoTurnoError: "Essa categoria não está em disputa neste turno da votação.",
-    CategoriaJaApuradaError: "Essa categoria já foi apurada.",
+    CategoriaJaApuradaError: "Essa categoria já tem vencedor.",
     CedulaConfirmadaError: "Essa cédula já foi confirmada: os votos não mudam mais.",
     EnderecoDeEmailInvalidoError: "Esse endereço de e-mail não parece válido.",
     FilmeNaoAssistidoError: "Esse filme ainda não foi assistido pelo clube.",
@@ -94,9 +95,10 @@ MENSAGENS_AMIGAVEIS: Final[dict[type[DomainError], str]] = {
         "A votação ainda não terminou: o placar só sai quando todos tiverem confirmado "
         "e não restar empate."
     ),
-    VencedorDemocraciaNaoInformadoError: (
-        "O filme vencedor veio de uma sessão democracia: escolha quem leva o troféu."
+    EscolhaDoGrupoNecessariaError: (
+        "Sem quem indicou (filme democracia) ou num empate absoluto, escolha quem leva o troféu."
     ),
+    MembroDeOutroClubeError: "Quem leva o troféu precisa ser membro do clube.",
 }
 
 

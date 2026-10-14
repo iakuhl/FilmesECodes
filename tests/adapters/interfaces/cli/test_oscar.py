@@ -104,63 +104,6 @@ def test_nomear_filme_assistido_no_ano_funciona(
     assert resultado.exit_code == 0
 
 
-def test_apurar_pergunta_a_vencedora_e_premia_quem_indicou(
-    cli: CliDeTeste, categoria_id: str, filme_assistido: str
-) -> None:
-    _nomear(cli, categoria_id, filme_assistido)
-
-    resultado = cli.executar_ok("oscar", "apurar", categoria_id, entrada="1\n")
-
-    assert "Parasita" in resultado.stdout  # a nomeação foi listada para escolha
-    assert "Troféu para Iano" in resultado.stdout
-    categorias = cli.executar_ok("oscar", "categoria", "listar").stdout
-    assert "Iano" in _linha(categorias, "Melhor veículo")
-
-
-def test_apurar_reprompta_quando_a_escolha_esta_fora_da_faixa(
-    cli: CliDeTeste, categoria_id: str, filme_assistido: str
-) -> None:
-    _nomear(cli, categoria_id, filme_assistido)
-
-    resultado = cli.executar_ok("oscar", "apurar", categoria_id, entrada="9\n1\n")
-
-    assert "Escolha um número entre 1 e 1." in resultado.stderr
-    assert "Troféu para Iano" in resultado.stdout
-
-
-def test_apurar_categoria_sem_nomeacoes_falha(cli: CliDeTeste, categoria_id: str) -> None:
-    resultado = cli.executar("oscar", "apurar", categoria_id)
-
-    assert resultado.exit_code == 1
-    assert "nomeação" in resultado.stderr
-
-
-def test_apurar_duas_vezes_falha(cli: CliDeTeste, categoria_id: str, filme_assistido: str) -> None:
-    _nomear(cli, categoria_id, filme_assistido)
-    cli.executar_ok("oscar", "apurar", categoria_id, entrada="1\n")
-
-    resultado = cli.executar("oscar", "apurar", categoria_id, entrada="1\n")
-    assert resultado.exit_code == 1
-    assert "já foi apurada" in resultado.stderr
-
-
-def test_vencedor_de_sessao_democracia_exige_membro_manual(
-    cli: CliDeTeste, categoria_id: str, rodada_aberta: str, outro_filme_id: str, membro_id: str
-) -> None:
-    democracia = cli.criar("indicacao", "democracia", "--filme-id", outro_filme_id)
-    cli.executar_ok("sessao", "registrar", democracia)
-    _nomear(cli, categoria_id, outro_filme_id)
-
-    sem_membro = cli.executar("oscar", "apurar", categoria_id, entrada="1\n")
-    assert sem_membro.exit_code == 1
-    assert "membro_vencedor_manual_id" in sem_membro.stderr
-
-    com_membro = cli.executar_ok(
-        "oscar", "apurar", categoria_id, "--membro-vencedor-id", membro_id, entrada="1\n"
-    )
-    assert "Troféu para Iano" in com_membro.stdout
-
-
 def test_nomear_para_categoria_inexistente_falha(cli: CliDeTeste, filme_assistido: str) -> None:
     resultado = cli.executar(
         "oscar", "nomear", "--categoria-id", str(uuid4()), "--filme-id", filme_assistido

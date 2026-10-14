@@ -38,4 +38,39 @@
   <p class="suave">As nomeações abrem quando a edição avança para “Aberta para indicações”.</p>
   {% endif %}
 </section>
+
+{% if categoria.trofeu %}
+<section class="cartao cartao--estreito trofeu">
+  <h2>Vencedor</h2>
+  {% if categoria.vencedora %}
+  <p><strong>{{ categoria.vencedora.filme.titulo if categoria.vencedora.filme else "—" }}</strong></p>
+  {% else %}
+  <p><strong>Empate absoluto</strong></p>
+  {% endif %}
+  <p>Troféu para {{ categoria.vencedor.nome if categoria.vencedor else "—" }}.</p>
+</section>
+{% elif pode_premiar %}
+<section class="cartao cartao--estreito">
+  <h2>Registrar o vencedor</h2>
+  <p class="suave">Depois da cerimônia, com o resultado apurado a partir do placar que foi por e-mail.</p>
+  <form method="post" action="/clubes/{{ clube.id }}/oscar/{{ temporada.id }}/categorias/{{ categoria.categoria.id }}/trofeu" class="formulario">
+    <label>Nomeação vencedora
+      <select name="nomeacao_id">
+        {% for item in categoria.nomeacoes %}
+        <option value="{{ item.nomeacao.id }}">{{ loop.index }}. {{ item.filme.titulo if item.filme else "—" }} — {% if item.indicado_por %}{{ item.indicado_por.nome }}{% else %}democracia{% endif %}</option>
+        {% endfor %}
+        <option value="">Empate absoluto (nenhuma venceu)</option>
+      </select>
+    </label>
+    <label>Quem o grupo escolheu
+      <select name="membro_escolhido_id">
+        <option value="">—</option>
+        {% for membro in membros %}<option value="{{ membro.id }}">{{ membro.nome }}</option>{% endfor %}
+      </select>
+      <small class="suave">Só quando o filme vencedor veio de uma sessão democracia ou no empate absoluto; nos demais casos, o troféu vai para quem indicou.</small>
+    </label>
+    <button class="botao">Registrar vencedor</button>
+  </form>
+</section>
+{% endif %}
 {% endblock %}

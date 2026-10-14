@@ -219,16 +219,19 @@ os ports (repositórios/serviços) de que depende.
   termina. Devolve a votação atualizada, se o turno se encerrou e quem
   ainda falta confirmar.
 
-### ApurarCategoriaOscar
-- **Intenção**: calcular/registrar o vencedor de uma categoria e emitir o
-  `Trofeu` correspondente.
-- **Ports**: `TrofeuRepository`, `NomeacaoOscarRepository`,
-  `CategoriaOscarRepository`, `CriterioApuracaoOscar`, `RelogioService`.
-- **Regras**: a apuração pode ser por votação dos membros ou por critério
-  definido por categoria — o mecanismo de apuração em si é um detalhe a
-  refinar depois (por isso é um port plugável, `CriterioApuracaoOscar`).
-  Quando a nomeação vencedora tem `indicado_por_membro_id` (indicação
-  `normal`), o troféu vai automaticamente para esse membro. Quando não
-  tem (indicação `democracia`), o caso de uso exige um
-  `membro_vencedor_manual_id` — a escolha do grupo, feita na hora da
-  apuração/premiação — e levanta erro se ele não for informado.
+### RegistrarVencedorOscar
+- **Intenção**: registrar, depois da cerimônia, o vencedor de uma
+  categoria e emitir o `Trofeu` (decisão 29).
+- **Ports**: `TrofeuRepository`, `CategoriaOscarRepository`,
+  `NomeacaoOscarRepository`, `TemporadaOscarRepository`,
+  `VotacaoOscarRepository`, `MembroRepository`, `RelogioService`.
+- **Regras**: a apuração acontece fora do sistema, com o placar que foi
+  por e-mail; aqui se registra o resultado, sem conferi-lo com o placar.
+  Só com a edição `em_votacao` (`AcaoForaDaFaseError`) e a votação
+  terminada (`VotacaoEmAndamentoError`); uma vez registrado, o vencedor
+  não muda (`CategoriaJaApuradaError`). Com a nomeação vencedora (que
+  precisa concorrer na categoria — `NomeacaoInvalidaError`), o troféu vai
+  para quem a indicou; se ela veio de uma sessão democracia, ou num
+  empate absoluto (sem nomeação), vai para o membro escolhido pelo grupo,
+  obrigatório nesses casos (`EscolhaDoGrupoNecessariaError`) e do clube da
+  edição (`MembroDeOutroClubeError`).

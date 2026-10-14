@@ -22,8 +22,8 @@ from filmes_e_cubos.adapters.interfaces.api.esquemas import (
     NovaNomeacao,
     NovaTemporada,
     NovoEnvioDoPlacar,
+    NovoTrofeu,
     NovoVoto,
-    PedidoDeApuracao,
     TemporadaSaida,
     TrofeuSaida,
     VotacaoSaida,
@@ -37,9 +37,6 @@ from filmes_e_cubos.adapters.interfaces.consultas import (
 from filmes_e_cubos.adapters.interfaces.contexto_http import ContextoDep
 from filmes_e_cubos.adapters.interfaces.convencoes import nome_padrao_da_temporada
 from filmes_e_cubos.adapters.interfaces.situacao_da_votacao import situacao_da_votacao
-from filmes_e_cubos.adapters.servicos.criterio_apuracao_escolha_informada import (
-    CriterioEscolhaInformada,
-)
 from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
 from filmes_e_cubos.domain.value_objects.identificadores import (
     CategoriaOscarId,
@@ -250,19 +247,21 @@ def enviar_placar(
 
 
 @roteador.post(
-    "/oscar/categorias/{categoria_id}/apuracao",
+    "/oscar/categorias/{categoria_id}/trofeu",
     status_code=status.HTTP_201_CREATED,
-    summary="Apura a categoria e emite o troféu",
-    description="O mecanismo de apuração ainda está em aberto no produto, então a API não "
-    "escolhe a vencedora: registra a escolha do grupo. O troféu vai para quem indicou o "
-    "filme vencedor; se ele veio de uma sessão democracia, `membro_vencedor_id` é obrigatório.",
+    summary="Registra o vencedor da categoria",
+    description="A apuração acontece fora do sistema, com o placar que foi por e-mail: aqui se "
+    "registra o resultado, depois da cerimônia, com a votação terminada e a edição ainda em "
+    "votação. O troféu vai para quem indicou a nomeação vencedora; num filme democracia ou num "
+    "empate absoluto (sem `nomeacao_id`), para `membro_escolhido_id`, obrigatório nesses casos "
+    "(`422` `escolha_do_grupo_necessaria`). `409` `categoria_ja_apurada` se já houver vencedor.",
 )
-def apurar(categoria_id: UUID, pedido: PedidoDeApuracao, contexto: ContextoDep) -> TrofeuSaida:
-    criterio = CriterioEscolhaInformada(NomeacaoOscarId(pedido.nomeacao_vencedora_id))
-    trofeu = contexto.apurar_categoria_oscar(criterio).executar(
+def registrar_vencedor(categoria_id: UUID, novo: NovoTrofeu, contexto: ContextoDep) -> TrofeuSaida:
+    trofeu = contexto.registrar_vencedor_oscar.executar(
         categoria_id=CategoriaOscarId(categoria_id),
-        membro_vencedor_manual_id=(
-            MembroId(pedido.membro_vencedor_id) if pedido.membro_vencedor_id is not None else None
+        nomeacao_id=NomeacaoOscarId(novo.nomeacao_id) if novo.nomeacao_id else None,
+        membro_escolhido_id=(
+            MembroId(novo.membro_escolhido_id) if novo.membro_escolhido_id else None
         ),
     )
     return TrofeuSaida.de_dominio(trofeu)
@@ -271,7 +270,7 @@ def apurar(categoria_id: UUID, pedido: PedidoDeApuracao, contexto: ContextoDep) 
 @roteador.get(
     "/oscar/categorias/{categoria_id}/trofeu",
     summary="Consulta o troféu de uma categoria",
-    description="404 enquanto a categoria não tiver sido apurada.",
+    description="404 enquanto a categoria não tiver vencedor registrado.",
 )
 def consultar_trofeu(categoria_id: UUID, contexto: ContextoDep) -> TrofeuSaida:
     categoria = obter_categoria(contexto.categorias, categoria_id)

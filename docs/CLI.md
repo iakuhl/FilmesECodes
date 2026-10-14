@@ -124,7 +124,8 @@ O catálogo é compartilhado: um filme não pertence a um clube.
 | `oscar votar --membro-id ID --categoria-id ID ESCOLHA...` | Registra (ou troca) o voto do eleitor na categoria. Cada `ESCOLHA` é a posição da candidata em `oscar votacao` (`1`, `2`...) ou o id da nomeação, em ordem de preferência: a 1ª e a 2ª opção, ou, num turno de classificação, todas. |
 | `oscar confirmar --membro-id ID [--temporada-id ID] [--clube-id ID]` | Confirma a cédula do eleitor no turno atual; depois disso, os votos não mudam. Exige voto em todas as categorias do turno. |
 | `oscar enviar-placar EMAIL [--temporada-id ID] [--clube-id ID]` | Envia o placar da votação terminada ao e-mail de quem monta a cerimônia — sem mostrá-lo na tela. Pode ser reenviado, ao mesmo ou a outro endereço, até a edição ser encerrada. Precisa do servidor de e-mail configurado (ver o README). |
-| `oscar apurar CATEGORIA_ID [--membro-vencedor-id ID]` | Apura a categoria e emite o troféu. |
+| `oscar categoria nomeacoes CATEGORIA_ID` | Lista as nomeações da categoria: posição, id, filme e quem indicou (ou `democracia`). |
+| `oscar premiar CATEGORIA_ID [--nomeacao-id ID] [--membro-escolhido-id ID]` | Registra, depois da cerimônia, o vencedor da categoria: o troféu vai para quem indicou a nomeação vencedora. Num filme democracia, ou num empate absoluto (sem `--nomeacao-id`), `--membro-escolhido-id` diz quem o grupo escolheu. Só com a votação terminada; o vencedor não muda depois. |
 
 #### A votação
 
@@ -148,30 +149,14 @@ filmes-e-cubos oscar votar --membro-id <IANO> --categoria-id <CATEGORIA> 3 1
 filmes-e-cubos oscar confirmar --membro-id <IANO>
 ```
 
-#### Como a apuração decide o vencedor
+#### Placar e vencedores
 
-O mecanismo de apuração continua em aberto no produto (votação? média de
-notas? júri?), então a CLI não inventa um: ela lista as nomeações e
-pergunta qual venceu.
-
-```
-Nomeações desta categoria:
-  1) Parasita  [nomeação 11435ed2-...]
-  2) Interestelar  [nomeação 9e438f84-...]
-
-Número da nomeação vencedora: 2
-✔ Troféu para Bia (55f6746e-...)
-```
-
-Isso não é um atalho: é o port `CriterioApuracaoOscar` cumprindo
-exatamente o papel para o qual foi criado. No dia em que o clube decidir
-um critério automático, basta escrever outro adapter e trocá-lo no
-composition root — sem tocar em domínio nem em aplicação.
-
-O troféu vai para **quem indicou o filme vencedor**, não para quem "atua"
-na categoria. Quando o filme vencedor veio de uma sessão `democracia`
-(que não tem membro indicador), o comando exige
-`--membro-vencedor-id` com a escolha do grupo.
+Ninguém vê o resultado no sistema. Terminada a votação, `oscar
+enviar-placar` manda o placar a quem monta a cerimônia; a apuração
+acontece fora, com ele em mãos. Depois do evento, `oscar premiar`
+registra cada vencedor — o troféu vai para **quem indicou o filme
+vencedor** —, e com todas as categorias premiadas a edição avança a
+`apurada`.
 
 ## Um ciclo completo
 
@@ -196,9 +181,19 @@ filmes-e-cubos avaliacao listar <SESSAO>
 # ... repete até todas as indicações da rodada terem sido assistidas
 filmes-e-cubos rodada encerrar
 
-filmes-e-cubos oscar temporada abrir
+filmes-e-cubos oscar temporada abrir --nomeacoes-por-categoria 2
 filmes-e-cubos oscar categoria definir "Melhor veículo" --tipo variavel
+filmes-e-cubos oscar temporada avancar               # aberta para indicações
 filmes-e-cubos oscar nomear --categoria-id <CATEGORIA> --filme-id <PARASITA>
-filmes-e-cubos oscar apurar <CATEGORIA>
-filmes-e-cubos oscar categoria listar
+filmes-e-cubos oscar nomear --categoria-id <CATEGORIA> --filme-id <INTERESTELAR>
+filmes-e-cubos oscar temporada avancar               # em votação: os eleitores ficam definidos
+filmes-e-cubos oscar votacao                         # candidatas numeradas e quem já votou
+filmes-e-cubos oscar votar --membro-id <IANO> --categoria-id <CATEGORIA> 2 1
+filmes-e-cubos oscar confirmar --membro-id <IANO>
+# ... cada eleitor vota e confirma; a última confirmação encerra o turno
+filmes-e-cubos oscar enviar-placar cerimonia@clube.com
+# ... depois da cerimônia:
+filmes-e-cubos oscar categoria nomeacoes <CATEGORIA>
+filmes-e-cubos oscar premiar <CATEGORIA> --nomeacao-id <NOMEACAO_VENCEDORA>
+filmes-e-cubos oscar temporada avancar               # apurada
 ```

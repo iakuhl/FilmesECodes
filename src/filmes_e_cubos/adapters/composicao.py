@@ -10,14 +10,6 @@ As anotações de tipo dos repositórios usam os *ports* (`ClubeRepository`
 e companhia), não as classes concretas: assim o `mypy` verifica, neste
 ponto de montagem, que cada adapter realmente satisfaz o contrato que diz
 implementar.
-
-O critério de apuração do Óscar é a exceção deliberada: ele não é
-escolhido aqui, e sim por cada interface. O mecanismo de apuração
-continua em aberto no produto, e cada interface o delega a quem opera de
-um jeito diferente — a CLI pergunta no terminal; a API e a web recebem a
-escolha na própria requisição. Por isso `ApurarCategoriaOscar` é montado
-sob demanda, com o critério que a interface fornecer
-(`Contexto.apurar_categoria_oscar`).
 """
 
 from __future__ import annotations
@@ -78,7 +70,6 @@ from filmes_e_cubos.application.ports.avaliacao_repository import AvaliacaoRepos
 from filmes_e_cubos.application.ports.categoria_oscar_repository import CategoriaOscarRepository
 from filmes_e_cubos.application.ports.cedula_repository import CedulaRepository
 from filmes_e_cubos.application.ports.clube_repository import ClubeRepository
-from filmes_e_cubos.application.ports.criterio_apuracao_oscar import CriterioApuracaoOscar
 from filmes_e_cubos.application.ports.enviador_de_email import EnviadorDeEmail
 from filmes_e_cubos.application.ports.filme_repository import FilmeRepository
 from filmes_e_cubos.application.ports.indicacao_repository import IndicacaoRepository
@@ -98,7 +89,6 @@ from filmes_e_cubos.application.ports.votacao_oscar_repository import VotacaoOsc
 from filmes_e_cubos.application.use_cases.abrir_nova_rodada import AbrirNovaRodada
 from filmes_e_cubos.application.use_cases.abrir_temporada_oscar import AbrirTemporadaOscar
 from filmes_e_cubos.application.use_cases.adicionar_filme_democracia import AdicionarFilmeDemocracia
-from filmes_e_cubos.application.use_cases.apurar_categoria_oscar import ApurarCategoriaOscar
 from filmes_e_cubos.application.use_cases.avaliar_filme import AvaliarFilme
 from filmes_e_cubos.application.use_cases.avancar_temporada_oscar import (
     AvancarTemporadaOscar,
@@ -120,6 +110,9 @@ from filmes_e_cubos.application.use_cases.indicar_filme_para_categoria import (
 from filmes_e_cubos.application.use_cases.realizar_sorteio import RealizarSorteio
 from filmes_e_cubos.application.use_cases.reativar_membro import ReativarMembro
 from filmes_e_cubos.application.use_cases.registrar_sessao_exibicao import RegistrarSessaoExibicao
+from filmes_e_cubos.application.use_cases.registrar_vencedor_oscar import (
+    RegistrarVencedorOscar,
+)
 from filmes_e_cubos.application.use_cases.registrar_voto import RegistrarVoto
 
 CAMINHO_BANCO_PADRAO = Path("filmes_e_cubos.db")
@@ -286,17 +279,12 @@ class Contexto:
             cedula_repository=self.cedulas,
             relogio=self.relogio,
         )
-
-    def apurar_categoria_oscar(self, criterio: CriterioApuracaoOscar) -> ApurarCategoriaOscar:
-        """Monta a apuração com o critério que a interface escolheu.
-
-        É o único caso de uso montado sob demanda — ver a explicação no
-        topo deste módulo.
-        """
-        return ApurarCategoriaOscar(
+        self.registrar_vencedor_oscar = RegistrarVencedorOscar(
             trofeu_repository=self.trofeus,
-            nomeacao_repository=self.nomeacoes,
             categoria_repository=self.categorias,
-            criterio=criterio,
+            nomeacao_repository=self.nomeacoes,
+            temporada_repository=self.temporadas,
+            votacao_repository=self.votacoes,
+            membro_repository=self.membros,
             relogio=self.relogio,
         )

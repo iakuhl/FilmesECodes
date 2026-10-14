@@ -20,17 +20,21 @@ class FilmeNaoAssistidoNoAnoDaTemporadaError(DomainError):
 
 
 class CategoriaJaApuradaError(DomainError):
-    """Levantada ao tentar apurar novamente uma categoria que já tem um troféu emitido."""
+    """Levantada ao registrar o vencedor de uma categoria que já tem troféu."""
 
 
 class NomeacaoInvalidaError(DomainError):
-    """Levantada quando a nomeação vencedora de uma apuração não pertence à categoria apurada."""
+    """Levantada quando a nomeação vencedora informada não concorre na categoria."""
 
 
-class VencedorDemocraciaNaoInformadoError(DomainError):
-    """Levantada ao apurar uma categoria cuja nomeação vencedora não tem indicador automático
-    (veio de um filme DEMOCRACIA) sem que um vencedor manual tenha sido informado.
+class EscolhaDoGrupoNecessariaError(DomainError):
+    """Levantada ao registrar o vencedor sem o membro escolhido pelo grupo, quando ele é
+    necessário: vitória de um filme democracia (sem indicador) ou empate absoluto.
     """
+
+
+class MembroDeOutroClubeError(DomainError):
+    """Levantada quando o membro escolhido pelo grupo não é do clube da edição."""
 
 
 class AcaoForaDaFaseError(DomainError):

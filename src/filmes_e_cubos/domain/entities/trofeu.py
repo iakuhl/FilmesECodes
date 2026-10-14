@@ -14,14 +14,19 @@ from filmes_e_cubos.domain.value_objects.identificadores import (
 
 
 class Trofeu:
-    """O resultado da apuração de uma categoria: qual nomeação venceu e quem a indicou."""
+    """O resultado de uma categoria: a nomeação vencedora e quem leva o troféu.
+
+    Sem nomeação vencedora (`None`) num empate absoluto, quando o troféu vai
+    para um membro escolhido pelo grupo (decisões 8.6 e 29 de
+    docs/PENDENCIAS.md).
+    """
 
     def __init__(
         self,
         *,
         id: TrofeuId,
         categoria_id: CategoriaOscarId,
-        nomeacao_vencedora_id: NomeacaoOscarId,
+        nomeacao_vencedora_id: NomeacaoOscarId | None,
         membro_vencedor_id: MembroId,
         data_apuracao: date,
     ) -> None:
@@ -36,7 +41,7 @@ class Trofeu:
         cls,
         *,
         categoria_id: CategoriaOscarId,
-        nomeacao_vencedora_id: NomeacaoOscarId,
+        nomeacao_vencedora_id: NomeacaoOscarId | None,
         membro_vencedor_id: MembroId,
         data_apuracao: date,
     ) -> Trofeu:
@@ -57,7 +62,7 @@ class Trofeu:
         return self._categoria_id
 
     @property
-    def nomeacao_vencedora_id(self) -> NomeacaoOscarId:
+    def nomeacao_vencedora_id(self) -> NomeacaoOscarId | None:
         return self._nomeacao_vencedora_id
 
     @property

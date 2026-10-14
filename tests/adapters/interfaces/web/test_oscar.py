@@ -193,3 +193,36 @@ def test_placar_antes_do_fim_da_votacao(web: WebDeTeste, edicao: Edicao) -> None
     pagina = web.agir(f"{edicao.caminho}/placar", destinatario="cerimonia@clube.com")
 
     assert "ainda não terminou" in avisos(pagina)[0]
+
+
+def test_registrar_o_vencedor_depois_da_votacao(web: WebDeTeste, edicao: Edicao) -> None:
+    _em_votacao(web, edicao)
+    categoria = f"{edicao.caminho}/categorias/{edicao.categoria}"
+    assert web.abrir(categoria).select_one(f"form[action='{categoria}/trofeu']") is None
+    for eleitor in (edicao.iano, edicao.bia):
+        _votar(web, edicao, eleitor, 1, 2)
+        web.agir(f"{edicao.caminho}/votacao/{eleitor}/confirmacao")
+
+    formulario = web.abrir(categoria)
+    vencedora = formulario.select("select[name='nomeacao_id'] option")[0]["value"]
+    pagina = web.agir(f"{categoria}/trofeu", nomeacao_id=vencedora, membro_escolhido_id="")
+
+    assert avisos(pagina) == ["Melhor veículo: troféu para Bia."]
+    assert "Troféu para Bia." in pagina.get_text()
+    assert "Bia" in textos(web.abrir(edicao.caminho), "tbody tr")[0]
+    assert "Apurada" in web.agir(f"{edicao.caminho}/avancar").get_text()
+
+
+def test_empate_absoluto_pela_web(web: WebDeTeste, edicao: Edicao) -> None:
+    _em_votacao(web, edicao)
+    for eleitor in (edicao.iano, edicao.bia):
+        _votar(web, edicao, eleitor, 1, 2)
+        web.agir(f"{edicao.caminho}/votacao/{eleitor}/confirmacao")
+    categoria = f"{edicao.caminho}/categorias/{edicao.categoria}"
+
+    recusa = web.agir(f"{categoria}/trofeu", nomeacao_id="", membro_escolhido_id="")
+    pagina = web.agir(f"{categoria}/trofeu", nomeacao_id="", membro_escolhido_id=edicao.iano)
+
+    assert "escolha quem leva o troféu" in avisos(recusa)[0]
+    assert "Empate absoluto" in pagina.get_text()
+    assert "Troféu para Iano." in pagina.get_text()

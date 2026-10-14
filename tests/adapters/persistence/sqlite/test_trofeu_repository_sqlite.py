@@ -1,6 +1,7 @@
 """Testes de integração de `TrofeuRepositorioSqlite` contra um SQLite real."""
 
 from datetime import date
+from uuid import uuid4
 
 from sqlalchemy import Engine
 
@@ -32,6 +33,7 @@ from filmes_e_cubos.domain.entities.membro import Membro
 from filmes_e_cubos.domain.entities.nomeacao_oscar import NomeacaoOscar
 from filmes_e_cubos.domain.entities.temporada_oscar import TemporadaOscar
 from filmes_e_cubos.domain.entities.trofeu import Trofeu
+from filmes_e_cubos.domain.value_objects.identificadores import CategoriaOscarId, MembroId
 from filmes_e_cubos.domain.value_objects.status import TipoCategoriaOscar
 
 
@@ -80,3 +82,20 @@ def test_buscar_por_categoria_sem_trofeu_retorna_none(engine: Engine) -> None:
     CategoriaOscarRepositorioSqlite(engine).salvar(categoria)
 
     assert TrofeuRepositorioSqlite(engine).buscar_por_categoria(categoria.id) is None
+
+
+def test_trofeu_de_empate_absoluto_nao_tem_nomeacao(engine: Engine) -> None:
+    repositorio = TrofeuRepositorioSqlite(engine)
+    trofeu = Trofeu.emitir(
+        categoria_id=CategoriaOscarId(uuid4()),
+        nomeacao_vencedora_id=None,
+        membro_vencedor_id=MembroId(uuid4()),
+        data_apuracao=date(2024, 12, 20),
+    )
+
+    repositorio.salvar(trofeu)
+    encontrado = repositorio.buscar_por_categoria(trofeu.categoria_id)
+
+    assert encontrado is not None
+    assert encontrado.nomeacao_vencedora_id is None
+    assert encontrado.membro_vencedor_id == trofeu.membro_vencedor_id

@@ -187,15 +187,25 @@ def categoria(
     temporada = temporada_do_clube(contexto, clube, temporada_id)
     escolhida = categoria_da_temporada(contexto, temporada, categoria_id)
     aceita_nomeacoes = temporada.status is StatusTemporadaOscar.ABERTA_PARA_INDICACOES
+    votacao = contexto.votacoes.buscar_por_temporada(temporada.id)
+    pagina_da_categoria = categoria_na_pagina(contexto, escolhida)
+    pode_premiar = (
+        temporada.status is StatusTemporadaOscar.EM_VOTACAO
+        and votacao is not None
+        and votacao.encerrada
+        and pagina_da_categoria.trofeu is None
+    )
     return pagina(
         request,
         "categoria.html",
         clube=clube,
         secao="oscar",
         temporada=temporada,
-        categoria=categoria_na_pagina(contexto, escolhida),
+        categoria=pagina_da_categoria,
         filmes=filmes_assistidos_no_ano(contexto, clube, temporada.ano) if aceita_nomeacoes else [],
         aceita_nomeacoes=aceita_nomeacoes,
+        pode_premiar=pode_premiar,
+        membros=contexto.membros.listar_por_clube(clube.id) if pode_premiar else [],
     )
 
 
@@ -218,6 +228,41 @@ def nomear(
             categoria_id=escolhida.id, filme_id=FilmeId(filme.id)
         )
         avisar(request, "sucesso", f"{filme.titulo} nomeado em {escolhida.nome}.")
+    return redirecionar(f"/clubes/{clube_id}/oscar/{temporada_id}/categorias/{categoria_id}")
+
+
+@roteador.post("/{temporada_id}/categorias/{categoria_id}/trofeu")
+def premiar(
+    request: Request,
+    clube_id: UUID,
+    temporada_id: UUID,
+    categoria_id: UUID,
+    contexto: ContextoDep,
+    nomeacao_id: Annotated[str, Form()] = "",
+    membro_escolhido_id: Annotated[str, Form()] = "",
+) -> Response:
+    """Registra o vencedor apurado fora do sistema (decisão 29); vazio é empate absoluto."""
+    with recusas_viram_avisos(request):
+        temporada = temporada_do_clube(
+            contexto, obter_clube(contexto.clubes, clube_id), temporada_id
+        )
+        escolhida = categoria_da_temporada(contexto, temporada, categoria_id)
+        trofeu = contexto.registrar_vencedor_oscar.executar(
+            categoria_id=escolhida.id,
+            nomeacao_id=(
+                NomeacaoOscarId(id_escolhido(nomeacao_id, campo="a nomeação vencedora"))
+                if nomeacao_id
+                else None
+            ),
+            membro_escolhido_id=(
+                MembroId(id_escolhido(membro_escolhido_id, campo="quem leva o troféu"))
+                if membro_escolhido_id
+                else None
+            ),
+        )
+        vencedor = contexto.membros.buscar_por_id(trofeu.membro_vencedor_id)
+        nome = vencedor.nome if vencedor else "o membro escolhido"
+        avisar(request, "sucesso", f"{escolhida.nome}: troféu para {nome}.")
     return redirecionar(f"/clubes/{clube_id}/oscar/{temporada_id}/categorias/{categoria_id}")
 
 

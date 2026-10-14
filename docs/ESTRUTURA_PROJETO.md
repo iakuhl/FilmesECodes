@@ -35,7 +35,7 @@ FilmesECodes/
 │       ├── application/
 │       │   ├── use_cases/             # um módulo por caso de uso (21)
 │       │   └── ports/                 # Protocols: repositórios, SorteadorService,
-│       │                              # RelogioService, CriterioApuracaoOscar,
+│       │                              # RelogioService, EnviadorDeEmail,
 │       │                              # LeitorDeHistorico (só o contrato)
 │       └── adapters/
 │           ├── composicao.py          # composition root: engine -> repos -> casos de uso
@@ -45,7 +45,6 @@ FilmesECodes/
 │           │       └── migracoes/     # Fase 4: env.py do Alembic e versions/
 │           ├── servicos/              # ✅ Fase 2: RelogioSistema, SorteadorAleatorio;
 │           │                          # Fase 4: EnviadorSmtp (e-mail do placar);
-│           │                          # Fase 4: CriterioEscolhaInformada
 │           └── interfaces/
 │               ├── convencoes.py      # padrões deduzidos, iguais em todas as interfaces
 │               ├── consultas.py       # buscas por id que precisam encontrar a entidade
@@ -66,7 +65,6 @@ FilmesECodes/
 │               │   ├── resolucao.py   # clube/rodada/temporada "correntes" quando omitidos
 │               │   ├── conversores.py # texto da linha de comando -> tipos do domínio
 │               │   ├── apresentacao.py            # tabelas e mensagens
-│               │   ├── criterio_apuracao_interativo.py  # CriterioApuracaoOscar via prompt
 │               │   └── comandos/      # um módulo por grupo: clube, membro, filme,
 │               │                      # rodada, indicacao, sessao, avaliacao, oscar
 │               └── api/               # ✅ Fase 4
@@ -114,17 +112,18 @@ FilmesECodes/
   [ARQUITETURA.md](ARQUITETURA.md) para o racional de Core vs. ORM).
 - **`src/filmes_e_cubos/adapters/servicos/`**: implementações concretas
   de `RelogioService` e `SorteadorService` usando o relógio e o gerador
-  aleatório reais do sistema, e o `CriterioEscolhaInformada` (critério de
-  apuração do Óscar em que a vencedora chega escolhida).
+  aleatório reais do sistema, e o `EnviadorSmtp`, que manda o placar do
+  Óscar por e-mail (ADR 14).
 - **`src/filmes_e_cubos/adapters/interfaces/`**: as interfaces com o
   usuário e o que elas compartilham (convenções, consultas por id, o
   middleware de escritas e o servidor HTTP). Nenhuma regra de negócio
   mora aqui.
   - **`cli/`**: a interface de linha de comando (ver [CLI.md](CLI.md)).
-    `contexto.py` decide quando montar o composition root e qual critério
-    de apuração do Óscar a CLI usa.
+    `contexto.py` decide quando montar o composition root.
   - **`api/`**: a API HTTP (ver [API.md](API.md)). Traduz requisições em
     chamadas aos casos de uso e erros em `application/problem+json`.
+  - **`web/`**: as páginas (ver [WEB.md](WEB.md)), o app raiz do
+    servidor: rotas por área do clube, modelos Jinja2 e o visual.
 - **`tests/`**: espelha a estrutura de `src/`, com testes de domínio
   (regras de negócio isoladas), de aplicação (casos de uso com
   implementações de teste/fake dos ports) e de adapters — estes sempre

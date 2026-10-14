@@ -159,7 +159,8 @@ trofeus = Table(
     metadata,
     Column("id", String, primary_key=True),
     Column("categoria_id", String, ForeignKey("categorias_oscar.id"), nullable=False, unique=True),
-    Column("nomeacao_vencedora_id", String, ForeignKey("nomeacoes_oscar.id"), nullable=False),
+    # Sem nomeação num empate absoluto: o troféu vai para quem o grupo escolheu.
+    Column("nomeacao_vencedora_id", String, ForeignKey("nomeacoes_oscar.id"), nullable=True),
     Column("membro_vencedor_id", String, ForeignKey("membros.id"), nullable=False),
     Column("data_apuracao", Date, nullable=False),
 )

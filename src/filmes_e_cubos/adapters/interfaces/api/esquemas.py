@@ -504,15 +504,15 @@ class NovaNomeacao(_Entrada):
     filme_id: UUID
 
 
-class PedidoDeApuracao(_Entrada):
-    nomeacao_vencedora_id: UUID = Field(
-        description="Nomeação que o grupo escolheu como vencedora. O mecanismo de apuração "
-        "ainda está em aberto no produto, então a API não decide: registra a escolha."
-    )
-    membro_vencedor_id: UUID | None = Field(
+class NovoTrofeu(_Entrada):
+    nomeacao_id: UUID | None = Field(
         default=None,
-        description="Quem leva o troféu quando a nomeação vencedora veio de uma sessão "
-        "democracia (sem membro indicador). Ignorado nos demais casos.",
+        description="Nomeação vencedora, apurada fora do sistema. `null` num empate absoluto.",
+    )
+    membro_escolhido_id: UUID | None = Field(
+        default=None,
+        description="Quem o grupo escolheu para levar o troféu: obrigatório quando a nomeação "
+        "vencedora veio de uma sessão democracia e num empate absoluto; ignorado nos demais.",
     )
 
 
@@ -644,7 +644,7 @@ class EnvioDoPlacarSaida(BaseModel):
 class TrofeuSaida(BaseModel):
     id: UUID
     categoria_id: UUID
-    nomeacao_vencedora_id: UUID
+    nomeacao_vencedora_id: UUID | None = Field(description="`null` num empate absoluto.")
     membro_vencedor_id: UUID
     data_apuracao: date
 

@@ -18,26 +18,19 @@ para virar produto multi-clube.
 - Branch de trabalho: `roadmap/fases-4-e-5`, publicado em `origin` a pedido
   do dono em 24/09/2026. Em 25/09, também a pedido dele, foi mesclado em
   `main` (fast-forward, só local: a `main` não foi enviada ao `origin`).
-- Fases 1–3 concluídas; Fase 4 com a API pronta, migrações com Alembic e
-  a web em construção: base, senha do clube e as páginas do dia a dia
-  (painel com as ações da rodada, membros, filmes, rodadas, sessões e
-  avaliações) e o Óscar até a votação e o envio do placar prontos;
-  falta o registro dos vencedores — ver [docs/WEB.md](docs/WEB.md).
-- Revisão de regras de 24/09/2026 quase toda implementada (duração,
-  reativação, data do evento, só presentes avaliam, média como fração em
-  estrelas, filme não se repete, uma edição por ano, nomeações fixas por
-  categoria, ciclo com *em votação*, contrato do histórico).
-- Em 25/09 o dono redesenhou a votação (decisões 21 a 33): eleitores
-  fixados no início, cédula confirmada, desempates automáticos, placar
-  **só por e-mail** (ninguém vê resultado no sistema) e vencedores
-  registrados por quem administra depois do evento.
-- As etapas (a) e (b) da votação estão prontas (eleitores, cédulas,
-  confirmação, desempates e o placar por e-mail). **Próximo passo:** a
-  etapa (c), os vencedores registrados por quem administra (que remove o
-  critério antigo de apuração), com a tela de premiação na web. O desenho
-  completo e as notas técnicas estão em "Desenho da votação" e "Como
-  continuar", no [ROADMAP](docs/ROADMAP.md); depois dela, as páginas da
-  web.
+  Desde 13/10 o branch vai ao GitHub a cada etapa; a `main` parou em
+  25/09 e precisa do merge (a pedido do dono) para publicar.
+- Fases 1–4 concluídas: CLI, API e web (ver [docs/WEB.md](docs/WEB.md)),
+  com migrações do Alembic, Postgres (Neon) na produção e a web pronta
+  para a Vercel, protegida pela senha única do clube.
+- As revisões de regras de 24 e 25/09/2026 estão implementadas por
+  inteiro (decisões 3 a 33 de PENDENCIAS) — inclusive a votação
+  redesenhada: placar **só por e-mail**, ninguém vê resultado no sistema.
+- A votação do Óscar está completa (etapas (a), (b) e (c)): eleitores,
+  cédulas, desempates, placar por e-mail e vencedores registrados depois
+  do evento. **Próximo passo:** o dono publicar (merge em `main`, push e a
+  configuração da Vercel, no README); depois, a Fase 5 — ver "Como
+  continuar" no [ROADMAP](docs/ROADMAP.md).
   As decisões, numeradas, estão em [docs/PENDENCIAS.md](docs/PENDENCIAS.md)
   — inclusive as interpretações que ainda pedem confirmação.
 - Em 13/10 o dono decidiu publicar a web na **Vercel** (decisões 34 a

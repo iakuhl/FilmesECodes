@@ -3,7 +3,8 @@
 Os comandos estão agrupados em dois sub-apps (`temporada` e `categoria`)
 mais as ações diretas, que acompanham as etapas reais do evento: montar
 a edição, nomear os concorrentes (`nomear`), votar (`votacao`, `votar` e
-`confirmar`) e premiar (`apurar`).
+`confirmar`), mandar o placar a quem monta a cerimônia (`enviar-placar`)
+e, depois dela, registrar os vencedores (`premiar`).
 
 O voto é secreto (decisão 26 de docs/PENDENCIAS.md): nenhum comando
 mostra em que alguém votou, nem o placar.
@@ -25,10 +26,7 @@ from filmes_e_cubos.adapters.interfaces.cli.apresentacao import (
     echo_titulo,
     formatar_opcional,
 )
-from filmes_e_cubos.adapters.interfaces.cli.contexto import (
-    obter_contexto,
-    obter_criterio_apuracao,
-)
+from filmes_e_cubos.adapters.interfaces.cli.contexto import obter_contexto
 from filmes_e_cubos.adapters.interfaces.cli.conversores import TipoCategoriaCli
 from filmes_e_cubos.adapters.interfaces.cli.resolucao import (
     resolver_clube,
@@ -39,10 +37,12 @@ from filmes_e_cubos.adapters.interfaces.convencoes import nome_padrao_da_tempora
 from filmes_e_cubos.adapters.interfaces.situacao_da_votacao import situacao_da_votacao
 from filmes_e_cubos.domain.entities.nomeacao_oscar import NomeacaoOscar
 from filmes_e_cubos.domain.entities.temporada_oscar import NOMEACOES_POR_CATEGORIA_PADRAO
+from filmes_e_cubos.domain.exceptions.base import EntidadeNaoEncontradaError
 from filmes_e_cubos.domain.value_objects.identificadores import (
     CategoriaOscarId,
     FilmeId,
     MembroId,
+    NomeacaoOscarId,
 )
 from filmes_e_cubos.domain.value_objects.status import ModoDeVotacao
 
@@ -219,6 +219,28 @@ def categoria_listar(
     )
 
 
+@categoria_app.command("nomeacoes")
+def categoria_nomeacoes(
+    ctx: typer.Context,
+    categoria_id: Annotated[UUID, typer.Argument(help="Categoria cujas nomeações listar.")],
+) -> None:
+    """Lista as nomeações de uma categoria: posição, id, filme e quem indicou."""
+    contexto = obter_contexto(ctx)
+    categoria = contexto.categorias.buscar_por_id(CategoriaOscarId(categoria_id))
+    if categoria is None:
+        raise EntidadeNaoEncontradaError(f"Categoria {categoria_id} não encontrada.")
+    echo_tabela(
+        ("#", "NOMEAÇÃO", "FILME", "INDICADO POR"),
+        [
+            (str(posicao), str(nomeacao.id), *_filme_e_indicador(contexto, nomeacao))
+            for posicao, nomeacao in enumerate(
+                contexto.nomeacoes.listar_por_categoria(categoria.id), start=1
+            )
+        ],
+        vazio=f"Nenhuma nomeação em {categoria.nome}.",
+    )
+
+
 @app.command("nomear")
 def nomear(
     ctx: typer.Context,
@@ -372,34 +394,42 @@ def enviar_placar(
     echo_resultado(f"Placar de {temporada.nome} enviado para {endereco}.")
 
 
-@app.command("apurar")
-def apurar(
+@app.command("premiar")
+def premiar(
     ctx: typer.Context,
-    categoria_id: Annotated[UUID, typer.Argument(help="Categoria a apurar.")],
-    membro_vencedor_id: Annotated[
+    categoria_id: Annotated[UUID, typer.Argument(help="Categoria premiada.")],
+    nomeacao_id: Annotated[
         UUID | None,
         typer.Option(
-            "--membro-vencedor-id",
-            help="Quem leva o troféu quando o filme vencedor veio de uma sessão democracia "
-            "(sem membro indicador).",
+            "--nomeacao-id",
+            help="Nomeação vencedora (veja `oscar categoria nomeacoes`). Sem ela, é um "
+            "empate absoluto.",
+        ),
+    ] = None,
+    membro_escolhido_id: Annotated[
+        UUID | None,
+        typer.Option(
+            "--membro-escolhido-id",
+            help="Quem o grupo escolheu para levar o troféu: obrigatório quando o filme "
+            "vencedor veio de uma sessão democracia e num empate absoluto.",
         ),
     ] = None,
 ) -> None:
-    """Apura a categoria e emite o troféu.
+    """Registra, depois da cerimônia, o vencedor da categoria e emite o troféu.
 
-    A vencedora é escolhida pelo critério de apuração da CLI — por padrão,
-    `CriterioApuracaoInterativo`, que pergunta aqui mesmo.
+    A apuração acontece fora do sistema, com o placar que foi por e-mail;
+    aqui se registra só o resultado. O troféu vai para quem indicou o
+    filme vencedor.
     """
     contexto = obter_contexto(ctx)
-    apuracao = contexto.apurar_categoria_oscar(obter_criterio_apuracao(ctx))
-    trofeu = apuracao.executar(
+    trofeu = contexto.registrar_vencedor_oscar.executar(
         categoria_id=CategoriaOscarId(categoria_id),
-        membro_vencedor_manual_id=(
-            MembroId(membro_vencedor_id) if membro_vencedor_id is not None else None
+        nomeacao_id=NomeacaoOscarId(nomeacao_id) if nomeacao_id is not None else None,
+        membro_escolhido_id=(
+            MembroId(membro_escolhido_id) if membro_escolhido_id is not None else None
         ),
     )
-    membro = contexto.membros.buscar_por_id(trofeu.membro_vencedor_id)
-    vencedor = membro.nome if membro is not None else str(trofeu.membro_vencedor_id)
+    vencedor = _nome_do_membro(contexto, trofeu.membro_vencedor_id)
     echo_resultado(f"Troféu para {vencedor} ({trofeu.id})")
 
 

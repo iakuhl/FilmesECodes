@@ -6,7 +6,7 @@ import pytest
 
 from filmes_e_cubos.adapters.interfaces.cli.contexto import FabricaDeContexto
 from filmes_e_cubos.adapters.interfaces.cli.main import app
-from tests.adapters.interfaces.cli.conftest import CliDeTeste
+from tests.adapters.interfaces.cli.conftest import _UUID, CliDeTeste
 from tests.application.fakes.enviador_de_email_fake import EnviadorDeEmailFake
 
 
@@ -190,3 +190,57 @@ def test_enviar_placar_sem_servidor_de_email(
 
     assert resultado.exit_code == 1
     assert "FILMES_E_CUBOS_SMTP_SERVIDOR" in resultado.stderr
+
+
+def _votacao_terminada(
+    cli: CliDeTeste, categoria: str, membro_id: str, outro_membro_id: str
+) -> list[str]:
+    """Os dois eleitores põem a 1ª nomeação em primeiro; devolve os ids das nomeações."""
+    for eleitor in (membro_id, outro_membro_id):
+        _votar(cli, eleitor, categoria, "1", "2")
+        cli.executar_ok("oscar", "confirmar", "--membro-id", eleitor)
+    return _UUID.findall(cli.executar_ok("oscar", "categoria", "nomeacoes", categoria).stdout)
+
+
+def test_premiar_depois_da_votacao(
+    cli: CliDeTeste, categoria_em_votacao: str, membro_id: str, outro_membro_id: str
+) -> None:
+    nomeacoes = _votacao_terminada(cli, categoria_em_votacao, membro_id, outro_membro_id)
+
+    resultado = cli.executar_ok(
+        "oscar", "premiar", categoria_em_votacao, "--nomeacao-id", nomeacoes[0]
+    )
+
+    assert "Troféu para Iano" in resultado.stdout
+    assert "Iano" in _linha_com(cli.executar_ok("oscar", "categoria", "listar").stdout, "veículo")
+    assert "apurada" in cli.executar_ok("oscar", "temporada", "avancar").stdout
+
+
+def test_premiar_empate_absoluto_exige_a_escolha_do_grupo(
+    cli: CliDeTeste, categoria_em_votacao: str, membro_id: str, outro_membro_id: str
+) -> None:
+    _votacao_terminada(cli, categoria_em_votacao, membro_id, outro_membro_id)
+
+    sem_escolha = cli.executar("oscar", "premiar", categoria_em_votacao)
+    com_escolha = cli.executar_ok(
+        "oscar", "premiar", categoria_em_votacao, "--membro-escolhido-id", outro_membro_id
+    )
+
+    assert sem_escolha.exit_code == 1
+    assert "membro escolhido pelo grupo" in sem_escolha.stderr
+    assert "Troféu para Bia" in com_escolha.stdout
+
+
+def test_premiar_antes_do_fim_da_votacao_e_recusado(
+    cli: CliDeTeste, categoria_em_votacao: str, outro_membro_id: str
+) -> None:
+    resultado = cli.executar(
+        "oscar", "premiar", categoria_em_votacao, "--membro-escolhido-id", outro_membro_id
+    )
+
+    assert resultado.exit_code == 1
+    assert "ainda não terminou" in resultado.stderr
+
+
+def _linha_com(saida: str, trecho: str) -> str:
+    return next(linha for linha in saida.splitlines() if trecho in linha)
