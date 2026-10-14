@@ -37,7 +37,9 @@ jobs:
         run: uv run mypy src
       - name: Testes (SQLite)
         run: uv run pytest
-      - name: Testes da API e do esquema (Postgres)
-        run: uv run pytest tests/adapters/interfaces/api tests/adapters/persistence/sqlite/test_postgres.py
+      - name: Testes da web, da API e do esquema (Postgres)
+        run: >-
+          uv run pytest tests/adapters/interfaces/api tests/adapters/interfaces/web
+          tests/adapters/persistence/sqlite/test_postgres.py
         env:
           FILMES_E_CUBOS_TESTE_POSTGRES: postgresql://postgres:postgres@localhost:5432/postgres

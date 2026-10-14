@@ -13,7 +13,9 @@ from decimal import Decimal
 from enum import Enum
 from typing import Final
 
+from filmes_e_cubos.adapters.interfaces.estrelas import media_em_estrelas
 from filmes_e_cubos.domain.value_objects.escala_avaliacao import EscalaAvaliacao
+from filmes_e_cubos.domain.value_objects.media_das_notas import MediaDasNotas
 from filmes_e_cubos.domain.value_objects.status import (
     ModoDeVotacao,
     StatusIndicacao,
@@ -68,6 +70,19 @@ def formatar_decimal(valor: Decimal) -> str:
     if "." in texto:
         texto = texto.rstrip("0").rstrip(".")
     return texto.replace(".", ",")
+
+
+def formatar_duracao(minutos: int | None) -> str:
+    """Duração de um filme: `148` -> `2h28`, `95` -> `1h35`, `50` -> `50 min`."""
+    if minutos is None:
+        return "—"
+    horas, resto = divmod(minutos, 60)
+    return f"{horas}h{resto:02d}" if horas else f"{resto} min"
+
+
+def formatar_estrelas(media: MediaDasNotas | None) -> str:
+    """A média de uma sessão em estrelas (decisão 30); sem notas, travessão."""
+    return media_em_estrelas(media.valor) if media is not None else "—"
 
 
 def notas_da_escala(escala: EscalaAvaliacao) -> list[Decimal]:

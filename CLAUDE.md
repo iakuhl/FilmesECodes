@@ -19,7 +19,8 @@ para virar produto multi-clube.
   do dono em 24/09/2026. Em 25/09, também a pedido dele, foi mesclado em
   `main` (fast-forward, só local: a `main` não foi enviada ao `origin`).
 - Fases 1–3 concluídas; Fase 4 com a API pronta, migrações com Alembic e
-  os módulos de apoio da web; as páginas da web ainda não existem.
+  a web em construção (base, senha do clube, início e painel prontos —
+  ver [docs/WEB.md](docs/WEB.md)).
 - Revisão de regras de 24/09/2026 quase toda implementada (duração,
   reativação, data do evento, só presentes avaliam, média como fração em
   estrelas, filme não se repete, uma edição por ano, nomeações fixas por
@@ -57,7 +58,8 @@ uv run filmes-e-cubos-servidor       # API em http://127.0.0.1:8000/api/v1/docs
 uv run alembic revision --autogenerate -m "descrição"   # nova revisão do esquema
 # testes da API e do esquema também no Postgres (a CI, quando ligada, faz isso):
 FILMES_E_CUBOS_TESTE_POSTGRES=postgresql://postgres@localhost:5432/postgres \
-  uv run pytest tests/adapters/interfaces/api tests/adapters/persistence/sqlite/test_postgres.py
+  uv run pytest tests/adapters/interfaces/api tests/adapters/interfaces/web \
+  tests/adapters/persistence/sqlite/test_postgres.py
 ```
 
 Um passo só está pronto com os quatro verdes: pytest, mypy, ruff check e

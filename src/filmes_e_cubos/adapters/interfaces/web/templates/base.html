@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}{% endblock %} · Filmes e Cubos</title>
+  <link rel="icon" href="/estaticos/icone.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/estaticos/estilo.css">
+</head>
+<body>
+<header class="topo">
+  <div class="topo__faixa">
+    <a class="marca" href="/"><span class="marca__icone" aria-hidden="true"></span>Filmes e Cubos</a>
+    {% if clube %}
+    <nav class="navegacao" aria-label="Seções de {{ clube.nome }}">
+      {% for chave, nome_da_secao, caminho in secoes_do_clube %}
+      <a href="/clubes/{{ clube.id }}{{ caminho }}"{% if secao == chave %} aria-current="page"{% endif %}>{{ nome_da_secao }}</a>
+      {% endfor %}
+    </nav>
+    {% endif %}
+    {% if autenticado %}
+    <form class="topo__sair" method="post" action="/sair">
+      <button class="botao botao--discreto">Sair</button>
+    </form>
+    {% endif %}
+  </div>
+</header>
+<main class="pagina">
+  {% for aviso in avisos %}
+  <p class="aviso aviso--{{ aviso.tipo }}" role="{{ 'alert' if aviso.tipo == 'erro' else 'status' }}">{{ aviso.texto }}</p>
+  {% endfor %}
+  {% block conteudo %}{% endblock %}
+</main>
+</body>
+</html>

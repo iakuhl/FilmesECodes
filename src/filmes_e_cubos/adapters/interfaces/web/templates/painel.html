@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block titulo %}{{ clube.nome }}{% endblock %}
+{% block conteudo %}
+<h1>{{ clube.nome }}</h1>
+
+<div class="grade">
+  <section class="cartao cartao--largo">
+    {% if painel.rodada %}
+    <h2>Rodada {{ painel.rodada.numero }}</h2>
+    <p class="suave">Aberta em {{ painel.rodada.data_inicio | data }}.</p>
+    {% include "_indicacoes.html" %}
+    {% else %}
+    <h2>Rodada</h2>
+    <p class="vazio">Nenhuma rodada aberta.</p>
+    {% endif %}
+  </section>
+
+  <section class="cartao">
+    <h2>Membros ativos</h2>
+    {% if painel.membros_ativos %}
+    <ul class="lista-simples">
+      {% for membro in painel.membros_ativos %}<li>{{ membro.nome }}</li>{% endfor %}
+    </ul>
+    {% else %}
+    <p class="vazio">Nenhum membro cadastrado.</p>
+    {% endif %}
+  </section>
+
+  <section class="cartao">
+    <h2>Óscar</h2>
+    {% if painel.temporada_do_ano %}
+    <p><strong>{{ painel.temporada_do_ano.nome }}</strong></p>
+    <p><span class="etiqueta">{{ painel.temporada_do_ano.status | rotulo }}</span></p>
+    {% if painel.temporada_do_ano.data_evento %}
+    <p class="suave">Evento em {{ painel.temporada_do_ano.data_evento | data }}.</p>
+    {% endif %}
+    {% else %}
+    <p class="vazio">Nenhuma edição neste ano.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

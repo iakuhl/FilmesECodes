@@ -83,16 +83,19 @@ Os dados ficam em um arquivo SQLite (`filmes_e_cubos.db` no diretório
 atual, por padrão; configurável com `--db-path` ou a variável de ambiente
 `FILMES_E_CUBOS_DB`).
 
-### API HTTP
+### Web e API HTTP
 
 ```bash
-uv run filmes-e-cubos-servidor          # http://127.0.0.1:8000/api/v1/docs
+uv run filmes-e-cubos-servidor          # site em http://127.0.0.1:8000
+                                        # API em http://127.0.0.1:8000/api/v1/docs
 ```
 
-O servidor usa o mesmo banco da CLI. A referência dos recursos e das
-convenções (incluindo o formato de erro, RFC 9457) está em
-[docs/API.md](docs/API.md). Ainda não há autenticação: por isso o padrão
-é ouvir só na própria máquina.
+O servidor usa o mesmo banco da CLI. As páginas estão descritas em
+[docs/WEB.md](docs/WEB.md); a referência dos recursos e das convenções da
+API (incluindo o formato de erro, RFC 9457), em [docs/API.md](docs/API.md).
+Com `FILMES_E_CUBOS_SENHA` definida, site e API pedem a senha do clube;
+sem ela, nada é protegido — por isso o padrão é ouvir só na própria
+máquina.
 
 ## Publicando na Vercel
 
@@ -113,6 +116,8 @@ dependências a partir do `pyproject.toml` e do `uv.lock`.
 | Variável | Obrigatória | O que é |
 |---|---|---|
 | `DATABASE_URL` | sim | URL do Postgres (a integração da Neon define). |
+| `FILMES_E_CUBOS_SENHA` | sim | A senha do clube, pedida para entrar no site e para usar a API (`Authorization: Bearer <senha>`). Sem ela, o site não abre na Vercel. |
+| `FILMES_E_CUBOS_CHAVE_SECRETA` | não | Chave que assina o cookie da sessão. Sem ela, uma é derivada da senha — trocar a senha desconecta todo mundo. |
 
 Sem `DATABASE_URL`, o app usa um arquivo SQLite — o que só serve
 localmente: na Vercel, o arquivo sumiria a cada reinício. A mesma
@@ -151,6 +156,7 @@ FILMES_E_CUBOS_TESTE_POSTGRES=postgresql://postgres@localhost:5432/postgres \
   pastas e ferramentas do projeto.
 - [docs/CLI.md](docs/CLI.md) — referência da interface de linha de
   comando.
+- [docs/WEB.md](docs/WEB.md) — as páginas da interface web.
 - [docs/API.md](docs/API.md) — referência da API HTTP.
 - [docs/ROADMAP.md](docs/ROADMAP.md) — fases de desenvolvimento previstas.
 - [docs/PENDENCIAS.md](docs/PENDENCIAS.md) — questões de negócio em aberto,

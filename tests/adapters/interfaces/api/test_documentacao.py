@@ -36,8 +36,10 @@ def test_documentacao_interativa_aponta_para_o_openapi_da_api(api: ApiDeTeste) -
     assert "/api/v1/openapi.json" in resposta.text
 
 
-def test_raiz_do_servidor_leva_a_documentacao(api: ApiDeTeste) -> None:
-    resposta = api.cliente.get("/", follow_redirects=False)
+def test_raiz_do_servidor_e_a_web_e_a_documentacao_segue_na_api(api: ApiDeTeste) -> None:
+    raiz = api.cliente.get("/", follow_redirects=False)
+    documentacao = api.cliente.get("/api/v1/docs")
 
-    assert resposta.status_code == 307
-    assert resposta.headers["location"] == "/api/v1/docs"
+    assert raiz.status_code == 200
+    assert raiz.headers["content-type"].startswith("text/html")
+    assert documentacao.status_code == 200

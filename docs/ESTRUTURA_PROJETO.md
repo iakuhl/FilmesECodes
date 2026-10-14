@@ -54,8 +54,10 @@ FilmesECodes/
 │               ├── contexto_http.py   # injeção do Contexto nas rotas HTTP
 │               ├── escritas_em_fila.py  # middleware: uma escrita HTTP por vez
 │               ├── servidor.py        # app ASGI completo + entry point do servidor
-│               ├── web/               # 🚧 Fase 4: por ora, formatacao, mensagens e
-│               │                      # formularios (apoio das páginas)
+│               ├── acesso.py          # senha do clube: protege site e API
+│               ├── web/               # 🚧 Fase 4: app.py (criar_web), renderizacao,
+│               │                      # erros, painel, rotas/, templates/, estaticos/
+│               │                      # e o apoio (formatacao, mensagens, formularios)
 │               ├── cli/               # ✅ Fase 3
 │               │   ├── main.py        # app Typer raiz; monta os grupos de comando
 │               │   ├── contexto.py    # quando montar o composition root; critério da CLI
@@ -89,7 +91,8 @@ FilmesECodes/
             │                          # por grupo de comandos + fluxo de ponta a ponta
             ├── api/                   # API real (app ASGI completo) contra SQLite
             │                          # temporário, idem
-            └── web/                   # módulos de apoio da interface web
+            └── web/                   # o site completo (TestClient + BeautifulSoup)
+                                       # contra SQLite ou Postgres, e o apoio
 ```
 
 ## Responsabilidade de cada pasta

@@ -25,11 +25,13 @@ código, fica em **`/api/v1/docs`**; o documento OpenAPI bruto, em
 | `DATABASE_URL` (variável) | — | URL de um banco (ex.: o Postgres da produção); vale no lugar do arquivo SQLite. É o que a Vercel usa — ver o README. |
 | `--recarregar` | desligado | Reinicia ao detectar mudança no código (desenvolvimento). |
 
-> **Ainda não há autenticação.** Qualquer pessoa que alcance o servidor
-> pode ler e alterar os dados do clube. Por isso o padrão é ouvir só em
-> `127.0.0.1`; expor na rede (`--host 0.0.0.0`) é uma decisão explícita,
-> que só faz sentido numa rede de confiança ou atrás de um proxy que
-> autentique. Autenticação está prevista na Fase 5 do roadmap.
+> **Senha do clube.** Com a variável `FILMES_E_CUBOS_SENHA` definida
+> (obrigatória na Vercel), a API pede a senha no cabeçalho
+> `Authorization: Bearer <senha>` — ou aceita a sessão de quem entrou no
+> site pelo navegador, o que faz a documentação interativa funcionar.
+> Sem a senha, a resposta é `401` (`nao_autenticado`); `/api/v1/saude`
+> fica livre. Sem a variável, nada é protegido: por isso o padrão é ouvir
+> só em `127.0.0.1`. O login individual chega na Fase 5.
 
 CLI e servidor podem usar o mesmo arquivo de banco — o que um registra, o
 outro enxerga.

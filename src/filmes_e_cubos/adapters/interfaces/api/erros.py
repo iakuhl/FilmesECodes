@@ -33,11 +33,13 @@ TIPO_DE_CONTEUDO_PROBLEMA: Final = "application/problem+json"
 
 _TITULOS: Final[dict[int, str]] = {
     HTTPStatus.BAD_REQUEST: "Requisição malformada",
+    HTTPStatus.UNAUTHORIZED: "Não autenticado",
     HTTPStatus.NOT_FOUND: "Não encontrado",
     HTTPStatus.METHOD_NOT_ALLOWED: "Método não permitido",
     HTTPStatus.CONFLICT: "Conflito com o estado atual",
     HTTPStatus.UNPROCESSABLE_ENTITY: "Requisição inválida",
     HTTPStatus.INTERNAL_SERVER_ERROR: "Erro interno",
+    HTTPStatus.SERVICE_UNAVAILABLE: "Serviço indisponível",
 }
 
 _CODIGOS_HTTP: Final[dict[int, str]] = {

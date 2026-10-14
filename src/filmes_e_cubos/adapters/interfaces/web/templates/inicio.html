@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titulo %}Início{% endblock %}
+{% block conteudo %}
+{% if clubes %}
+<h1>Clubes</h1>
+<ul class="lista-de-cartoes">
+  {% for clube_da_lista in clubes %}
+  <li><a class="cartao cartao--link" href="/clubes/{{ clube_da_lista.id }}">{{ clube_da_lista.nome }}</a></li>
+  {% endfor %}
+</ul>
+<h2>Outro clube</h2>
+{% else %}
+<h1>Bem-vindo ao Filmes e Cubos</h1>
+<p class="suave">Ainda não há nenhum clube. Comece criando o seu.</p>
+{% endif %}
+<section class="cartao cartao--estreito">
+  <form method="post" action="/clubes" class="formulario">
+    <label>Nome do clube
+      <input name="nome" required placeholder="Filmes e Cubos">
+    </label>
+    <label>Indicações por rodada
+      <input name="tamanho_rodada" inputmode="numeric" placeholder="5">
+      <small class="suave">Normalmente, uma por membro. Vazio usa 5.</small>
+    </label>
+    <button class="botao">Criar clube</button>
+  </form>
+</section>
+{% endblock %}

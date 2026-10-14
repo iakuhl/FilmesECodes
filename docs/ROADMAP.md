@@ -168,21 +168,15 @@ vier, consome a API que já existe.
 Feito: os módulos de apoio em `adapters/interfaces/web/` — `formatacao.py`
 (datas, decimais, rótulos), `mensagens.py` (avisos na sessão e textos
 amigáveis para as recusas de negócio) e `formularios.py` (conversão de
-campos), com testes. As dependências (`jinja2`, `python-multipart`,
-`itsdangerous`) já estão no `pyproject.toml`.
+campos) — e a base das páginas: `web/app.py` (`criar_web`, o app raiz,
+com `StaticFiles` em `/estaticos` e páginas de erro), `renderizacao.py`
+(ambiente Jinja com `autoescape`, `StrictUndefined` e os filtros de
+`formatacao.py`), o padrão Post/Redirect/Get, o visual (`estilo.css`), a
+entrada com a senha do clube e as páginas de início e do painel. A
+referência das páginas está em [WEB.md](WEB.md).
 
 Plano para o restante (ver "Como continuar"):
 
-- `web/app.py` com `criar_web(contexto, chave_secreta=...)`: app FastAPI
-  com `SessionMiddleware` (avisos), `StaticFiles` em `/estaticos` e
-  handlers que transformam erros em páginas HTML. `servidor.py` passa a
-  usar a web como app raiz e monta a API em `/api/v1` dentro dela.
-- Ambiente Jinja próprio (`autoescape`, `StrictUndefined`, filtros de
-  `formatacao.py`); `TemplateResponse(request, nome, contexto)` — a
-  assinatura do Starlette 1.x.
-- Padrão Post/Redirect/Get em toda ação: a rota roda o caso de uso dentro
-  de `recusas_viram_avisos(request)`, registra o aviso de sucesso e
-  redireciona com 303.
 - Páginas, todas escopadas por clube (`/clubes/{clube_id}/...`), com
   verificação de que a entidade do caminho pertence ao clube: início
   (sem clube → criar; um clube → redireciona; vários → escolher), painel
@@ -404,9 +398,9 @@ produção, só a pedido do dono (decisão 37).
    1. ✅ persistência portável — Postgres (Neon) na produção, SQLite local
       e nos testes; ordem de criação em coluna própria (revisão 0006);
       entrada `app.py` da Vercel; CI pronta para ligar;
-   2. **próximo:** senha única do clube (decisão 35), protegendo o site e a
-      API;
-   3. páginas do dia a dia, conforme o plano da seção da Fase 4: início,
+   2. ✅ senha única do clube (decisão 35), protegendo o site e a API; a
+      base da web (app raiz, modelos, visual), o início e o painel;
+   3. **próximo:** páginas do dia a dia, conforme o plano da seção da Fase 4: início,
       painel da rodada, membros, filmes, histórico de rodadas, sessões e
       avaliações;
    4. Óscar até a votação: edições, categorias, nomeações, cédula e

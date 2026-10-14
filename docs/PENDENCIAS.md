@@ -355,6 +355,28 @@ Novas, do redesenho de 25/09:
 38. **`DATABASE_URL` vale para o servidor e para a CLI** (`--db-url`), no
     lugar do arquivo SQLite: o nome é o que a integração da Neon define,
     e assim a CLI local também consegue administrar a produção.
+39. **A senha do clube vale para o site e para a API** (decisão 35), num
+    middleware ASGI compartilhado (`adapters/interfaces/acesso.py`): no
+    navegador, a página `/entrar` marca a sessão (cookie assinado,
+    `HttpOnly`, `SameSite=Lax` — o que já barra formulários forjados por
+    outros sites —, `Secure` na Vercel); programas mandam
+    `Authorization: Bearer <senha>`. Ficam livres só a entrada, os
+    arquivos estáticos e `/api/v1/saude`. A comparação é em tempo
+    constante.
+40. **A chave que assina a sessão vem da senha**, a menos que
+    `FILMES_E_CUBOS_CHAVE_SECRETA` seja definida: é a mesma em todas as
+    instâncias da Vercel e muda com a senha — trocar a senha desconecta
+    todo mundo.
+41. **Na Vercel, sem senha o site não abre** (503 com a instrução do que
+    configurar): esquecer a variável não pode deixar o clube aberto na
+    internet. Localmente, sem senha, nada muda.
+42. **A web virou o app raiz** e a API é montada dentro dela, em
+    `/api/v1`; a raiz, que antes redirecionava à documentação da API,
+    agora é a página inicial.
+43. **Visual próprio, sem framework de CSS** (um `estilo.css` com tema
+    escuro automático): nada de build nem de dependência de terceiros
+    para o que a página precisa.
+44. **Os testes da web rodam também contra o Postgres**, como os da API.
 
 ## Dívidas técnicas conhecidas
 
